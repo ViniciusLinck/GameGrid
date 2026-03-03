@@ -4,7 +4,7 @@ Projeto frontend para explorar os jogos da Copa do Mundo Masculina 2026 com foco
 
 ## Sobre o projeto
 
-O GameGrid foi reestruturado de uma versao HTML/CSS/JS para uma aplicacao moderna com React + Vite, incluindo:
+O GameGrid foi reestruturado de uma versao HTML/CSS/JS para uma aplicacao moderna com React + Vite + Tailwind, incluindo:
 
 - Intro animada cinematografica com bola de futebol (GSAP)
 - Background 3D dinamico (Three.js)
@@ -30,7 +30,8 @@ Imagens do projeto:
 - React Router DOM 7
 - GSAP
 - Three.js
-- CSS (arquitetura custom, sem framework)
+- Tailwind CSS 3
+- PostCSS + Autoprefixer
 
 ## Arquitetura
 
@@ -59,6 +60,8 @@ src/
   main.jsx
 public/
   favicon.svg
+tailwind.config.js
+postcss.config.js
 ```
 
 ## Rotas
