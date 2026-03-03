@@ -1,44 +1,126 @@
-<h1 align="center"> NLW #10 Copa </h1>
+# GameGrid - FIFA World Cup 2026 Match Explorer
 
-<p align="center">
-Evento exclusivo e gratuito, promovido pela Rocketseat para ensino de tecnologias WEB.
-</p>
+Projeto frontend para explorar os jogos da Copa do Mundo Masculina 2026 com foco em experiencia visual, navegacao fluida e consumo de API sem banco de dados.
 
-<p align="center">
-  <a href="#-tecnologias">Tecnologias</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#-projeto">Projeto</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#-layout">Layout</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#memo-licença">Licença</a>
-</p>
+## Sobre o projeto
 
-<p align="center">
-  <img alt="License" src="https://img.shields.io/static/v1?label=license&message=MIT&color=49AA26&labelColor=000000">
-</p>
+O GameGrid foi reestruturado de uma versao HTML/CSS/JS para uma aplicacao moderna com React + Vite, incluindo:
 
-<br>
+- Intro animada cinematografica com bola de futebol (GSAP)
+- Background 3D dinamico (Three.js)
+- Calendario com 104 jogos (fallback local + merge com API)
+- Rotas de detalhe de Time e Jogador
+- Tela 404 personalizada
+- Links de estadio para Google Maps
+- Favicon customizado
 
-<p align="center">
-  <img alt="calendario da copa" src=".github/preview.jpg" width="100%">
-</p>
+## Preview
 
-## 🚀 Tecnologias
+Imagens do projeto:
 
-Esse projeto foi desenvolvido com as seguintes tecnologias:
+- `assets/projeto-img1.png`
+- `assets/projeto-img2..png`
 
-- HTML e CSS
-- JavaScript
-- Git e Github
+## Tecnologias
 
-## 💻 Projeto
+- React 18
+- Vite 7
+- React Router DOM 7
+- GSAP
+- Three.js
+- CSS (arquitetura custom, sem framework)
 
-O Calendário da Copa é um projeto que mostra os jogos da Copa de 2022.
+## Arquitetura
 
-<p align="center">
-  <img alt="Print do meu projeto" src="./assets/projeto-img1.png"  width="100%">
-  <img alt="Segunda print do meu projeto" src="./assets/projeto-img2..png" width="100%">
-</p>
+```text
+src/
+  components/
+    IntroKickoff.jsx
+    MatchCard.jsx
+    PageFrame.jsx
+    TeamBadge.jsx
+    WorldBackground.jsx
+  data/
+    matches2026.js
+  pages/
+    HomePage.jsx
+    TeamPage.jsx
+    PlayerPage.jsx
+    NotFoundPage.jsx
+  services/
+    worldCupApi.js
+  styles/
+    app.css
+  utils/
+    flags.js
+  App.jsx
+  main.jsx
+public/
+  favicon.svg
+```
 
-## 🔖 Layout
+## Rotas
 
-Você pode visualizar o layout do projeto através [DESSE LINK](https://www.figma.com/file/J1Z33MISC22YZB8wfxiIns/NLW-Copa-Explorer/duplicate). É necessário ter conta no [Figma](https://figma.com) para acessá-lo.
+- `/` - calendario principal
+- `/time/:teamName` - detalhes do time e 11 jogadores principais
+- `/jogador/:playerId` - card detalhado do jogador
+- `*` - 404 Not Found
 
+## Fonte de dados
+
+Sem banco de dados.
+
+O projeto usa API publica:
+
+- TheSportsDB (`https://www.thesportsdb.com/api.php`)
+
+Como o calendario publico 2026 ainda pode estar incompleto na API, o app aplica estrategia hibrida:
+
+1. carrega calendario base local com 104 jogos
+2. tenta complementar dados reais da API (datas, confrontos e venues)
+3. mantem fallback local quando faltam dados externos
+
+## Como executar
+
+### Requisitos
+
+- Node.js 18+
+- npm 9+
+
+### Desenvolvimento
+
+```bash
+npm install
+npm run dev
+```
+
+### Build de producao
+
+```bash
+npm run build
+npm run preview
+```
+
+## Scripts
+
+- `npm run dev` - inicia servidor local Vite
+- `npm run build` - gera build de producao
+- `npm run preview` - sobe preview do build local
+
+## Diferenciais implementados
+
+- Migracao total para SPA com React Router
+- Intro de entrada premium com skip e suporte a reduced motion
+- Mapeamento robusto de bandeiras com aliases de paises
+- Navegacao por time/jogador com carregamento de dados em runtime
+- Visual responsivo para desktop e mobile
+
+## Status
+
+Projeto em evolucao continua para portfolio.
+
+Proximos incrementos recomendados:
+
+- cache local de respostas da API para reduzir latencia
+- pagina de estatisticas por grupo/fase
+- testes automatizados (unitarios + navegacao)
