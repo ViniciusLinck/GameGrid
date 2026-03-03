@@ -15,6 +15,14 @@ function formatLabelDate(rawDate) {
   return new Intl.DateTimeFormat("pt-BR").format(date);
 }
 
+function shorten(text) {
+  const cleaned = (text ?? "").replace(/\s+/g, " ").trim();
+  if (!cleaned) {
+    return "Sem resumo disponivel para este jogador.";
+  }
+  return cleaned.length > 260 ? `${cleaned.slice(0, 260)}...` : cleaned;
+}
+
 export default function PlayerPage() {
   const { playerId: routePlayerId } = useParams();
   const [searchParams] = useSearchParams();
@@ -115,7 +123,7 @@ export default function PlayerPage() {
             </div>
           </div>
 
-          <p className="player-description">{player.description}</p>
+          <p className="player-description">{shorten(player.description)}</p>
         </div>
       </article>
     </section>

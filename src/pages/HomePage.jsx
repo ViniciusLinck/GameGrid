@@ -28,23 +28,28 @@ function getNextMatchLabel(match) {
 export default function HomePage() {
   const [selectedStage, setSelectedStage] = useState("Todas as fases");
   const [matches, setMatches] = useState(FALLBACK_MATCHES_2026);
-  const [sourceLabel, setSourceLabel] = useState("local");
   const appRef = useRef(null);
   const listRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
 
-    fetchWorldCupMatches2026().then((result) => {
-      if (!mounted) {
-        return;
-      }
-      setMatches(result.matches);
-      setSourceLabel(result.sourceLabel);
-    });
+    const loadMatches = () =>
+      fetchWorldCupMatches2026().then((result) => {
+        if (!mounted) {
+          return;
+        }
+        setMatches(result.matches);
+      });
+
+    loadMatches();
+
+    // Atualiza periodicamente para refletir mudanças da API sem recarregar a página.
+    const intervalId = window.setInterval(loadMatches, 300000);
 
     return () => {
       mounted = false;
+      window.clearInterval(intervalId);
     };
   }, []);
 
@@ -156,13 +161,6 @@ export default function HomePage() {
             </select>
           </label>
         </div>
-
-        <small className="source-note">
-          Fonte de jogos:{" "}
-          {sourceLabel === "api+local"
-            ? "API TheSportsDB + calendário base"
-            : "calendário base local"}
-        </small>
       </header>
 
       <main className="calendar" ref={listRef}>

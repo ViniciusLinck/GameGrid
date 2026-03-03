@@ -25,9 +25,10 @@ function teamRoute(teamName) {
 
 export default function MatchCard({ match }) {
   const mapsUrl = match.mapsUrl ?? buildMapsUrl(match.venue);
+  const isFeatured = match.id === 1;
 
   return (
-    <article className="match-card">
+    <article className={`match-card ${isFeatured ? "match-card-featured" : ""}`}>
       <div className="match-header">
         <p>Jogo {match.id}</p>
         <span>{match.stage}</span>

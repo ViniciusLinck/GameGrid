@@ -356,13 +356,23 @@ a {
   align-items: center;
   display: grid;
   gap: 8px;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 }
 
 .team-link {
   border-radius: 10px;
+  display: flex;
+  min-width: 0;
   text-decoration: none;
   transition: transform 0.2s ease;
+}
+
+.team-link:first-child {
+  justify-content: flex-start;
+}
+
+.team-link:last-child {
+  justify-content: flex-end;
 }
 
 .team-link:hover {
@@ -379,12 +389,17 @@ a {
 .team-badge {
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .team-badge strong {
   font-size: 0.88rem;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .team-icon {
@@ -393,11 +408,11 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   display: inline-flex;
-  flex: 0 0 34px;
-  height: 34px;
+  flex: 0 0 36px;
+  height: 36px;
   justify-content: center;
   overflow: hidden;
-  width: 34px;
+  width: 36px;
 }
 
 .team-icon img {
@@ -437,6 +452,38 @@ a {
 .venue-link:hover {
   color: #e8f6ff;
   text-decoration: underline;
+}
+
+.match-card-featured {
+  min-height: 210px;
+  padding: 16px 18px;
+}
+
+.match-card-featured .match-sides {
+  gap: 12px;
+}
+
+.match-card-featured .team-badge {
+  gap: 12px;
+}
+
+.match-card-featured .team-badge strong {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.match-card-featured .team-icon {
+  flex-basis: 54px;
+  height: 54px;
+  width: 54px;
+}
+
+.match-card-featured .versus {
+  font-size: 2.1rem;
+}
+
+.match-card-featured .match-footer {
+  font-size: 1.08rem;
 }
 
 .page-card {
@@ -490,9 +537,78 @@ a {
 
 .team-description {
   color: var(--ink-300);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  margin-top: 12px;
+}
+
+.team-stats-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin-top: 14px;
+}
+
+.team-stat-card {
+  background: linear-gradient(160deg, rgba(8, 20, 40, 0.95), rgba(13, 32, 60, 0.85));
+  border: 1px solid rgba(115, 184, 255, 0.28);
+  border-radius: 12px;
+  min-height: 88px;
+  padding: 10px;
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease;
+}
+
+.team-stat-card:hover {
+  transform: perspective(700px) rotateX(4deg) rotateY(-4deg) translateY(-2px);
+}
+
+.team-stat-card span {
+  color: var(--ink-400);
+  display: block;
+  font-size: 0.78rem;
+}
+
+.team-stat-card strong {
+  display: block;
+  font-size: 1.2rem;
+  margin-top: 7px;
+}
+
+.world-cup-history {
+  margin-top: 14px;
+}
+
+.world-cup-history h3 {
   font-size: 0.95rem;
-  line-height: 1.5;
-  margin-top: 10px;
+  margin-bottom: 8px;
+}
+
+.history-track {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.history-item {
+  background: rgba(11, 25, 46, 0.85);
+  border: 1px solid rgba(115, 184, 255, 0.2);
+  border-radius: 10px;
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.history-item small {
+  color: var(--ink-400);
+  display: block;
+  font-size: 0.7rem;
+}
+
+.history-item strong {
+  color: var(--accent-gold);
+  display: block;
+  font-size: 0.95rem;
+  margin-top: 2px;
 }
 
 .players-hint {

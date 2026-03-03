@@ -12,6 +12,8 @@ O GameGrid foi reestruturado de uma versao HTML/CSS/JS para uma aplicacao modern
 - Rotas de detalhe de Time e Jogador
 - Tela 404 personalizada
 - Links de estadio para Google Maps
+- Cards destacados e layout visual refinado para confrontos (team vs team)
+- Estatisticas visuais nas paginas de time (titulos, ranking e ultimas 5 copas)
 - Favicon customizado
 
 ## Preview
@@ -79,6 +81,7 @@ Como o calendario publico 2026 ainda pode estar incompleto na API, o app aplica 
 1. carrega calendario base local com 104 jogos
 2. tenta complementar dados reais da API (datas, confrontos e venues)
 3. mantem fallback local quando faltam dados externos
+4. atualiza automaticamente os dados da API em intervalos no frontend
 
 ## Como executar
 

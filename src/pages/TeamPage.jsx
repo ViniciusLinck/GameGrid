@@ -50,6 +50,9 @@ export default function TeamPage() {
   }, [teamDetails]);
 
   const flagSrc = getFlagByTeamName(teamName);
+  const profile = teamDetails?.profile;
+
+  const historyLabels = ["2006", "2010", "2014", "2018", "2022"];
 
   if (loading) {
     return <section className="page-card">Carregando detalhes do time...</section>;
@@ -86,6 +89,33 @@ export default function TeamPage() {
               {teamDetails.country} | Fundado em: {teamDetails.founded}
             </p>
             <p>Estádio: {teamDetails.stadium}</p>
+          </div>
+        </div>
+
+        <div className="team-stats-grid">
+          <article className="team-stat-card">
+            <span>Copas do mundo</span>
+            <strong>{profile?.worldCups ?? "N/A"}</strong>
+          </article>
+          <article className="team-stat-card">
+            <span>Melhor campanha</span>
+            <strong>{profile?.bestFinish ?? "N/A"}</strong>
+          </article>
+          <article className="team-stat-card">
+            <span>Ranking FIFA</span>
+            <strong>#{profile?.fifaRank ?? "N/A"}</strong>
+          </article>
+        </div>
+
+        <div className="world-cup-history">
+          <h3>Ultimas 5 copas</h3>
+          <div className="history-track">
+            {historyLabels.map((label, index) => (
+              <div className="history-item" key={label}>
+                <small>{label}</small>
+                <strong>{profile?.last5WorldCups?.[index] ?? "-"}</strong>
+              </div>
+            ))}
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
+import { getWorldCupProfile } from "../data/worldCupInsights";
 import { normalizeTeamName } from "../utils/flags";
 
 const SPORTS_DB_BASE = "https://www.thesportsdb.com/api/v1/json/3";
@@ -90,6 +91,14 @@ async function fetchJson(url) {
   return response.json();
 }
 
+function shortDescription(text) {
+  if (!text) {
+    return "Resumo indisponível na API.";
+  }
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  return trimmed.length > 220 ? `${trimmed.slice(0, 220)}...` : trimmed;
+}
+
 async function getTeamFromApi(teamName) {
   const normalized = normalizeTeamName(teamName);
   const queryName = teamNameAliases[normalized] ?? teamName;
@@ -177,8 +186,8 @@ export async function fetchTeamDetails(teamName) {
       country: "A definir",
       founded: "A definir",
       stadium: "A definir",
-      description:
-        "Este time ainda depende de definicao da fase anterior da Copa.",
+      description: "Este time ainda depende de definicao da fase anterior da Copa.",
+      profile: getWorldCupProfile(teamName),
       players: fallbackPlayersByTeam(teamName),
       isFallback: true,
     };
@@ -196,6 +205,7 @@ export async function fetchTeamDetails(teamName) {
         stadium: "A definir",
         description:
           "A API nao retornou detalhes para este time. Mostrando escalação base.",
+        profile: getWorldCupProfile(teamName),
         players: fallbackPlayersByTeam(teamName),
         isFallback: true,
       };
@@ -215,10 +225,8 @@ export async function fetchTeamDetails(teamName) {
       country: team.strCountry ?? "N/A",
       founded: team.intFormedYear ?? "N/A",
       stadium: team.strStadium ?? "N/A",
-      description:
-        team.strDescriptionPT ??
-        team.strDescriptionEN ??
-        "Sem descrição na API.",
+      description: shortDescription(team.strDescriptionPT ?? team.strDescriptionEN),
+      profile: getWorldCupProfile(team.strTeam ?? teamName),
       players:
         players.length > 0
           ? players
@@ -234,6 +242,7 @@ export async function fetchTeamDetails(teamName) {
       stadium: "A definir",
       description:
         "Nao foi possivel acessar a API no momento. Mostrando escalação base.",
+      profile: getWorldCupProfile(teamName),
       players: fallbackPlayersByTeam(teamName),
       isFallback: true,
     };
