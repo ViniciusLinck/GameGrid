@@ -27,6 +27,10 @@ Imagens do projeto:
 - `assets/projeto-img1.png`
 - `assets/projeto-img2..png`
 
+Site publicado (GitHub Pages):
+
+- `https://viniciuslinck.github.io/GameGrid/`
+
 ## Tecnologias
 
 - React 18
@@ -116,6 +120,14 @@ npm run preview
 - `npm run dev` - inicia servidor local Vite
 - `npm run build` - gera build de producao
 - `npm run preview` - sobe preview do build local
+
+## Deploy
+
+O deploy para GitHub Pages e automatico via GitHub Actions:
+
+- workflow: `.github/workflows/deploy-pages.yml`
+- gatilho: push para `main` ou `master`
+- URL de publicacao: `https://viniciuslinck.github.io/GameGrid/`
 
 ## Diferenciais implementados
 
