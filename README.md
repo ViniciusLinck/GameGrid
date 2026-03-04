@@ -10,10 +10,14 @@ O GameGrid foi reestruturado de uma versao HTML/CSS/JS para uma aplicacao modern
 - Background 3D dinamico (Three.js)
 - Calendario com 104 jogos (fallback local + merge com API)
 - Rotas de detalhe de Time e Jogador
+- Conteudo das telas de detalhe em PT-BR
 - Tela 404 personalizada
 - Links de estadio para Google Maps
 - Cards destacados e layout visual refinado para confrontos (team vs team)
 - Estatisticas visuais nas paginas de time (titulos, ranking e ultimas 5 copas)
+- Match cards com confronto centralizado e `team-badge` ampliado
+- Secao de 11 jogadores principais em cards visuais (layout em 3 colunas no desktop)
+- Tela de detalhe do jogador com card extra de tecnico
 - Favicon customizado
 
 ## Preview
@@ -68,7 +72,7 @@ postcss.config.js
 
 - `/` - calendario principal
 - `/time/:teamName` - detalhes do time e 11 jogadores principais
-- `/jogador/:playerId` - card detalhado do jogador
+- `/jogador/:playerId` - card detalhado do jogador + card de tecnico
 - `*` - 404 Not Found
 
 ## Fonte de dados

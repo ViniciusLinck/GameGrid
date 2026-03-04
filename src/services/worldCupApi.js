@@ -1,4 +1,4 @@
-import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
+﻿import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
 import { getWorldCupProfile } from "../data/worldCupInsights";
 import { normalizeTeamName } from "../utils/flags";
 
@@ -36,11 +36,10 @@ function fallbackPlayer(teamName, position, index) {
     team: teamName,
     position,
     nationality: teamName,
-    birth: "Não informado",
-    height: "Não informado",
-    weight: "Não informado",
-    description:
-      "Dados detalhados ainda não disponíveis na API para este atleta.",
+    birth: "Nao informado",
+    height: "Nao informado",
+    weight: "Nao informado",
+    description: "Dados detalhados ainda nao disponiveis na API para este atleta.",
     image: "",
   };
 }
@@ -60,9 +59,7 @@ function fallbackPlayersByTeam(teamName) {
     "Left Winger",
   ];
 
-  return positions.map((position, index) =>
-    fallbackPlayer(teamName, position, index)
-  );
+  return positions.map((position, index) => fallbackPlayer(teamName, position, index));
 }
 
 function fallbackCoachByTeam(teamName) {
@@ -94,15 +91,12 @@ function toPlayerView(player, teamName) {
     id: player.idPlayer,
     name: player.strPlayer ?? "Jogador",
     team: player.strTeam ?? teamName,
-    position: player.strPosition ?? "Posição não informada",
-    nationality: player.strNationality ?? "Nacionalidade não informada",
-    birth: player.dateBorn ?? "Data não informada",
-    height: player.strHeight ?? "Não informado",
-    weight: player.strWeight ?? "Não informado",
-    description:
-      player.strDescriptionPT ??
-      player.strDescriptionEN ??
-      "Sem descrição disponível.",
+    position: player.strPosition ?? "Posicao nao informada",
+    nationality: player.strNationality ?? "Nacionalidade nao informada",
+    birth: player.dateBorn ?? "Data nao informada",
+    height: player.strHeight ?? "Nao informado",
+    weight: player.strWeight ?? "Nao informado",
+    description: player.strDescriptionPT ?? player.strDescriptionEN ?? "Sem descricao disponivel.",
     image: player.strThumb ?? player.strCutout ?? "",
   };
 }
@@ -117,7 +111,7 @@ async function fetchJson(url) {
 
 function shortDescription(text) {
   if (!text) {
-    return "Resumo indisponível na API.";
+    return "Resumo indisponivel na API.";
   }
   const trimmed = text.replace(/\s+/g, " ").trim();
   return trimmed.length > 220 ? `${trimmed.slice(0, 220)}...` : trimmed;
@@ -228,8 +222,7 @@ export async function fetchTeamDetails(teamName) {
         country: "A definir",
         founded: "A definir",
         stadium: "A definir",
-        description:
-          "A API nao retornou detalhes para este time. Mostrando escalação base.",
+        description: "A API nao retornou detalhes para este time. Mostrando escalacao base.",
         profile: getWorldCupProfile(teamName),
         players: fallbackPlayersByTeam(teamName),
         coach: fallbackCoachByTeam(teamName),
@@ -253,10 +246,7 @@ export async function fetchTeamDetails(teamName) {
       stadium: team.strStadium ?? "N/A",
       description: shortDescription(team.strDescriptionPT ?? team.strDescriptionEN),
       profile: getWorldCupProfile(team.strTeam ?? teamName),
-      players:
-        players.length > 0
-          ? players
-          : fallbackPlayersByTeam(team.strTeam ?? teamName),
+      players: players.length > 0 ? players : fallbackPlayersByTeam(team.strTeam ?? teamName),
       coach: toCoachView(team, team.strTeam ?? teamName),
       isFallback: players.length === 0,
     };
@@ -267,8 +257,7 @@ export async function fetchTeamDetails(teamName) {
       country: "A definir",
       founded: "A definir",
       stadium: "A definir",
-      description:
-        "Nao foi possivel acessar a API no momento. Mostrando escalação base.",
+      description: "Nao foi possivel acessar a API no momento. Mostrando escalacao base.",
       profile: getWorldCupProfile(teamName),
       players: fallbackPlayersByTeam(teamName),
       coach: fallbackCoachByTeam(teamName),
@@ -280,7 +269,7 @@ export async function fetchTeamDetails(teamName) {
 export async function fetchPlayerById(playerId, teamName = "Time") {
   if (playerId.startsWith("local-")) {
     const indexFromId = Number(playerId.split("-").at(-1)) || 1;
-    return fallbackPlayer(teamName, "Posição não informada", indexFromId - 1);
+    return fallbackPlayer(teamName, "Posicao nao informada", indexFromId - 1);
   }
 
   try {

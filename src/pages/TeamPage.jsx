@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Link, useParams } from "react-router-dom";
 import { getFlagByTeamName } from "../utils/flags";
@@ -10,6 +10,29 @@ function decodeRouteTeam(routeValue) {
   } catch {
     return routeValue ?? "";
   }
+}
+
+function translatePosition(position) {
+  const value = (position ?? "").trim().toLowerCase();
+  const map = {
+    goalkeeper: "Goleiro",
+    defender: "Defensor",
+    "centre-back": "Zagueiro",
+    "center-back": "Zagueiro",
+    "right-back": "Lateral direito",
+    "left-back": "Lateral esquerdo",
+    midfielder: "Meio-campista",
+    "defensive midfield": "Volante",
+    "central midfield": "Meio-campista central",
+    forward: "Atacante",
+    "centre-forward": "Centroavante",
+    "right winger": "Ponta direita",
+    "left winger": "Ponta esquerda",
+    striker: "Centroavante",
+    manager: "Tecnico",
+  };
+
+  return map[value] ?? position ?? "Posicao nao informada";
 }
 
 export default function TeamPage() {
@@ -51,27 +74,6 @@ export default function TeamPage() {
 
   const flagSrc = getFlagByTeamName(teamName);
   const profile = teamDetails?.profile;
-  const squadCards = useMemo(() => {
-    if (!teamDetails) {
-      return [];
-    }
-
-    const players = teamDetails.players.slice(0, 11).map((player) => ({
-      ...player,
-      cardType: "player",
-    }));
-
-    const coach = {
-      id: teamDetails.coach?.id ?? `coach-${teamDetails.teamName}`,
-      name: teamDetails.coach?.name ?? `Tecnico de ${teamDetails.teamName}`,
-      role: teamDetails.coach?.role ?? "Tecnico",
-      image: teamDetails.coach?.image ?? "",
-      cardType: "coach",
-    };
-
-    return [...players, coach];
-  }, [teamDetails]);
-
   const historyLabels = ["2006", "2010", "2014", "2018", "2022"];
 
   if (loading) {
@@ -81,9 +83,9 @@ export default function TeamPage() {
   if (!teamDetails) {
     return (
       <section className="page-card">
-        <h2>Não foi possível carregar o time.</h2>
+        <h2>Nao foi possivel carregar os detalhes do time.</h2>
         <Link to="/" className="text-link">
-          Voltar ao calendário
+          Voltar ao calendario
         </Link>
       </section>
     );
@@ -108,13 +110,13 @@ export default function TeamPage() {
             <p>
               {teamDetails.country} | Fundado em: {teamDetails.founded}
             </p>
-            <p>Estádio: {teamDetails.stadium}</p>
+            <p>Estadio: {teamDetails.stadium}</p>
           </div>
         </div>
 
         <div className="team-stats-grid">
           <article className="team-stat-card">
-            <span>Copas do mundo</span>
+            <span>Copas do Mundo</span>
             <strong>{profile?.worldCups ?? "N/A"}</strong>
           </article>
           <article className="team-stat-card">
@@ -128,7 +130,7 @@ export default function TeamPage() {
         </div>
 
         <div className="world-cup-history">
-          <h3>Ultimas 5 copas</h3>
+          <h3>Ultimas 5 Copas</h3>
           <div className="history-track">
             {historyLabels.map((label, index) => (
               <div className="history-item" key={label}>
@@ -144,63 +146,40 @@ export default function TeamPage() {
 
       <article className="page-card">
         <header className="squad-header">
-          <h2 className="squad-title">Titulares e Comando Tecnico</h2>
+          <h2 className="squad-title">11 Jogadores Principais</h2>
           <p className="players-hint squad-subtitle">
-            11 jogadores principais + tecnico. Clique em um jogador para abrir o card
-            completo.
+            Clique em um jogador para abrir os detalhes completos.
           </p>
         </header>
 
         <div className="player-grid squad-grid">
-          {squadCards.map((member) => {
-            const cardContent = (
-              <>
-                <div className={`player-card-media${member.cardType === "coach" ? " coach" : ""}`}>
-                  {member.image ? (
-                    <img src={member.image} alt={member.name} loading="lazy" />
-                  ) : (
-                    <div className="player-card-fallback">
-                      {member.name.slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
+          {teamDetails.players.slice(0, 11).map((player) => (
+            <Link
+              to={`/jogador/${encodeURIComponent(player.id)}?team=${encodeURIComponent(
+                teamDetails.teamName
+              )}`}
+              state={{ player }}
+              className="player-preview-card"
+              key={player.id}
+            >
+              <div className="player-card-media">
+                {player.image ? (
+                  <img src={player.image} alt={player.name} loading="lazy" />
+                ) : (
+                  <div className="player-card-fallback">{player.name.slice(0, 2).toUpperCase()}</div>
+                )}
+              </div>
+
+              <section className="player-card-content">
+                <h3>{player.name}</h3>
+                <p>{translatePosition(player.position)}</p>
+                <div className="player-card-meta">
+                  <span className="player-card-tag">Jogador</span>
+                  <span className="player-card-action">Abrir card</span>
                 </div>
-
-                <section className="player-card-content">
-                  <h3>{member.name}</h3>
-                  <p>{member.cardType === "coach" ? member.role : member.position}</p>
-                  <div className="player-card-meta">
-                    <span className="player-card-tag">
-                      {member.cardType === "coach" ? "Comissao tecnica" : "Jogador"}
-                    </span>
-                    <span className="player-card-action">
-                      {member.cardType === "coach" ? "Tecnico" : "Abrir card"}
-                    </span>
-                  </div>
-                </section>
-              </>
-            );
-
-            if (member.cardType === "coach") {
-              return (
-                <article className="player-preview-card coach-preview-card" key={member.id}>
-                  {cardContent}
-                </article>
-              );
-            }
-
-            return (
-              <Link
-                to={`/jogador/${encodeURIComponent(member.id)}?team=${encodeURIComponent(
-                  teamDetails.teamName
-                )}`}
-                state={{ player: member }}
-                className="player-preview-card"
-                key={member.id}
-              >
-                {cardContent}
-              </Link>
-            );
-          })}
+              </section>
+            </Link>
+          ))}
         </div>
       </article>
     </section>

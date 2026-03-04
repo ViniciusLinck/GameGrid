@@ -130,11 +130,11 @@
   }
 
   .match-sides {
-    @apply grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2;
+    @apply mx-auto grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center justify-items-center gap-3;
   }
 
   .match-card-featured .match-sides {
-    @apply gap-3;
+    @apply gap-4;
   }
 
   .team-link {
@@ -162,7 +162,7 @@
   }
 
   .team-badge {
-    @apply flex min-w-0 max-w-full items-center justify-center gap-2.5 text-center;
+    @apply flex min-w-0 max-w-full items-center justify-center gap-3.5 text-center;
   }
 
   .match-card-featured .team-badge {
@@ -170,20 +170,20 @@
   }
 
   .team-badge strong {
-    @apply overflow-hidden text-ellipsis whitespace-nowrap text-[0.88rem] leading-[1.2];
+    @apply overflow-hidden text-ellipsis whitespace-nowrap text-[1.02rem] font-semibold leading-[1.2];
   }
 
   .match-card-featured .team-badge strong {
-    @apply text-[1.4rem] font-bold;
+    @apply text-[1.56rem] font-bold;
   }
 
   .team-icon {
-    @apply inline-flex h-9 w-9 flex-none items-center justify-center overflow-hidden rounded-full border border-[#ffffff1f];
+    @apply inline-flex h-11 w-11 flex-none items-center justify-center overflow-hidden rounded-full border border-[#ffffff1f];
     background: linear-gradient(140deg, rgba(28, 46, 83, 0.9), rgba(10, 19, 37, 0.8));
   }
 
   .match-card-featured .team-icon {
-    @apply h-[54px] w-[54px] basis-[54px];
+    @apply h-[64px] w-[64px] basis-[64px];
   }
 
   .team-icon img {
@@ -191,7 +191,7 @@
   }
 
   .team-icon span {
-    @apply text-[#f5d061] text-[0.72rem] font-bold;
+    @apply text-[#f5d061] text-[0.8rem] font-bold;
   }
 
   .match-footer {
@@ -456,6 +456,26 @@
 
   .player-description {
     @apply mt-[14px] leading-[1.55] text-ink-300 text-center;
+  }
+
+  .coach-spotlight-card {
+    @apply mt-4 rounded-[18px] border border-[#ffd06166] px-5 py-4 text-center;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 35%),
+      linear-gradient(160deg, rgba(18, 31, 54, 0.95), rgba(7, 15, 27, 0.95));
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  .coach-spotlight-card h3 {
+    @apply text-[1.28rem] font-bold text-[#f7fbff];
+  }
+
+  .coach-spotlight-card p {
+    @apply mt-1 text-[0.96rem] text-[#d5e6ff];
+  }
+
+  .coach-spotlight-card span {
+    @apply mt-2 inline-block rounded-full border border-[#ffffff38] bg-[#ffffff12] px-3 py-1 text-[0.76rem] uppercase tracking-[0.06em] text-[#ffe197];
   }
 
   .not-found-card {
