@@ -65,6 +65,30 @@ function fallbackPlayersByTeam(teamName) {
   );
 }
 
+function fallbackCoachByTeam(teamName) {
+  return {
+    id: `coach-${normalizeTeamName(teamName)}`,
+    name: `Tecnico de ${teamName}`,
+    role: "Tecnico",
+    image: "",
+  };
+}
+
+function toCoachView(team, teamName) {
+  const managerName =
+    team?.strManager
+      ?.split(/[,;|]/)
+      .map((name) => name.trim())
+      .find(Boolean) ?? `Tecnico de ${teamName}`;
+
+  return {
+    id: `coach-${normalizeTeamName(teamName)}`,
+    name: managerName,
+    role: "Tecnico",
+    image: "",
+  };
+}
+
 function toPlayerView(player, teamName) {
   return {
     id: player.idPlayer,
@@ -189,6 +213,7 @@ export async function fetchTeamDetails(teamName) {
       description: "Este time ainda depende de definicao da fase anterior da Copa.",
       profile: getWorldCupProfile(teamName),
       players: fallbackPlayersByTeam(teamName),
+      coach: fallbackCoachByTeam(teamName),
       isFallback: true,
     };
   }
@@ -207,6 +232,7 @@ export async function fetchTeamDetails(teamName) {
           "A API nao retornou detalhes para este time. Mostrando escalação base.",
         profile: getWorldCupProfile(teamName),
         players: fallbackPlayersByTeam(teamName),
+        coach: fallbackCoachByTeam(teamName),
         isFallback: true,
       };
     }
@@ -231,6 +257,7 @@ export async function fetchTeamDetails(teamName) {
         players.length > 0
           ? players
           : fallbackPlayersByTeam(team.strTeam ?? teamName),
+      coach: toCoachView(team, team.strTeam ?? teamName),
       isFallback: players.length === 0,
     };
   } catch {
@@ -244,6 +271,7 @@ export async function fetchTeamDetails(teamName) {
         "Nao foi possivel acessar a API no momento. Mostrando escalação base.",
       profile: getWorldCupProfile(teamName),
       players: fallbackPlayersByTeam(teamName),
+      coach: fallbackCoachByTeam(teamName),
       isFallback: true,
     };
   }

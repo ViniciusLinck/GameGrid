@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Link, useParams } from "react-router-dom";
 import { getFlagByTeamName } from "../utils/flags";
@@ -51,6 +51,26 @@ export default function TeamPage() {
 
   const flagSrc = getFlagByTeamName(teamName);
   const profile = teamDetails?.profile;
+  const squadCards = useMemo(() => {
+    if (!teamDetails) {
+      return [];
+    }
+
+    const players = teamDetails.players.slice(0, 11).map((player) => ({
+      ...player,
+      cardType: "player",
+    }));
+
+    const coach = {
+      id: teamDetails.coach?.id ?? `coach-${teamDetails.teamName}`,
+      name: teamDetails.coach?.name ?? `Tecnico de ${teamDetails.teamName}`,
+      role: teamDetails.coach?.role ?? "Tecnico",
+      image: teamDetails.coach?.image ?? "",
+      cardType: "coach",
+    };
+
+    return [...players, coach];
+  }, [teamDetails]);
 
   const historyLabels = ["2006", "2010", "2014", "2018", "2022"];
 
@@ -123,33 +143,64 @@ export default function TeamPage() {
       </article>
 
       <article className="page-card">
-        <h2>11 jogadores principais</h2>
-        <p className="players-hint">Clique em um jogador para abrir o card completo.</p>
+        <header className="squad-header">
+          <h2 className="squad-title">Titulares e Comando Tecnico</h2>
+          <p className="players-hint squad-subtitle">
+            11 jogadores principais + tecnico. Clique em um jogador para abrir o card
+            completo.
+          </p>
+        </header>
 
-        <div className="player-grid">
-          {teamDetails.players.slice(0, 11).map((player) => (
-            <Link
-              to={`/jogador/${encodeURIComponent(player.id)}?team=${encodeURIComponent(
-                teamDetails.teamName
-              )}`}
-              state={{ player }}
-              className="player-preview-card"
-              key={player.id}
-            >
-              <div className="player-avatar">
-                {player.image ? (
-                  <img src={player.image} alt={player.name} loading="lazy" />
-                ) : (
-                  <span>{player.name.slice(0, 2).toUpperCase()}</span>
-                )}
-              </div>
+        <div className="player-grid squad-grid">
+          {squadCards.map((member) => {
+            const cardContent = (
+              <>
+                <div className={`player-card-media${member.cardType === "coach" ? " coach" : ""}`}>
+                  {member.image ? (
+                    <img src={member.image} alt={member.name} loading="lazy" />
+                  ) : (
+                    <div className="player-card-fallback">
+                      {member.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
 
-              <div>
-                <h3>{player.name}</h3>
-                <p>{player.position}</p>
-              </div>
-            </Link>
-          ))}
+                <section className="player-card-content">
+                  <h3>{member.name}</h3>
+                  <p>{member.cardType === "coach" ? member.role : member.position}</p>
+                  <div className="player-card-meta">
+                    <span className="player-card-tag">
+                      {member.cardType === "coach" ? "Comissao tecnica" : "Jogador"}
+                    </span>
+                    <span className="player-card-action">
+                      {member.cardType === "coach" ? "Tecnico" : "Abrir card"}
+                    </span>
+                  </div>
+                </section>
+              </>
+            );
+
+            if (member.cardType === "coach") {
+              return (
+                <article className="player-preview-card coach-preview-card" key={member.id}>
+                  {cardContent}
+                </article>
+              );
+            }
+
+            return (
+              <Link
+                to={`/jogador/${encodeURIComponent(member.id)}?team=${encodeURIComponent(
+                  teamDetails.teamName
+                )}`}
+                state={{ player: member }}
+                className="player-preview-card"
+                key={member.id}
+              >
+                {cardContent}
+              </Link>
+            );
+          })}
         </div>
       </article>
     </section>
