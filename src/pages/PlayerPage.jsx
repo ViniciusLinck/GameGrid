@@ -1,8 +1,7 @@
-﻿import { useEffect, useLayoutEffect, useState, useRef } from "react";
+﻿import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { fetchPlayerById, fetchTeamDetails } from "../services/worldCupApi";
-import { normalizeTeamName } from "../utils/flags";
+import { fetchPlayerById } from "../services/worldCupApi";
 
 function formatLabelDate(rawDate) {
   if (!rawDate || rawDate === "Nao informado") {
@@ -47,33 +46,44 @@ function translatePosition(position) {
   return map[value] ?? position ?? "Posicao nao informada";
 }
 
-function buildDefaultCoachCard(teamName) {
-  if (normalizeTeamName(teamName) === "brazil") {
-    return {
-      name: "Carlo Ancelotti",
-      team: "Brazil",
-      role: "Manager",
-    };
+function uniqueImages(values) {
+  const seen = new Set();
+  const images = [];
+
+  for (const value of values) {
+    if (!value || seen.has(value)) {
+      continue;
+    }
+    seen.add(value);
+    images.push(value);
   }
 
-  return {
-    name: `Tecnico de ${teamName}`,
-    team: teamName,
-    role: "Tecnico",
-  };
+  return images;
+}
+
+function getInitials(name) {
+  const initials = (name ?? "")
+    .split(" ")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("");
+
+  return initials || "??";
 }
 
 export default function PlayerPage() {
   const { playerId: routePlayerId } = useParams();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const [player, setPlayer] = useState(location.state?.player ?? null);
-  const [loading, setLoading] = useState(!location.state?.player);
-  const [coachCard, setCoachCard] = useState(() => buildDefaultCoachCard("Brazil"));
-  const pageRef = useRef(null);
 
   const playerId = decodeURIComponent(routePlayerId ?? "");
   const teamName = searchParams.get("team") ?? "Time";
+
+  const [player, setPlayer] = useState(location.state?.player ?? null);
+  const [loading, setLoading] = useState(!location.state?.player);
+  const pageRef = useRef(null);
 
   useEffect(() => {
     if (location.state?.player) {
@@ -95,46 +105,9 @@ export default function PlayerPage() {
     };
   }, [location.state, playerId, teamName]);
 
-  useEffect(() => {
-    let mounted = true;
-    setCoachCard(buildDefaultCoachCard(teamName));
-
-    fetchTeamDetails(teamName)
-      .then((teamPayload) => {
-        if (!mounted || !teamPayload) {
-          return;
-        }
-
-        const teamLabel = teamPayload.teamName ?? teamName;
-        const isBrazil = normalizeTeamName(teamLabel) === "brazil";
-
-        if (isBrazil) {
-          setCoachCard({
-            name: "Carlo Ancelotti",
-            team: "Brazil",
-            role: "Manager",
-          });
-          return;
-        }
-
-        setCoachCard({
-          name: teamPayload.coach?.name ?? `Tecnico de ${teamLabel}`,
-          team: teamLabel,
-          role: teamPayload.coach?.role ?? "Tecnico",
-        });
-      })
-      .catch(() => {
-        // Mantem o fallback local do tecnico.
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [teamName]);
-
   useLayoutEffect(() => {
     const context = gsap.context(() => {
-      gsap.from(".player-detail-card, .coach-spotlight-card", {
+      gsap.from(".player-detail-card, .player-gallery-card", {
         opacity: 0,
         y: 22,
         duration: 0.55,
@@ -143,7 +116,24 @@ export default function PlayerPage() {
       });
     }, pageRef);
     return () => context.revert();
-  }, [player, coachCard]);
+  }, [player]);
+
+  const photoCards = useMemo(() => {
+    if (!player) {
+      return [];
+    }
+
+    const images = uniqueImages(player.gallery?.length > 0 ? player.gallery : [player.image]);
+    const source = images.length > 0 ? images : [""];
+
+    return Array.from({ length: 9 }, (_, index) => ({
+      id: `player-${player.id ?? "selected"}-${index}`,
+      name: player.name,
+      team: player.team,
+      role: translatePosition(player.position),
+      image: source[index % source.length],
+    }));
+  }, [player]);
 
   if (loading) {
     return <section className="page-card">Carregando detalhes do jogador...</section>;
@@ -173,7 +163,7 @@ export default function PlayerPage() {
               {player.image ? (
                 <img src={player.image} alt={player.name} />
               ) : (
-                <span>{player.name.slice(0, 2).toUpperCase()}</span>
+                <span>{getInitials(player.name)}</span>
               )}
             </div>
             <div>
@@ -205,11 +195,41 @@ export default function PlayerPage() {
           <p className="player-description">{shorten(player.description)}</p>
         </div>
 
-        <article className="coach-spotlight-card" aria-label="Card do tecnico">
-          <h3>{coachCard.name}</h3>
-          <p>{coachCard.team}</p>
-          <span>{coachCard.role}</span>
-        </article>
+        <section aria-label="Galeria com 9 fotos do jogador selecionado">
+          <header className="squad-header">
+            <h3 className="squad-title">Galeria do jogador</h3>
+            <p className="players-hint squad-subtitle">
+              Exibindo 9 cards com fotos da pessoa selecionada.
+            </p>
+          </header>
+
+          <div className="player-grid player-gallery-grid">
+            {photoCards.map((card, index) => (
+              <article className="player-preview-card player-gallery-card" key={card.id}>
+                <div className="player-card-media">
+                  {card.image ? (
+                    <img
+                      src={card.image}
+                      alt={`${card.name} - foto ${index + 1} de 9`}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="player-card-fallback">{getInitials(card.name)}</div>
+                  )}
+                </div>
+
+                <section className="player-card-content">
+                  <h3>{card.name}</h3>
+                  <p>{card.team}</p>
+                  <div className="player-card-meta">
+                    <span className="player-card-tag">Jogador</span>
+                    <span className="player-card-action">{card.role}</span>
+                  </div>
+                </section>
+              </article>
+            ))}
+          </div>
+        </section>
       </article>
     </section>
   );

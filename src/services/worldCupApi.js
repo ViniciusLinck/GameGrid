@@ -41,6 +41,7 @@ function fallbackPlayer(teamName, position, index) {
     weight: "Nao informado",
     description: "Dados detalhados ainda nao disponiveis na API para este atleta.",
     image: "",
+    gallery: [],
   };
 }
 
@@ -68,7 +69,35 @@ function fallbackCoachByTeam(teamName) {
     name: `Tecnico de ${teamName}`,
     role: "Tecnico",
     image: "",
+    gallery: [],
   };
+}
+
+function uniqueImages(values) {
+  const unique = [];
+  const seen = new Set();
+
+  for (const value of values) {
+    if (!value || seen.has(value)) {
+      continue;
+    }
+    seen.add(value);
+    unique.push(value);
+  }
+
+  return unique;
+}
+
+function extractPlayerGallery(player) {
+  return uniqueImages([
+    player?.strThumb,
+    player?.strCutout,
+    player?.strRender,
+    player?.strFanart1,
+    player?.strFanart2,
+    player?.strFanart3,
+    player?.strFanart4,
+  ]);
 }
 
 function toCoachView(team, teamName) {
@@ -83,10 +112,13 @@ function toCoachView(team, teamName) {
     name: managerName,
     role: "Tecnico",
     image: "",
+    gallery: [],
   };
 }
 
 function toPlayerView(player, teamName) {
+  const gallery = extractPlayerGallery(player);
+
   return {
     id: player.idPlayer,
     name: player.strPlayer ?? "Jogador",
@@ -97,8 +129,35 @@ function toPlayerView(player, teamName) {
     height: player.strHeight ?? "Nao informado",
     weight: player.strWeight ?? "Nao informado",
     description: player.strDescriptionPT ?? player.strDescriptionEN ?? "Sem descricao disponivel.",
-    image: player.strThumb ?? player.strCutout ?? "",
+    image: gallery[0] ?? "",
+    gallery,
   };
+}
+
+async function fetchCoachGallery(coachName, teamName) {
+  if (!coachName || /^tecnico de /i.test(coachName)) {
+    return [];
+  }
+
+  try {
+    const data = await fetchJson(
+      `${SPORTS_DB_BASE}/searchplayers.php?p=${encodeURIComponent(coachName)}`
+    );
+    const candidates = data.player ?? [];
+    const normalizedTeam = normalizeTeamName(teamName);
+
+    const bestMatch =
+      candidates.find((candidate) => normalizeTeamName(candidate.strTeam ?? "") === normalizedTeam) ??
+      candidates[0];
+
+    if (!bestMatch) {
+      return [];
+    }
+
+    return extractPlayerGallery(bestMatch);
+  } catch {
+    return [];
+  }
 }
 
 async function fetchJson(url) {
@@ -238,6 +297,9 @@ export async function fetchTeamDetails(teamName) {
       .slice(0, 11)
       .map((player) => toPlayerView(player, team.strTeam));
 
+    const coach = toCoachView(team, team.strTeam ?? teamName);
+    const coachGallery = await fetchCoachGallery(coach.name, team.strTeam ?? teamName);
+
     return {
       teamName: team.strTeam ?? teamName,
       badge: team.strBadge ?? "",
@@ -247,7 +309,11 @@ export async function fetchTeamDetails(teamName) {
       description: shortDescription(team.strDescriptionPT ?? team.strDescriptionEN),
       profile: getWorldCupProfile(team.strTeam ?? teamName),
       players: players.length > 0 ? players : fallbackPlayersByTeam(team.strTeam ?? teamName),
-      coach: toCoachView(team, team.strTeam ?? teamName),
+      coach: {
+        ...coach,
+        image: coachGallery[0] ?? "",
+        gallery: coachGallery,
+      },
       isFallback: players.length === 0,
     };
   } catch {
