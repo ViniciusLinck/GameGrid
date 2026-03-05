@@ -478,6 +478,47 @@
     @apply mt-2 inline-block rounded-full border border-[#ffffff38] bg-[#ffffff12] px-3 py-1 text-[0.76rem] uppercase tracking-[0.06em] text-[#ffe197];
   }
 
+  .achievements-grid {
+    @apply mt-4 grid gap-3;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .achievement-card {
+    @apply rounded-[14px] border border-[#73b8ff47] bg-[#081427d6] p-4;
+  }
+
+  .achievement-card h4 {
+    @apply text-[1.05rem] text-[#f5f9ff];
+  }
+
+  .achievement-summary {
+    @apply mt-1 text-[0.82rem] text-ink-300;
+  }
+
+  .achievement-list {
+    @apply mt-3 grid gap-2 max-h-[360px] overflow-y-auto pr-1;
+  }
+
+  .achievement-item {
+    @apply rounded-[10px] border border-[#6aaeff42] bg-[#0d1e39c9] px-3 py-2;
+  }
+
+  .achievement-item strong {
+    @apply block text-[0.9rem] text-[#edf4ff];
+  }
+
+  .achievement-item span {
+    @apply mt-0.5 block text-[0.76rem] text-ink-300;
+  }
+
+  .achievement-item small {
+    @apply mt-1 block text-[0.72rem] text-[#f5d061];
+  }
+
+  .achievement-empty {
+    @apply mt-3 text-[0.86rem] text-ink-300;
+  }
+
   .not-found-card {
     @apply mx-auto mt-20 max-w-[620px] text-center;
   }

@@ -1,7 +1,12 @@
-﻿import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
-import { fetchPlayerById } from "../services/worldCupApi";
+import {
+  fetchPersonAchievementsByName,
+  fetchPlayerById,
+  fetchTeamDetails,
+} from "../services/worldCupApi";
+import { normalizeTeamName } from "../utils/flags";
 
 function formatLabelDate(rawDate) {
   if (!rawDate || rawDate === "Nao informado") {
@@ -46,21 +51,6 @@ function translatePosition(position) {
   return map[value] ?? position ?? "Posicao nao informada";
 }
 
-function uniqueImages(values) {
-  const seen = new Set();
-  const images = [];
-
-  for (const value of values) {
-    if (!value || seen.has(value)) {
-      continue;
-    }
-    seen.add(value);
-    images.push(value);
-  }
-
-  return images;
-}
-
 function getInitials(name) {
   const initials = (name ?? "")
     .split(" ")
@@ -73,6 +63,22 @@ function getInitials(name) {
   return initials || "??";
 }
 
+function buildDefaultCoach(teamName) {
+  if (normalizeTeamName(teamName) === "brazil") {
+    return {
+      name: "Carlo Ancelotti",
+      team: "Brazil",
+      role: "Manager",
+    };
+  }
+
+  return {
+    name: `Tecnico de ${teamName}`,
+    team: teamName,
+    role: "Tecnico",
+  };
+}
+
 export default function PlayerPage() {
   const { playerId: routePlayerId } = useParams();
   const [searchParams] = useSearchParams();
@@ -83,31 +89,93 @@ export default function PlayerPage() {
 
   const [player, setPlayer] = useState(location.state?.player ?? null);
   const [loading, setLoading] = useState(!location.state?.player);
+  const [playerAchievements, setPlayerAchievements] = useState(
+    location.state?.player?.achievements ?? []
+  );
+  const [coach, setCoach] = useState(() => buildDefaultCoach(teamName));
+  const [coachAchievements, setCoachAchievements] = useState([]);
   const pageRef = useRef(null);
 
   useEffect(() => {
-    if (location.state?.player) {
-      return;
-    }
-
     let mounted = true;
-    setLoading(true);
+
     fetchPlayerById(playerId, teamName).then((payload) => {
       if (!mounted) {
         return;
       }
-      setPlayer(payload);
+
       setLoading(false);
+      if (!payload) {
+        return;
+      }
+
+      setPlayer(payload);
+      setPlayerAchievements(payload.achievements ?? []);
     });
 
     return () => {
       mounted = false;
     };
-  }, [location.state, playerId, teamName]);
+  }, [playerId, teamName]);
+
+  useEffect(() => {
+    let mounted = true;
+    const defaultCoach = buildDefaultCoach(teamName);
+
+    const loadCoach = async () => {
+      setCoach(defaultCoach);
+      setCoachAchievements([]);
+
+      try {
+        const teamPayload = await fetchTeamDetails(teamName);
+        if (!mounted || !teamPayload) {
+          return;
+        }
+
+        const teamLabel = teamPayload.teamName ?? teamName;
+        let coachName = teamPayload.coach?.name ?? defaultCoach.name;
+        let coachRole = teamPayload.coach?.role ?? defaultCoach.role;
+
+        if (normalizeTeamName(teamLabel) === "brazil" && /^tecnico de /i.test(coachName)) {
+          coachName = "Carlo Ancelotti";
+          coachRole = "Manager";
+        }
+
+        const nextCoach = {
+          name: coachName,
+          team: teamLabel,
+          role: coachRole,
+        };
+
+        setCoach(nextCoach);
+
+        const achievements = await fetchPersonAchievementsByName(coachName, teamLabel);
+        if (!mounted) {
+          return;
+        }
+        setCoachAchievements(achievements);
+      } catch {
+        const achievements = await fetchPersonAchievementsByName(
+          defaultCoach.name,
+          defaultCoach.team
+        );
+        if (!mounted) {
+          return;
+        }
+        setCoachAchievements(achievements);
+      }
+    };
+
+    loadCoach();
+
+    return () => {
+      mounted = false;
+    };
+  }, [teamName]);
 
   useLayoutEffect(() => {
     const context = gsap.context(() => {
-      gsap.from(".player-detail-card, .player-gallery-card", {
+      gsap.from(".player-detail-card, .achievement-card", {
         opacity: 0,
         y: 22,
         duration: 0.55,
@@ -116,24 +184,7 @@ export default function PlayerPage() {
       });
     }, pageRef);
     return () => context.revert();
-  }, [player]);
-
-  const photoCards = useMemo(() => {
-    if (!player) {
-      return [];
-    }
-
-    const images = uniqueImages(player.gallery?.length > 0 ? player.gallery : [player.image]);
-    const source = images.length > 0 ? images : [""];
-
-    return Array.from({ length: 9 }, (_, index) => ({
-      id: `player-${player.id ?? "selected"}-${index}`,
-      name: player.name,
-      team: player.team,
-      role: translatePosition(player.position),
-      image: source[index % source.length],
-    }));
-  }, [player]);
+  }, [player, playerAchievements, coach, coachAchievements]);
 
   if (loading) {
     return <section className="page-card">Carregando detalhes do jogador...</section>;
@@ -195,39 +246,56 @@ export default function PlayerPage() {
           <p className="player-description">{shorten(player.description)}</p>
         </div>
 
-        <section aria-label="Galeria com 9 fotos do jogador selecionado">
+        <section aria-label="Lista de conquistas do jogador e tecnico">
           <header className="squad-header">
-            <h3 className="squad-title">Galeria do jogador</h3>
+            <h3 className="squad-title">Conquistas</h3>
             <p className="players-hint squad-subtitle">
-              Exibindo 9 cards com fotos da pessoa selecionada.
+              Lista de titulos e premiacoes registradas para jogador e tecnico.
             </p>
           </header>
 
-          <div className="player-grid player-gallery-grid">
-            {photoCards.map((card, index) => (
-              <article className="player-preview-card player-gallery-card" key={card.id}>
-                <div className="player-card-media">
-                  {card.image ? (
-                    <img
-                      src={card.image}
-                      alt={`${card.name} - foto ${index + 1} de 9`}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="player-card-fallback">{getInitials(card.name)}</div>
-                  )}
-                </div>
+          <div className="achievements-grid">
+            <article className="achievement-card">
+              <h4>{player.name}</h4>
+              <p className="achievement-summary">
+                {playerAchievements.length} conquistas registradas
+              </p>
 
-                <section className="player-card-content">
-                  <h3>{card.name}</h3>
-                  <p>{card.team}</p>
-                  <div className="player-card-meta">
-                    <span className="player-card-tag">Jogador</span>
-                    <span className="player-card-action">{card.role}</span>
-                  </div>
-                </section>
-              </article>
-            ))}
+              {playerAchievements.length > 0 ? (
+                <ul className="achievement-list" aria-label="Conquistas do jogador">
+                  {playerAchievements.map((achievement) => (
+                    <li className="achievement-item" key={achievement.id}>
+                      <strong>{achievement.title}</strong>
+                      <span>{achievement.team}</span>
+                      <small>{achievement.season}</small>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="achievement-empty">Sem conquistas disponiveis na API.</p>
+              )}
+            </article>
+
+            <article className="achievement-card">
+              <h4>{coach.name}</h4>
+              <p className="achievement-summary">
+                {coach.role} | {coachAchievements.length} conquistas registradas
+              </p>
+
+              {coachAchievements.length > 0 ? (
+                <ul className="achievement-list" aria-label="Conquistas do tecnico">
+                  {coachAchievements.map((achievement) => (
+                    <li className="achievement-item" key={achievement.id}>
+                      <strong>{achievement.title}</strong>
+                      <span>{achievement.team}</span>
+                      <small>{achievement.season}</small>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="achievement-empty">Sem conquistas disponiveis na API.</p>
+              )}
+            </article>
           </div>
         </section>
       </article>

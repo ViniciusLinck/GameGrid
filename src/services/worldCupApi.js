@@ -42,6 +42,7 @@ function fallbackPlayer(teamName, position, index) {
     description: "Dados detalhados ainda nao disponiveis na API para este atleta.",
     image: "",
     gallery: [],
+    achievements: [],
   };
 }
 
@@ -131,7 +132,33 @@ function toPlayerView(player, teamName) {
     description: player.strDescriptionPT ?? player.strDescriptionEN ?? "Sem descricao disponivel.",
     image: gallery[0] ?? "",
     gallery,
+    achievements: [],
   };
+}
+
+function toAchievementView(honour, index) {
+  return {
+    id: honour.id ?? `${honour.idHonour ?? honour.strHonour ?? "honour"}-${index}`,
+    title: honour.strHonour ?? "Conquista",
+    season: honour.strSeason ?? "Temporada nao informada",
+    team: honour.strTeam ?? "Time nao informado",
+  };
+}
+
+async function fetchHonoursByPlayerId(playerId) {
+  if (!playerId) {
+    return [];
+  }
+
+  try {
+    const data = await fetchJson(
+      `${SPORTS_DB_BASE}/lookuphonours.php?id=${encodeURIComponent(playerId)}`
+    );
+    const honours = data.honours ?? [];
+    return honours.map((honour, index) => toAchievementView(honour, index));
+  } catch {
+    return [];
+  }
 }
 
 async function fetchCoachGallery(coachName, teamName) {
@@ -155,6 +182,32 @@ async function fetchCoachGallery(coachName, teamName) {
     }
 
     return extractPlayerGallery(bestMatch);
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchPersonAchievementsByName(personName, teamName = "") {
+  const safeName = (personName ?? "").trim();
+  if (!safeName || /^tecnico de /i.test(safeName)) {
+    return [];
+  }
+
+  try {
+    const data = await fetchJson(
+      `${SPORTS_DB_BASE}/searchplayers.php?p=${encodeURIComponent(safeName)}`
+    );
+    const candidates = data.player ?? [];
+    if (candidates.length === 0) {
+      return [];
+    }
+
+    const normalizedTeam = normalizeTeamName(teamName);
+    const selectedPlayer =
+      candidates.find((candidate) => normalizeTeamName(candidate.strTeam ?? "") === normalizedTeam) ??
+      candidates[0];
+
+    return fetchHonoursByPlayerId(selectedPlayer.idPlayer);
   } catch {
     return [];
   }
@@ -346,7 +399,12 @@ export async function fetchPlayerById(playerId, teamName = "Time") {
     if (!player) {
       return null;
     }
-    return toPlayerView(player, teamName);
+    const view = toPlayerView(player, teamName);
+    const achievements = await fetchHonoursByPlayerId(player.idPlayer);
+    return {
+      ...view,
+      achievements,
+    };
   } catch {
     return null;
   }
