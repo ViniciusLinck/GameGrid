@@ -4,10 +4,48 @@ import { normalizeTeamName } from "../utils/flags";
 
 const SPORTS_DB_BASE = "https://www.thesportsdb.com/api/v1/json/3";
 const SOCCER_WC_LEAGUE_ID = "4429";
+const TRANSLATION_API_BASE = "https://api.mymemory.translated.net/get";
+const translationCache = new Map();
 
 const teamNameAliases = {
   "united states": "USA",
   "south korea": "Korea Republic",
+  "estados unidos": "USA",
+  "coreia do sul": "Korea Republic",
+  suica: "Switzerland",
+  croacia: "Croatia",
+  gana: "Ghana",
+  "arabia saudita": "Saudi Arabia",
+  polonia: "Poland",
+  japao: "Japan",
+  brasil: "Brazil",
+  dinamarca: "Denmark",
+  camaroes: "Cameroon",
+  eslovaquia: "Slovakia",
+  belgica: "Belgium",
+  argelia: "Algeria",
+  noruega: "Norway",
+  uruguai: "Uruguay",
+  alemanha: "Germany",
+  egito: "Egypt",
+  "pais de gales": "Wales",
+  "paises baixos": "Netherlands",
+  romenia: "Romania",
+  marrocos: "Morocco",
+  escocia: "Scotland",
+  paraguai: "Paraguay",
+  italia: "Italy",
+  catar: "Qatar",
+  franca: "France",
+  turquia: "Turkey",
+  hungria: "Hungary",
+  equador: "Ecuador",
+  espanha: "Spain",
+  suecia: "Sweden",
+  "republica tcheca": "Czech Republic",
+  inglaterra: "England",
+  servia: "Serbia",
+  ucrania: "Ukraine",
 };
 
 const isUnknownTeam = (teamName) =>
@@ -48,17 +86,17 @@ function fallbackPlayer(teamName, position, index) {
 
 function fallbackPlayersByTeam(teamName) {
   const positions = [
-    "Goalkeeper",
-    "Right-Back",
-    "Centre-Back",
-    "Centre-Back",
-    "Left-Back",
-    "Defensive Midfield",
-    "Central Midfield",
-    "Central Midfield",
-    "Right Winger",
-    "Centre-Forward",
-    "Left Winger",
+    "Goleiro",
+    "Lateral direito",
+    "Zagueiro",
+    "Zagueiro",
+    "Lateral esquerdo",
+    "Volante",
+    "Meio-campista central",
+    "Meio-campista central",
+    "Ponta direita",
+    "Centroavante",
+    "Ponta esquerda",
   ];
 
   return positions.map((position, index) => fallbackPlayer(teamName, position, index));
@@ -129,11 +167,61 @@ function toPlayerView(player, teamName) {
     birth: player.dateBorn ?? "Data nao informada",
     height: player.strHeight ?? "Nao informado",
     weight: player.strWeight ?? "Nao informado",
-    description: player.strDescriptionPT ?? player.strDescriptionEN ?? "Sem descricao disponivel.",
+    description: player.strDescriptionPT ?? "Sem descricao disponivel em portugues.",
     image: gallery[0] ?? "",
     gallery,
     achievements: [],
   };
+}
+
+function truncateForTranslation(text, maxLength = 900) {
+  const clean = (text ?? "").replace(/\s+/g, " ").trim();
+  if (clean.length <= maxLength) {
+    return clean;
+  }
+  return `${clean.slice(0, maxLength)}...`;
+}
+
+async function translateEnglishToPortuguese(text) {
+  const base = truncateForTranslation(text);
+  if (!base) {
+    return "";
+  }
+
+  if (translationCache.has(base)) {
+    return translationCache.get(base);
+  }
+
+  try {
+    const data = await fetchJson(
+      `${TRANSLATION_API_BASE}?q=${encodeURIComponent(base)}&langpair=en|pt`
+    );
+    const translated = data?.responseData?.translatedText?.trim();
+    const isValid = translated && !/^INVALID LANGUAGE PAIR/i.test(translated);
+
+    if (!isValid) {
+      translationCache.set(base, "");
+      return "";
+    }
+
+    translationCache.set(base, translated);
+    return translated;
+  } catch {
+    return "";
+  }
+}
+
+async function getPortugueseDescription(descriptionPt, descriptionEn) {
+  if (descriptionPt && descriptionPt.trim()) {
+    return descriptionPt.trim();
+  }
+
+  const translated = await translateEnglishToPortuguese(descriptionEn);
+  if (translated) {
+    return translated;
+  }
+
+  return "Descricao disponivel apenas em ingles no momento.";
 }
 
 function toAchievementView(honour, index) {
@@ -356,10 +444,12 @@ export async function fetchTeamDetails(teamName) {
     return {
       teamName: team.strTeam ?? teamName,
       badge: team.strBadge ?? "",
-      country: team.strCountry ?? "N/A",
-      founded: team.intFormedYear ?? "N/A",
-      stadium: team.strStadium ?? "N/A",
-      description: shortDescription(team.strDescriptionPT ?? team.strDescriptionEN),
+      country: team.strCountry ?? "N/D",
+      founded: team.intFormedYear ?? "N/D",
+      stadium: team.strStadium ?? "N/D",
+      description: shortDescription(
+        await getPortugueseDescription(team.strDescriptionPT, team.strDescriptionEN)
+      ),
       profile: getWorldCupProfile(team.strTeam ?? teamName),
       players: players.length > 0 ? players : fallbackPlayersByTeam(team.strTeam ?? teamName),
       coach: {
@@ -400,6 +490,10 @@ export async function fetchPlayerById(playerId, teamName = "Time") {
       return null;
     }
     const view = toPlayerView(player, teamName);
+    view.description = await getPortugueseDescription(
+      player.strDescriptionPT,
+      player.strDescriptionEN
+    );
     const achievements = await fetchHonoursByPlayerId(player.idPlayer);
     return {
       ...view,

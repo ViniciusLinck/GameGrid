@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { useMotionPreferences } from "../hooks/useMotionPreferences";
+import { motionTokens } from "../animations/motionTokens";
 
 export default function IntroKickoff({ onFinish }) {
   const [hidden, setHidden] = useState(false);
@@ -9,6 +11,7 @@ export default function IntroKickoff({ onFinish }) {
   const streakRef = useRef(null);
   const titleRef = useRef(null);
   const timelineRef = useRef(null);
+  const { shouldAnimate } = useMotionPreferences();
 
   useEffect(() => {
     const overlay = overlayRef.current;
@@ -21,11 +24,7 @@ export default function IntroKickoff({ onFinish }) {
       return undefined;
     }
 
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (prefersReducedMotion) {
+    if (!shouldAnimate) {
       setHidden(true);
       onFinish?.();
       return undefined;
@@ -43,7 +42,7 @@ export default function IntroKickoff({ onFinish }) {
     };
 
     const tl = gsap.timeline({
-      defaults: { ease: "power2.out" },
+      defaults: { ease: motionTokens.ease.soft },
       onComplete: finishIntro,
     });
 
@@ -52,12 +51,18 @@ export default function IntroKickoff({ onFinish }) {
     tl.fromTo(
       title,
       { autoAlpha: 0, y: 22 },
-      { autoAlpha: 1, y: 0, duration: 0.45 }
+      { autoAlpha: 1, y: 0, duration: motionTokens.duration.fast }
     )
       .fromTo(
         ball,
         { scale: 0.22, autoAlpha: 0, rotation: -160 },
-        { scale: 1, autoAlpha: 1, rotation: 0, duration: 0.58, ease: "back.out(1.9)" },
+        {
+          scale: 1,
+          autoAlpha: 1,
+          rotation: 0,
+          duration: motionTokens.duration.medium,
+          ease: motionTokens.ease.emphasis,
+        },
         0.08
       )
       .fromTo(
@@ -66,7 +71,7 @@ export default function IntroKickoff({ onFinish }) {
         { autoAlpha: 0.45, scale: 1, duration: 0.5 },
         0.08
       )
-      .to(ball, { y: -92, duration: 0.42, ease: "power3.out" }, 0.74)
+      .to(ball, { y: -92, duration: 0.42, ease: motionTokens.ease.enter }, 0.74)
       .to(shadow, { scale: 0.52, autoAlpha: 0.16, duration: 0.42 }, 0.74)
       .to(ball, { y: 0, duration: 0.54, ease: "bounce.out" }, 1.16)
       .to(shadow, { scale: 1, autoAlpha: 0.45, duration: 0.4 }, 1.16)
@@ -104,7 +109,7 @@ export default function IntroKickoff({ onFinish }) {
           clipPath: "circle(0% at 90% 50%)",
           autoAlpha: 0,
           duration: 0.82,
-          ease: "power4.inOut",
+          ease: motionTokens.ease.exit,
         },
         1.84
       );
@@ -113,7 +118,7 @@ export default function IntroKickoff({ onFinish }) {
       document.body.style.overflow = previousOverflow;
       tl.kill();
     };
-  }, [onFinish]);
+  }, [onFinish, shouldAnimate]);
 
   const skipIntro = () => {
     timelineRef.current?.progress(1);

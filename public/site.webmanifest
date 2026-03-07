@@ -1,0 +1,15 @@
+{
+  "name": "GameGrid - Copa do Mundo 2026",
+  "short_name": "GameGrid",
+  "start_url": "/GameGrid/",
+  "display": "standalone",
+  "background_color": "#050816",
+  "theme_color": "#050816",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

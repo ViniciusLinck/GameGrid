@@ -1,149 +1,73 @@
-const UNKNOWN_PROFILE = {
-  worldCups: "N/A",
-  bestFinish: "N/A",
-  fifaRank: "N/A",
+﻿const PERFIL_DESCONHECIDO = {
+  worldCups: "N/D",
+  bestFinish: "N/D",
+  fifaRank: "N/D",
   last5WorldCups: ["-", "-", "-", "-", "-"],
 };
 
-const WORLD_CUP_INSIGHTS = {
-  argentina: {
-    worldCups: 3,
-    bestFinish: "Campeão",
-    fifaRank: 1,
-    last5WorldCups: ["C", "O", "G", "F", "V"],
-  },
-  brazil: {
-    worldCups: 5,
-    bestFinish: "Campeão",
-    fifaRank: 5,
-    last5WorldCups: ["QF", "4", "QF", "QF", "QF"],
-  },
-  england: {
-    worldCups: 1,
-    bestFinish: "Campeão",
-    fifaRank: 4,
-    last5WorldCups: ["QF", "GS", "16", "4", "QF"],
-  },
-  france: {
-    worldCups: 2,
-    bestFinish: "Campeão",
-    fifaRank: 2,
-    last5WorldCups: ["V", "QF", "V", "16", "F"],
-  },
-  germany: {
-    worldCups: 4,
-    bestFinish: "Campeão",
-    fifaRank: 16,
-    last5WorldCups: ["3", "V", "GS", "GS", "GS"],
-  },
-  spain: {
-    worldCups: 1,
-    bestFinish: "Campeão",
-    fifaRank: 8,
-    last5WorldCups: ["V", "GS", "16", "16", "16"],
-  },
-  portugal: {
-    worldCups: 0,
-    bestFinish: "3º lugar",
-    fifaRank: 7,
-    last5WorldCups: ["16", "GS", "16", "16", "QF"],
-  },
-  netherlands: {
-    worldCups: 0,
-    bestFinish: "Vice-campeão",
-    fifaRank: 6,
-    last5WorldCups: ["F", "3", "GS", "DNQ", "QF"],
-  },
-  belgium: {
-    worldCups: 0,
-    bestFinish: "3º lugar",
-    fifaRank: 3,
-    last5WorldCups: ["16", "QF", "QF", "3", "GS"],
-  },
-  uruguay: {
-    worldCups: 2,
-    bestFinish: "Campeão",
-    fifaRank: 11,
-    last5WorldCups: ["4", "4", "16", "QF", "GS"],
-  },
-  croatia: {
-    worldCups: 0,
-    bestFinish: "Vice-campeão",
-    fifaRank: 9,
-    last5WorldCups: ["GS", "3", "GS", "F", "3"],
-  },
-  denmark: {
-    worldCups: 0,
-    bestFinish: "Quartas",
-    fifaRank: 21,
-    last5WorldCups: ["GS", "DNQ", "16", "DNQ", "GS"],
-  },
-  poland: {
-    worldCups: 0,
-    bestFinish: "3º lugar",
-    fifaRank: 28,
-    last5WorldCups: ["GS", "GS", "DNQ", "GS", "16"],
-  },
-  mexico: {
-    worldCups: 0,
-    bestFinish: "Quartas",
-    fifaRank: 17,
-    last5WorldCups: ["16", "16", "16", "16", "GS"],
-  },
-  "united states": {
-    worldCups: 0,
-    bestFinish: "3º lugar",
-    fifaRank: 13,
-    last5WorldCups: ["16", "GS", "DNQ", "16", "16"],
-  },
-  canada: {
-    worldCups: 0,
-    bestFinish: "GS",
-    fifaRank: 49,
-    last5WorldCups: ["DNQ", "DNQ", "DNQ", "DNQ", "GS"],
-  },
-  japan: {
-    worldCups: 0,
-    bestFinish: "16 avos",
-    fifaRank: 18,
-    last5WorldCups: ["16", "16", "16", "16", "16"],
-  },
-  "south korea": {
-    worldCups: 0,
-    bestFinish: "4º lugar",
-    fifaRank: 23,
-    last5WorldCups: ["16", "GS", "GS", "GS", "16"],
-  },
-  switzerland: {
-    worldCups: 0,
-    bestFinish: "Quartas",
-    fifaRank: 20,
-    last5WorldCups: ["GS", "16", "16", "16", "16"],
-  },
-  serbia: {
-    worldCups: 0,
-    bestFinish: "4º lugar",
-    fifaRank: 33,
-    last5WorldCups: ["GS", "DNQ", "GS", "GS", "GS"],
-  },
-  morocco: {
-    worldCups: 0,
-    bestFinish: "4º lugar",
-    fifaRank: 12,
-    last5WorldCups: ["GS", "GS", "GS", "GS", "4"],
-  },
-  qatar: {
-    worldCups: 0,
-    bestFinish: "GS",
-    fifaRank: 58,
-    last5WorldCups: ["DNQ", "DNQ", "DNQ", "DNQ", "GS"],
-  },
-  ecuador: {
-    worldCups: 0,
-    bestFinish: "16 avos",
-    fifaRank: 31,
-    last5WorldCups: ["GS", "DNQ", "GS", "DNQ", "GS"],
-  },
+const INFORMACOES_COPA = {
+  argentina: { worldCups: 3, bestFinish: "Campeao", fifaRank: 1, last5WorldCups: ["C", "O", "FG", "F", "V"] },
+  brazil: { worldCups: 5, bestFinish: "Campeao", fifaRank: 5, last5WorldCups: ["Q", "4", "Q", "Q", "Q"] },
+  england: { worldCups: 1, bestFinish: "Campeao", fifaRank: 4, last5WorldCups: ["Q", "FG", "16", "4", "Q"] },
+  france: { worldCups: 2, bestFinish: "Campeao", fifaRank: 2, last5WorldCups: ["V", "Q", "V", "16", "F"] },
+  germany: { worldCups: 4, bestFinish: "Campeao", fifaRank: 16, last5WorldCups: ["3", "V", "FG", "FG", "FG"] },
+  spain: { worldCups: 1, bestFinish: "Campeao", fifaRank: 8, last5WorldCups: ["V", "FG", "16", "16", "16"] },
+  portugal: { worldCups: 0, bestFinish: "3o lugar", fifaRank: 7, last5WorldCups: ["16", "FG", "16", "16", "Q"] },
+  netherlands: { worldCups: 0, bestFinish: "Vice-campeao", fifaRank: 6, last5WorldCups: ["F", "3", "FG", "NQ", "Q"] },
+  belgium: { worldCups: 0, bestFinish: "3o lugar", fifaRank: 3, last5WorldCups: ["16", "Q", "Q", "3", "FG"] },
+  uruguay: { worldCups: 2, bestFinish: "Campeao", fifaRank: 11, last5WorldCups: ["4", "4", "16", "Q", "FG"] },
+  croatia: { worldCups: 0, bestFinish: "Vice-campeao", fifaRank: 9, last5WorldCups: ["FG", "3", "FG", "F", "3"] },
+  denmark: { worldCups: 0, bestFinish: "Quartas", fifaRank: 21, last5WorldCups: ["FG", "NQ", "16", "NQ", "FG"] },
+  poland: { worldCups: 0, bestFinish: "3o lugar", fifaRank: 28, last5WorldCups: ["FG", "FG", "NQ", "FG", "16"] },
+  mexico: { worldCups: 0, bestFinish: "Quartas", fifaRank: 17, last5WorldCups: ["16", "16", "16", "16", "FG"] },
+  "united states": { worldCups: 0, bestFinish: "3o lugar", fifaRank: 13, last5WorldCups: ["16", "FG", "NQ", "16", "16"] },
+  canada: { worldCups: 0, bestFinish: "Fase de grupos", fifaRank: 49, last5WorldCups: ["NQ", "NQ", "NQ", "NQ", "FG"] },
+  japan: { worldCups: 0, bestFinish: "Oitavas", fifaRank: 18, last5WorldCups: ["16", "16", "16", "16", "16"] },
+  "south korea": { worldCups: 0, bestFinish: "4o lugar", fifaRank: 23, last5WorldCups: ["16", "FG", "FG", "FG", "16"] },
+  switzerland: { worldCups: 0, bestFinish: "Quartas", fifaRank: 20, last5WorldCups: ["FG", "16", "16", "16", "16"] },
+  serbia: { worldCups: 0, bestFinish: "4o lugar", fifaRank: 33, last5WorldCups: ["FG", "NQ", "FG", "FG", "FG"] },
+  morocco: { worldCups: 0, bestFinish: "4o lugar", fifaRank: 12, last5WorldCups: ["FG", "FG", "FG", "FG", "4"] },
+  qatar: { worldCups: 0, bestFinish: "Fase de grupos", fifaRank: 58, last5WorldCups: ["NQ", "NQ", "NQ", "NQ", "FG"] },
+  ecuador: { worldCups: 0, bestFinish: "Oitavas", fifaRank: 31, last5WorldCups: ["FG", "NQ", "FG", "NQ", "FG"] },
+};
+
+const ALIAS_PARA_CHAVE = {
+  brasil: "brazil",
+  "estados unidos": "united states",
+  "coreia do sul": "south korea",
+  suica: "switzerland",
+  croacia: "croatia",
+  gana: "ghana",
+  "arabia saudita": "saudi arabia",
+  polonia: "poland",
+  japao: "japan",
+  dinamarca: "denmark",
+  camaroes: "cameroon",
+  eslovaquia: "slovakia",
+  belgica: "belgium",
+  argelia: "algeria",
+  noruega: "norway",
+  uruguai: "uruguay",
+  alemanha: "germany",
+  egito: "egypt",
+  "pais de gales": "wales",
+  "paises baixos": "netherlands",
+  romenia: "romania",
+  marrocos: "morocco",
+  escocia: "scotland",
+  paraguai: "paraguay",
+  italia: "italy",
+  catar: "qatar",
+  franca: "france",
+  turquia: "turkey",
+  hungria: "hungary",
+  equador: "ecuador",
+  espanha: "spain",
+  suecia: "sweden",
+  "republica tcheca": "czech republic",
+  inglaterra: "england",
+  servia: "serbia",
+  ucrania: "ukraine",
 };
 
 function normalize(value) {
@@ -156,5 +80,7 @@ function normalize(value) {
 }
 
 export function getWorldCupProfile(teamName) {
-  return WORLD_CUP_INSIGHTS[normalize(teamName)] ?? UNKNOWN_PROFILE;
+  const normalized = normalize(teamName);
+  const key = normalize(ALIAS_PARA_CHAVE[normalized] ?? normalized);
+  return INFORMACOES_COPA[key] ?? PERFIL_DESCONHECIDO;
 }

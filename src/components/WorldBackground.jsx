@@ -1,7 +1,20 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
+import { useMotionPreferences } from "../hooks/useMotionPreferences";
 
-export default function WorldBackground() {
+const MOOD_PRESETS = {
+  idle: { speed: 0.0022, glow: 0.24, starOpacity: 0.72, cometChance: 0.0012 },
+  focus: { speed: 0.0036, glow: 0.34, starOpacity: 0.88, cometChance: 0.0023 },
+  transition: { speed: 0.0056, glow: 0.45, starOpacity: 0.95, cometChance: 0.0042 },
+};
+
+export default function WorldBackground({ mood = "idle" }) {
   const canvasRef = useRef(null);
+  const moodRef = useRef(mood);
+  const { shouldAnimate } = useMotionPreferences();
+
+  useEffect(() => {
+    moodRef.current = mood;
+  }, [mood]);
 
   useEffect(() => {
     let disposed = false;
@@ -18,12 +31,15 @@ export default function WorldBackground() {
         return;
       }
 
+      const isNarrowScreen = window.innerWidth < 900;
+      const lowPowerMode = !shouldAnimate || isNarrowScreen;
+
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(
         50,
         window.innerWidth / window.innerHeight,
         0.1,
-        200
+        220
       );
       camera.position.z = 9;
 
@@ -32,23 +48,22 @@ export default function WorldBackground() {
         antialias: true,
         alpha: true,
       });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPowerMode ? 1.5 : 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
 
-      const globe = new THREE.Mesh(
-        new THREE.SphereGeometry(2.6, 40, 40),
-        new THREE.MeshBasicMaterial({
-          color: "#16a6b6",
-          wireframe: true,
-          transparent: true,
-          opacity: 0.26,
-        })
-      );
+      const globeMaterial = new THREE.MeshBasicMaterial({
+        color: "#16a6b6",
+        wireframe: true,
+        transparent: true,
+        opacity: 0.26,
+      });
 
-      const starCount = 750;
+      const globe = new THREE.Mesh(new THREE.SphereGeometry(2.6, 40, 40), globeMaterial);
+
+      const starCount = lowPowerMode ? 320 : 760;
       const starPositions = new Float32Array(starCount * 3);
       for (let i = 0; i < starCount; i += 1) {
-        const radius = 5.4 + Math.random() * 2.6;
+        const radius = 5.4 + Math.random() * 2.8;
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(2 * Math.random() - 1);
         starPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
@@ -57,37 +72,106 @@ export default function WorldBackground() {
       }
 
       const starsGeometry = new THREE.BufferGeometry();
-      starsGeometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(starPositions, 3)
-      );
-      const stars = new THREE.Points(
-        starsGeometry,
-        new THREE.PointsMaterial({
-          color: "#f5d061",
-          size: 0.03,
-          transparent: true,
-          opacity: 0.8,
-        })
-      );
+      starsGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+      const starsMaterial = new THREE.PointsMaterial({
+        color: "#f5d061",
+        size: lowPowerMode ? 0.028 : 0.032,
+        transparent: true,
+        opacity: 0.8,
+      });
+      const stars = new THREE.Points(starsGeometry, starsMaterial);
+
+      const cometGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+      const cometMaterial = new THREE.MeshBasicMaterial({ color: "#fde68a", transparent: true, opacity: 0 });
+      const comet = new THREE.Mesh(cometGeometry, cometMaterial);
+      comet.position.set(-20, -20, -20);
 
       scene.add(globe);
       scene.add(stars);
+      scene.add(comet);
+
+      const pointer = { x: 0, y: 0 };
+      const scrollDrift = { y: 0 };
+      let cometActive = false;
+      let cometLife = 0;
+      let cometVelocity = { x: 0.12, y: -0.05, z: 0.02 };
+      let isHidden = false;
+      const clock = new THREE.Clock();
+
+      const spawnComet = () => {
+        comet.position.set(-4 + Math.random() * 8, 2.6 + Math.random() * 2.2, -2.5 + Math.random() * 1.5);
+        cometVelocity = {
+          x: 0.13 + Math.random() * 0.06,
+          y: -0.06 - Math.random() * 0.05,
+          z: 0.01 + Math.random() * 0.03,
+        };
+        cometLife = 1;
+        cometActive = true;
+      };
+
+      const onPointerMove = (event) => {
+        pointer.x = (event.clientX / window.innerWidth - 0.5) * 2;
+        pointer.y = (event.clientY / window.innerHeight - 0.5) * 2;
+      };
+
+      const onScroll = () => {
+        scrollDrift.y = Math.min(window.scrollY / 1200, 1.2);
+      };
+
+      const onVisibility = () => {
+        isHidden = document.hidden;
+      };
 
       const onResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPowerMode ? 1.5 : 2));
       };
 
       window.addEventListener("resize", onResize);
+      window.addEventListener("pointermove", onPointerMove, { passive: true });
+      window.addEventListener("scroll", onScroll, { passive: true });
+      document.addEventListener("visibilitychange", onVisibility);
 
       let animationFrame = 0;
       const animate = () => {
-        globe.rotation.y += 0.0024;
-        stars.rotation.y -= 0.0008;
-        stars.rotation.x += 0.0004;
+        if (isHidden) {
+          animationFrame = window.requestAnimationFrame(animate);
+          return;
+        }
+
+        const moodConfig = MOOD_PRESETS[moodRef.current] ?? MOOD_PRESETS.idle;
+        const elapsed = clock.getElapsedTime();
+
+        globe.rotation.y += moodConfig.speed;
+        globe.rotation.x = pointer.y * 0.035;
+        globeMaterial.opacity = moodConfig.glow + Math.sin(elapsed * 1.4) * 0.03;
+
+        stars.rotation.y -= moodConfig.speed * 0.33;
+        stars.rotation.x += 0.00035 + scrollDrift.y * 0.00045;
+        stars.position.x += (pointer.x * 0.16 - stars.position.x) * 0.03;
+        stars.position.y += (-pointer.y * 0.12 - stars.position.y) * 0.03;
+        starsMaterial.opacity += (moodConfig.starOpacity - starsMaterial.opacity) * 0.08;
+
+        if (!cometActive && Math.random() < moodConfig.cometChance && !lowPowerMode) {
+          spawnComet();
+        }
+
+        if (cometActive) {
+          comet.position.x += cometVelocity.x;
+          comet.position.y += cometVelocity.y;
+          comet.position.z += cometVelocity.z;
+          cometLife -= 0.012;
+          cometMaterial.opacity = Math.max(0, cometLife * 0.9);
+
+          if (cometLife <= 0 || comet.position.x > 7) {
+            cometActive = false;
+            comet.position.set(-20, -20, -20);
+            cometMaterial.opacity = 0;
+          }
+        }
+
         renderer.render(scene, camera);
         animationFrame = window.requestAnimationFrame(animate);
       };
@@ -96,12 +180,17 @@ export default function WorldBackground() {
 
       cleanup = () => {
         window.removeEventListener("resize", onResize);
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("scroll", onScroll);
+        document.removeEventListener("visibilitychange", onVisibility);
         window.cancelAnimationFrame(animationFrame);
         renderer.dispose();
         globe.geometry.dispose();
-        globe.material.dispose();
+        globeMaterial.dispose();
         starsGeometry.dispose();
-        stars.material.dispose();
+        starsMaterial.dispose();
+        cometGeometry.dispose();
+        cometMaterial.dispose();
       };
     };
 
@@ -111,7 +200,7 @@ export default function WorldBackground() {
       disposed = true;
       cleanup();
     };
-  }, []);
+  }, [shouldAnimate]);
 
   return <canvas className="world-bg-canvas" ref={canvasRef} />;
 }

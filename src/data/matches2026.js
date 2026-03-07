@@ -29,18 +29,18 @@ const groupPairMatrix = [
 ];
 
 const groupTeams = {
-  A: ["Mexico", "Switzerland", "Senegal", "South Korea"],
-  B: ["Canada", "Croatia", "Ghana", "Saudi Arabia"],
-  C: ["United States", "Poland", "Tunisia", "Japan"],
-  D: ["Brazil", "Denmark", "Cameroon", "Slovakia"],
-  E: ["Argentina", "Belgium", "Algeria", "Norway"],
-  F: ["Uruguay", "Germany", "Egypt", "Wales"],
-  G: ["Colombia", "Netherlands", "Nigeria", "Romania"],
-  H: ["Chile", "Portugal", "Morocco", "Scotland"],
-  I: ["Paraguay", "Italy", "Qatar", "Austria"],
-  J: ["Peru", "France", "Turkey", "Hungary"],
-  K: ["Ecuador", "Spain", "Sweden", "Czech Republic"],
-  L: ["Costa Rica", "England", "Serbia", "Ukraine"],
+  A: ["Mexico", "Suica", "Senegal", "Coreia do Sul"],
+  B: ["Canada", "Croacia", "Gana", "Arabia Saudita"],
+  C: ["Estados Unidos", "Polonia", "Tunisia", "Japao"],
+  D: ["Brasil", "Dinamarca", "Camaroes", "Eslovaquia"],
+  E: ["Argentina", "Belgica", "Argelia", "Noruega"],
+  F: ["Uruguai", "Alemanha", "Egito", "Pais de Gales"],
+  G: ["Colombia", "Paises Baixos", "Nigeria", "Romenia"],
+  H: ["Chile", "Portugal", "Marrocos", "Escocia"],
+  I: ["Paraguai", "Italia", "Catar", "Austria"],
+  J: ["Peru", "Franca", "Turquia", "Hungria"],
+  K: ["Equador", "Espanha", "Suecia", "Republica Tcheca"],
+  L: ["Costa Rica", "Inglaterra", "Servia", "Ucrania"],
 };
 
 const stagePlan = [
@@ -99,7 +99,7 @@ const stagePlan = [
     ],
   },
   {
-    label: "Disputa de 3 lugar",
+    label: "Disputa de 3º lugar",
     count: 1,
     startDate: "2026-07-18",
     spanInDays: 1,

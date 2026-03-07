@@ -39,7 +39,7 @@ export default function MatchCard({ match }) {
           <TeamBadge name={match.homeTeam.name} />
         </Link>
 
-        <span className="versus">VS</span>
+        <span className="versus">x</span>
 
         <Link to={teamRoute(match.awayTeam.name)} className="team-link">
           <TeamBadge name={match.awayTeam.name} />

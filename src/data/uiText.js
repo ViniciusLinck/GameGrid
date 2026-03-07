@@ -1,0 +1,46 @@
+export const uiText = {
+  common: {
+    loadingTeam: "Carregando detalhes do time...",
+    loadingPlayer: "Carregando detalhes do jogador...",
+    loadingMatches: "Carregando jogos...",
+    notAvailable: "N/D",
+    backToTop: "Voltar ao topo",
+  },
+  navigation: {
+    skipToContent: "Pular para o conteudo principal",
+    home: "Jogos",
+    team: "Time",
+    player: "Jogador",
+    nowYouAreHere: "Voce esta em",
+  },
+  home: {
+    title: "Copa do Mundo Masculina 2026",
+    subtitle:
+      "Calendario interativo com 104 jogos, filtros por fase e detalhes de times e jogadores.",
+    totalMatches: (count) => `${count} jogos no total`,
+    nextMatch: (value) => `Proximo: ${value}`,
+    stage: "Fase:",
+    searchTeam: "Buscar selecao:",
+    searchPlaceholder: "Ex.: Brasil, Franca, Argentina",
+    clearSearch: "Limpar",
+    allStages: "Todas as fases",
+    noMatchesWithFilter: "Nenhum jogo encontrado com os filtros atuais.",
+  },
+  team: {
+    backToMatches: "<- Voltar para jogos",
+    loadError: "Nao foi possivel carregar os detalhes do time.",
+    backToCalendar: "Voltar ao calendario",
+    founded: "Fundado em:",
+    stadium: "Estadio:",
+    quickNavSummary: "Resumo do time",
+    quickNavSquad: "Elenco principal",
+  },
+  player: {
+    notFound: "Jogador nao encontrado.",
+    backHome: "Voltar para a pagina inicial",
+    backTeam: "<- Voltar ao time",
+    noAchievements: "Sem conquistas disponiveis na API.",
+    quickNavProfile: "Perfil",
+    quickNavAchievements: "Conquistas",
+  },
+};
