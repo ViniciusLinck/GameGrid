@@ -5,6 +5,8 @@ import { normalizeTeamName } from "../utils/flags";
 const SPORTS_DB_BASE = "https://www.thesportsdb.com/api/v1/json/3";
 const SOCCER_WC_LEAGUE_ID = "4429";
 const TRANSLATION_API_BASE = "https://api.mymemory.translated.net/get";
+const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v1";
+const MATCHES_CACHE_TTL_MS = 3 * 60 * 1000;
 const translationCache = new Map();
 
 const teamNameAliases = {
@@ -50,6 +52,38 @@ const teamNameAliases = {
 
 const isUnknownTeam = (teamName) =>
   /^(grupo|classificado|vencedor|perdedor|a definir)/i.test(teamName ?? "");
+
+function readMatchesCache() {
+  try {
+    const raw = localStorage.getItem(MATCHES_CACHE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.savedAt || !parsed?.data) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeMatchesCache(data) {
+  try {
+    localStorage.setItem(
+      MATCHES_CACHE_KEY,
+      JSON.stringify({
+        savedAt: Date.now(),
+        data,
+      })
+    );
+  } catch {
+    // Ignore quota/private mode failures.
+  }
+}
 
 function withStageFallback(stageName, fallbackStage) {
   return stageName || fallbackStage || "Fase de grupos";
@@ -338,6 +372,11 @@ async function getTeamFromApi(teamName) {
 }
 
 export async function fetchWorldCupMatches2026() {
+  const cached = readMatchesCache();
+  if (cached && Date.now() - cached.savedAt < MATCHES_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   try {
     const data = await fetchJson(
       `${SPORTS_DB_BASE}/eventsseason.php?id=${SOCCER_WC_LEAGUE_ID}&s=2026`
@@ -347,10 +386,12 @@ export async function fetchWorldCupMatches2026() {
     );
 
     if (apiEvents.length === 0) {
-      return {
+      const fallbackResult = {
         matches: FALLBACK_MATCHES_2026,
         sourceLabel: "local",
       };
+      writeMatchesCache(fallbackResult);
+      return fallbackResult;
     }
 
     // A API publica ainda nao retorna os 104 jogos completos;
@@ -381,18 +422,26 @@ export async function fetchWorldCupMatches2026() {
       };
     });
 
-    return {
+    const apiResult = {
       matches: mergedMatches,
       sourceLabel: "api+local",
     };
+    writeMatchesCache(apiResult);
+    return apiResult;
   } catch {
-    return {
+    if (cached?.data) {
+      return cached.data;
+    }
+
+    const fallbackResult = {
       matches: FALLBACK_MATCHES_2026.map((match) => ({
         ...match,
         mapsUrl: createMapsUrl(match.venue),
       })),
       sourceLabel: "local",
     };
+    writeMatchesCache(fallbackResult);
+    return fallbackResult;
   }
 }
 

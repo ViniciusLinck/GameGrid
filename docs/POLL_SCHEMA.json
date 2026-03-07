@@ -1,0 +1,18 @@
+﻿{
+  "Vote": {
+    "matchId": 123,
+    "choice": "home",
+    "createdAt": "2026-06-11T15:00:00Z",
+    "clientId": "uuid-v4"
+  },
+  "PollResult": {
+    "matchId": 123,
+    "counts": {
+      "home": 1245,
+      "draw": 312,
+      "away": 832
+    },
+    "total": 2389,
+    "lastUpdated": "2026-06-11T15:10:00Z"
+  }
+}

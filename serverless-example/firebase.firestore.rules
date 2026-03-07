@@ -1,0 +1,15 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /polls/{matchId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /pollVotes/{voteId} {
+      allow read: if false;
+      // Escrita apenas por Cloud Functions (admin SDK). 
+      allow write: if false;
+    }
+  }
+}

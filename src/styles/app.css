@@ -61,7 +61,7 @@
   }
 
   .global-nav-row {
-    @apply flex flex-wrap items-center justify-between gap-3;
+    @apply flex flex-wrap items-center justify-center gap-3 text-center;
   }
 
   .brand-link {
@@ -69,7 +69,7 @@
   }
 
   .global-nav-links {
-    @apply flex flex-wrap items-center gap-2;
+    @apply flex w-full flex-wrap items-center justify-center gap-2;
   }
 
   .global-nav-links a {
@@ -82,7 +82,7 @@
   }
 
   .global-nav-meta {
-    @apply mt-2 flex items-center gap-1 text-[0.78rem] text-ink-400;
+    @apply mt-2 flex items-center justify-center gap-1 text-[0.78rem] text-ink-400 text-center;
   }
 
   .global-nav-meta strong {
@@ -163,32 +163,44 @@
   }
 
   .dashboard-bar {
-    @apply mt-5 grid grid-cols-1 items-center gap-2 rounded-[14px] border border-[#7ebeff2e] bg-[#091022b8] p-3 text-left;
+    @apply mt-5 grid items-stretch gap-2.5 rounded-[14px] border border-[#7ebeff2e] bg-[#091022b8] p-3 text-center;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   }
 
-  .dashboard-bar span,
-  .dashboard-bar label {
-    @apply text-ink-300 text-[0.9rem];
+  .dashboard-item {
+    @apply rounded-xl border border-[#7cbfff30] bg-[#0a1730c2] px-3 py-2.5;
+    min-height: 72px;
   }
 
-  .dashboard-bar > span {
-    @apply rounded-xl border border-[#7cbfff30] bg-[#0a1730c2] px-3 py-2;
+  .dashboard-kpi {
+    @apply flex items-center justify-center text-[0.92rem] text-ink-300;
   }
 
-  .dashboard-bar label {
-    @apply flex items-center gap-2;
+  .dashboard-control {
+    @apply flex flex-col items-center justify-center gap-1.5;
   }
 
-  .dashboard-bar select {
+  .dashboard-label {
+    @apply text-[0.8rem] uppercase tracking-[0.04em] text-ink-400;
+  }
+
+  .dashboard-control select,
+  .dashboard-control input {
     @apply appearance-none rounded-full border border-[#84c6ff57] bg-[#0f1e3ad6] px-3 py-[7px] text-[0.88rem] text-ink-100 outline-none;
+    width: min(100%, 460px);
   }
 
-  .dashboard-search input {
-    @apply w-full rounded-full border border-[#84c6ff57] bg-[#0f1e3ad6] px-3 py-[7px] text-[0.88rem] text-ink-100 outline-none;
+  .dashboard-search {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-action {
+    @apply flex items-center justify-center;
   }
 
   .dashboard-clear-btn {
-    @apply justify-self-start rounded-full border border-[#ffd06173] bg-[#47361099] px-3 py-[7px] text-[0.82rem] font-semibold text-[#ffe7a5];
+    @apply rounded-full border border-[#ffd06173] bg-[#47361099] px-4 py-[7px] text-[0.82rem] font-semibold text-[#ffe7a5];
+    min-width: 160px;
   }
 
   .dashboard-clear-btn:disabled {
@@ -320,6 +332,15 @@
 
   .match-footer p:last-child {
     @apply justify-self-end text-right;
+  }
+
+  .match-actions {
+    @apply mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2;
+  }
+
+  .match-actions button,
+  .match-actions a {
+    @apply text-center;
   }
 
   .venue-link {
@@ -615,7 +636,7 @@
 
   .achievements-grid {
     @apply mt-4 grid gap-3;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .achievement-card {
@@ -800,7 +821,7 @@
 
 @media (min-width: 860px) {
   .dashboard-bar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .dashboard-search {
@@ -816,10 +837,6 @@
   .dashboard-search {
     grid-column: span 2 / span 2;
   }
-
-  .dashboard-clear-btn {
-    justify-self: end;
-  }
 }
 
 @media (max-width: 930px) {
@@ -828,7 +845,11 @@
   }
 
   .global-nav-row {
-    @apply flex-col items-start;
+    @apply flex-col items-center;
+  }
+
+  .match-grid {
+    @apply grid grid-cols-[repeat(auto-fit,minmax(255px,1fr))];
   }
 
   .player-grid {
@@ -859,6 +880,23 @@
 
   .match-grid {
     @apply grid-cols-1 p-2.5;
+  }
+
+  .match-footer {
+    @apply grid-cols-2 items-start gap-y-1.5;
+  }
+
+  .match-footer p:last-child {
+    @apply col-span-2 justify-self-start text-left;
+  }
+
+  .match-actions {
+    @apply grid-cols-1;
+  }
+
+  .match-actions a,
+  .match-actions button {
+    @apply w-full;
   }
 
   .player-grid {

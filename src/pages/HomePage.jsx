@@ -54,21 +54,38 @@ export default function HomePage() {
   useEffect(() => {
     let mounted = true;
 
-    const loadMatches = () =>
+    const loadMatches = ({ force = false } = {}) => {
+      if (!force && (document.hidden || !navigator.onLine)) {
+        return;
+      }
+
       fetchWorldCupMatches2026().then((result) => {
         if (!mounted) {
           return;
         }
         setMatches(result.matches);
       });
+    };
 
-    loadMatches();
+    loadMatches({ force: true });
 
-    const intervalId = window.setInterval(loadMatches, 300000);
+    // Adiciona jitter para reduzir picos simultaneos de requisicoes em larga escala.
+    const jitterMs = Math.floor(Math.random() * 20000);
+    const intervalId = window.setInterval(loadMatches, 300000 + jitterMs);
+    const onVisibility = () => {
+      if (!document.hidden) {
+        loadMatches({ force: true });
+      }
+    };
+    const onOnline = () => loadMatches({ force: true });
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online", onOnline);
 
     return () => {
       mounted = false;
       window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", onOnline);
     };
   }, []);
 
@@ -321,11 +338,13 @@ export default function HomePage() {
         <p className="hero-subtitle">{uiText.home.subtitle}</p>
 
         <div className="dashboard-bar">
-          <span>{uiText.home.totalMatches(displayedTotal)}</span>
-          <span>{uiText.home.nextMatch(displayedNext)}</span>
+          <div className="dashboard-item dashboard-kpi">{uiText.home.totalMatches(displayedTotal)}</div>
+          <div className="dashboard-item dashboard-kpi">{uiText.home.nextMatch(displayedNext)}</div>
 
-          <label htmlFor="stage-select">
-            {uiText.home.stage}
+          <div className="dashboard-item dashboard-control">
+            <label htmlFor="stage-select" className="dashboard-label">
+              {uiText.home.stage}
+            </label>
             <select
               id="stage-select"
               value={selectedStage}
@@ -337,10 +356,12 @@ export default function HomePage() {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
 
-          <label htmlFor="team-search" className="dashboard-search">
-            {uiText.home.searchTeam}
+          <div className="dashboard-item dashboard-control dashboard-search">
+            <label htmlFor="team-search" className="dashboard-label">
+              {uiText.home.searchTeam}
+            </label>
             <input
               id="team-search"
               type="search"
@@ -348,16 +369,18 @@ export default function HomePage() {
               placeholder={uiText.home.searchPlaceholder}
               onChange={(event) => setTeamQuery(event.target.value)}
             />
-          </label>
+          </div>
 
-          <button
-            type="button"
-            className="dashboard-clear-btn"
-            onClick={clearFilters}
-            disabled={!hasActiveFilters}
-          >
-            {uiText.home.clearSearch}
-          </button>
+          <div className="dashboard-item dashboard-action">
+            <button
+              type="button"
+              className="dashboard-clear-btn"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+            >
+              {uiText.home.clearSearch}
+            </button>
+          </div>
         </div>
 
         <nav className="hero-shortcuts" aria-label="Atalhos da pagina">
