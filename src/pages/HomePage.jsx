@@ -246,38 +246,47 @@ export default function HomePage() {
         const header = day.querySelector(".day-group-header");
         const cards = day.querySelectorAll(".match-card");
 
-        const timeline = gsap.timeline({
-          scrollTrigger: {
-            trigger: day,
-            start: "top 95%",
-            once: true,
-          },
+        if (header) {
+          gsap.fromTo(
+            header,
+            { autoAlpha: 0, y: motionTokens.distance.sm },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: motionTokens.duration.fast,
+              ease: motionTokens.ease.soft,
+              clearProps: "transform,opacity",
+              scrollTrigger: {
+                trigger: day,
+                start: "top 85%",
+                once: true,
+              },
+            }
+          );
+        }
+
+        cards.forEach((card) => {
+          gsap.fromTo(
+            card,
+            { autoAlpha: 0, y: motionTokens.distance.sm },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: motionTokens.duration.fast,
+              ease: motionTokens.ease.soft,
+              clearProps: "transform,opacity",
+              scrollTrigger: {
+                trigger: card,
+                start: () => {
+                  const cardHeight = card.getBoundingClientRect().height || 0;
+                  const startPx = window.innerHeight - cardHeight * 0.4;
+                  return `top ${Math.round(startPx)}px`;
+                },
+                once: true,
+              },
+            }
+          );
         });
-
-        timeline.fromTo(
-          header,
-          { autoAlpha: 0, y: motionTokens.distance.sm },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: motionTokens.duration.fast,
-            ease: motionTokens.ease.soft,
-          }
-        );
-
-        timeline.fromTo(
-          cards,
-          { autoAlpha: 0, y: motionTokens.distance.sm },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: motionTokens.duration.fast,
-            ease: motionTokens.ease.soft,
-            stagger: motionTokens.stagger.tight,
-            clearProps: "transform,opacity",
-          },
-          0.05
-        );
       });
     }, listRef);
 
