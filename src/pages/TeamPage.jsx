@@ -203,12 +203,12 @@ export default function TeamPage() {
 
   return (
     <section ref={pageRef}>
-      <nav className="section-nav" aria-label="Atalhos da pagina do time">
+      <nav className="section-nav" aria-label="Atalhos da página do time">
         <a href="#time-resumo">{uiText.team.quickNavSummary}</a>
         <a href="#time-elenco">{uiText.team.quickNavSquad}</a>
       </nav>
 
-      <article className="page-card team-hero" id="time-resumo">
+      <article className="page-card team-hero section-anchor" id="time-resumo">
         <Link to="/" className="text-link">
           {uiText.team.backToMatches}
         </Link>
@@ -261,7 +261,7 @@ export default function TeamPage() {
         <p className="team-description">{teamDetails.description}</p>
       </article>
 
-      <article className="page-card" id="time-elenco">
+      <article className="page-card section-anchor" id="time-elenco">
         <header className="squad-header">
           <h2 className="squad-title">11 Jogadores Principais</h2>
           <p className="players-hint squad-subtitle">

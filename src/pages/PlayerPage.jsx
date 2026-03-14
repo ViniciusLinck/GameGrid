@@ -358,7 +358,7 @@ export default function PlayerPage() {
 
   return (
     <section ref={pageRef}>
-      <nav className="section-nav" aria-label="Atalhos da pagina do jogador">
+      <nav className="section-nav" aria-label="Atalhos da página do jogador">
         <a href="#jogador-perfil">{uiText.player.quickNavProfile}</a>
         <a href="#jogador-conquistas">{uiText.player.quickNavAchievements}</a>
       </nav>
@@ -368,7 +368,7 @@ export default function PlayerPage() {
           {uiText.player.backTeam}
         </Link>
 
-        <div className="player-detail-card" id="jogador-perfil">
+        <div className="player-detail-card section-anchor" id="jogador-perfil">
           <div className="player-detail-top">
             <div className="player-avatar large">
               {player.image ? (
@@ -406,7 +406,7 @@ export default function PlayerPage() {
           <p className="player-description">{shorten(player.description)}</p>
         </div>
 
-        <section aria-label="Lista de conquistas do jogador e técnico" id="jogador-conquistas">
+        <section className="section-anchor" aria-label="Lista de conquistas do jogador e técnico" id="jogador-conquistas">
           <header className="squad-header">
             <h3 className="squad-title">Conquistas</h3>
             <p className="players-hint squad-subtitle">

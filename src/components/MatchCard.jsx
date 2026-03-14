@@ -73,7 +73,7 @@ export default function MatchCard({ match }) {
       <div className="match-actions">
         <button
           type="button"
-          className="rounded-full border border-[#8dcfff5e] px-2 py-1 text-[0.72rem] text-[#d3e8ff]"
+          className="rounded-full border border-[#8dcfff5e] px-2.5 py-[3px] text-[0.68rem] text-[#d3e8ff]"
           onClick={() => setShowPoll((current) => !current)}
           aria-expanded={showPoll}
           aria-controls={`poll-widget-${match.id}`}
@@ -85,7 +85,7 @@ export default function MatchCard({ match }) {
           href={CAZETV_YOUTUBE_URL}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-[#ff5a7d88] px-3 py-1 text-[0.72rem] font-semibold text-[#ffd7e1] no-underline"
+          className="rounded-full border border-[#ff5a7d88] px-4 py-1.5 text-[0.8rem] font-semibold text-[#ffd7e1] no-underline"
           title="Assistir na CazeTV"
         >
           Assistir

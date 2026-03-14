@@ -338,48 +338,54 @@ export default function HomePage() {
         <p className="hero-subtitle">{uiText.home.subtitle}</p>
 
         <div className="dashboard-bar">
-          <div className="dashboard-item dashboard-kpi">{uiText.home.totalMatches(displayedTotal)}</div>
-          <div className="dashboard-item dashboard-kpi">{uiText.home.nextMatch(displayedNext)}</div>
+          <div className="dashboard-row dashboard-row-top">
+            <div className="dashboard-item dashboard-kpi">
+              {uiText.home.totalMatches(displayedTotal)}
+            </div>
+            <div className="dashboard-item dashboard-kpi">{uiText.home.nextMatch(displayedNext)}</div>
 
-          <div className="dashboard-item dashboard-control">
-            <label htmlFor="stage-select" className="dashboard-label">
-              {uiText.home.stage}
-            </label>
-            <select
-              id="stage-select"
-              value={selectedStage}
-              onChange={(event) => setSelectedStage(event.target.value)}
-            >
-              {stageOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <div className="dashboard-item dashboard-control">
+              <label htmlFor="stage-select" className="dashboard-label">
+                {uiText.home.stage}
+              </label>
+              <select
+                id="stage-select"
+                value={selectedStage}
+                onChange={(event) => setSelectedStage(event.target.value)}
+              >
+                {stageOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="dashboard-item dashboard-control dashboard-search">
-            <label htmlFor="team-search" className="dashboard-label">
-              {uiText.home.searchTeam}
-            </label>
-            <input
-              id="team-search"
-              type="search"
-              value={teamQuery}
-              placeholder={uiText.home.searchPlaceholder}
-              onChange={(event) => setTeamQuery(event.target.value)}
-            />
-          </div>
+          <div className="dashboard-row dashboard-row-bottom">
+            <div className="dashboard-item dashboard-control dashboard-search">
+              <label htmlFor="team-search" className="dashboard-label">
+                {uiText.home.searchTeam}
+              </label>
+              <input
+                id="team-search"
+                type="search"
+                value={teamQuery}
+                placeholder={uiText.home.searchPlaceholder}
+                onChange={(event) => setTeamQuery(event.target.value)}
+              />
+            </div>
 
-          <div className="dashboard-item dashboard-action">
-            <button
-              type="button"
-              className="dashboard-clear-btn"
-              onClick={clearFilters}
-              disabled={!hasActiveFilters}
-            >
-              {uiText.home.clearSearch}
-            </button>
+            <div className="dashboard-item dashboard-action">
+              <button
+                type="button"
+                className="dashboard-clear-btn"
+                onClick={clearFilters}
+                disabled={!hasActiveFilters}
+              >
+                {uiText.home.clearSearch}
+              </button>
+            </div>
           </div>
         </div>
 
