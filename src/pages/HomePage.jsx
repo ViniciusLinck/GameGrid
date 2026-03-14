@@ -249,7 +249,7 @@ export default function HomePage() {
         const timeline = gsap.timeline({
           scrollTrigger: {
             trigger: day,
-            start: "top 85%",
+            start: "top 95%",
             once: true,
           },
         });
