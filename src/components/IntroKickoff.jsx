@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { motionTokens } from "../animations/motionTokens";
+import introBall from "../images/bola.gif";
 
 export default function IntroKickoff({ onFinish }) {
   const [hidden, setHidden] = useState(false);
@@ -71,10 +72,6 @@ export default function IntroKickoff({ onFinish }) {
         { autoAlpha: 0.45, scale: 1, duration: 0.5 },
         0.08
       )
-      .to(ball, { y: -92, duration: 0.42, ease: motionTokens.ease.enter }, 0.74)
-      .to(shadow, { scale: 0.52, autoAlpha: 0.16, duration: 0.42 }, 0.74)
-      .to(ball, { y: 0, duration: 0.54, ease: "bounce.out" }, 1.16)
-      .to(shadow, { scale: 1, autoAlpha: 0.45, duration: 0.4 }, 1.16)
       .fromTo(
         streak,
         { autoAlpha: 0, scaleX: 0.1 },
@@ -138,7 +135,14 @@ export default function IntroKickoff({ onFinish }) {
 
       <div className="intro-stage">
         <div className="intro-streak" ref={streakRef} />
-        <div className="intro-ball" ref={ballRef} />
+        <img
+          src={introBall}
+          alt="Bola"
+          className="intro-ball-image"
+          ref={ballRef}
+          loading="eager"
+          draggable={false}
+        />
         <div className="intro-shadow" ref={shadowRef} />
       </div>
 

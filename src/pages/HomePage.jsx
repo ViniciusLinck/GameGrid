@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import MatchCard from "../components/MatchCard";
 import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
 import { uiText } from "../data/uiText";
@@ -16,6 +17,8 @@ const dayFormatter = new Intl.DateTimeFormat("pt-BR", {
   month: "long",
   weekday: "long",
 });
+
+gsap.registerPlugin(ScrollTrigger);
 
 function formatDayHeading(dateISO) {
   const formatted = dayFormatter.format(new Date(`${dateISO}T12:00:00`));
@@ -188,56 +191,6 @@ export default function HomePage() {
     return () => tween.kill();
   }, [matches.length, nextMatch, shouldAnimate]);
 
-  useEffect(() => {
-    if (!heroRef.current || !shouldAnimate) {
-      return undefined;
-    }
-
-    const hero = heroRef.current;
-
-    const onMove = (event) => {
-      const rect = hero.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width - 0.5;
-      const y = (event.clientY - rect.top) / rect.height - 0.5;
-
-      gsap.to(".hero-logo", {
-        x: x * 16,
-        y: y * 12,
-        duration: 0.35,
-        ease: motionTokens.ease.soft,
-      });
-      gsap.to(".hero-title", {
-        x: x * 10,
-        y: y * 8,
-        duration: 0.35,
-        ease: motionTokens.ease.soft,
-      });
-      gsap.to(".hero-subtitle", {
-        x: x * 8,
-        y: y * 6,
-        duration: 0.35,
-        ease: motionTokens.ease.soft,
-      });
-    };
-
-    const onLeave = () => {
-      gsap.to(".hero-logo, .hero-title, .hero-subtitle", {
-        x: 0,
-        y: 0,
-        duration: 0.35,
-        ease: motionTokens.ease.soft,
-      });
-    };
-
-    hero.addEventListener("pointermove", onMove);
-    hero.addEventListener("pointerleave", onLeave);
-
-    return () => {
-      hero.removeEventListener("pointermove", onMove);
-      hero.removeEventListener("pointerleave", onLeave);
-    };
-  }, [shouldAnimate]);
-
   useLayoutEffect(() => {
     if (!shouldAnimate) {
       return undefined;
@@ -273,7 +226,11 @@ export default function HomePage() {
   }, [shouldAnimate]);
 
   useLayoutEffect(() => {
-    if (!listRef.current || !shouldAnimate) {
+    if (!listRef.current) {
+      return undefined;
+    }
+
+    if (!shouldAnimate) {
       previousRectsRef.current = captureRects(listRef.current, "[data-flip-key]");
       return undefined;
     }
@@ -285,39 +242,48 @@ export default function HomePage() {
 
     const context = gsap.context(() => {
       const days = gsap.utils.toArray(".day-group");
-      days.forEach((day, dayIndex) => {
+      days.forEach((day) => {
         const header = day.querySelector(".day-group-header");
         const cards = day.querySelectorAll(".match-card");
 
-        gsap.fromTo(
+        const timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: day,
+            start: "top 85%",
+            once: true,
+          },
+        });
+
+        timeline.fromTo(
           header,
-          { opacity: 0, y: motionTokens.distance.sm },
+          { autoAlpha: 0, y: motionTokens.distance.sm },
           {
-            opacity: 1,
+            autoAlpha: 1,
             y: 0,
             duration: motionTokens.duration.fast,
             ease: motionTokens.ease.soft,
-            delay: dayIndex * 0.04,
           }
         );
 
-        gsap.fromTo(
+        timeline.fromTo(
           cards,
-          { opacity: 0, y: motionTokens.distance.sm },
+          { autoAlpha: 0, y: motionTokens.distance.sm },
           {
-            opacity: 1,
+            autoAlpha: 1,
             y: 0,
             duration: motionTokens.duration.fast,
             ease: motionTokens.ease.soft,
             stagger: motionTokens.stagger.tight,
-            delay: dayIndex * 0.04 + 0.05,
-            clearProps: "all",
-          }
+            clearProps: "transform,opacity",
+          },
+          0.05
         );
       });
     }, listRef);
 
     previousRectsRef.current = captureRects(listRef.current, "[data-flip-key]");
+
+    ScrollTrigger.refresh();
 
     return () => context.revert();
   }, [filteredMatches, selectedStage, shouldAnimate, teamQuery]);

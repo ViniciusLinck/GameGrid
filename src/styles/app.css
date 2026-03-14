@@ -55,21 +55,24 @@
     transform: translateY(0);
   }
 
-  .global-nav {
-    @apply sticky top-2 z-[34] mb-2 rounded-2xl border border-[#88c6ff3a] bg-[#060f22cf] px-4 py-3;
-    backdrop-filter: blur(6px);
+  .site-header {
+    @apply mb-2 px-2 py-3 flex justify-center;
   }
 
   .global-nav-row {
-    @apply flex flex-wrap items-center justify-center gap-3 text-center;
+    @apply flex flex-wrap items-center justify-center text-center;
   }
 
   .brand-link {
-    @apply rounded-full border border-[#9bd2ff47] bg-[#0d1f3eb8] px-4 py-1.5 font-display text-[1.05rem] tracking-[0.05em] text-[#f2f7ff] no-underline;
+    @apply flex items-center justify-center rounded-full border border-[#9bd2ff47] bg-[#0d1f3eb8] px-7 py-4 font-display text-[1.2rem] tracking-[0.05em] text-[#f2f7ff] no-underline;
   }
 
-  .global-nav-links {
-    @apply flex w-full flex-wrap items-center justify-center gap-2;
+  .brand-logo {
+    @apply h-24 w-auto;
+  }
+
+  .brand-text {
+    @apply leading-none;
   }
 
   .global-nav-links a {
@@ -150,8 +153,39 @@
     background: linear-gradient(90deg, transparent, rgba(245, 208, 97, 0.55), transparent);
   }
 
+  .hero::after {
+    content: "";
+    @apply absolute inset-0;
+    background:
+      radial-gradient(circle at 25% 20%, rgba(255, 201, 6, 0.18), transparent 45%),
+      radial-gradient(circle at 80% 75%, rgba(204, 30, 74, 0.16), transparent 50%);
+    opacity: 0.55;
+    z-index: 0;
+    animation: heroGlow 12s ease-in-out infinite;
+  }
+
+  .hero > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes heroGlow {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 0.45;
+    }
+    50% {
+      transform: translate3d(-2%, -1%, 0) scale(1.03);
+      opacity: 0.7;
+    }
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 0.45;
+    }
+  }
+
   .hero-logo {
-    @apply block mx-auto mb-[10px] w-[130px];
+    @apply block mx-auto mb-[10px] w-[160px];
   }
 
   .hero-title {
@@ -253,6 +287,10 @@
   .day-group-header span {
     @apply text-ink-400 text-[0.84rem];
   }
+  
+  .match-countdown {
+    @apply mt-1 text-center text-[0.78rem] text-[#FFC906];
+  }
 
   .match-grid {
     @apply grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-[10px] p-[14px];
@@ -352,12 +390,24 @@
   }
 
   .match-actions {
-    @apply mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2;
+    @apply mt-2 flex flex-wrap items-center justify-between gap-2;
   }
 
   .match-actions button,
   .match-actions a {
     @apply text-center;
+  }
+
+  .match-action-watch {
+    @apply rounded-full border border-[#CC1E4A] bg-[#CC1E4A] px-4 py-1 text-[0.82rem] font-semibold text-white no-underline;
+    box-shadow: 0 8px 16px rgba(204, 30, 74, 0.25);
+    transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+  }
+
+  .match-action-watch:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 12px 22px rgba(204, 30, 74, 0.35);
+    filter: brightness(1.05);
   }
 
   .venue-link {
@@ -773,46 +823,13 @@
   }
 
   .intro-stage {
-    @apply relative flex h-[180px] w-[min(90vw,700px)] items-center justify-center;
+    @apply relative flex h-[clamp(240px,30vw,340px)] w-[min(92vw,760px)] items-center justify-center;
   }
 
-  .intro-ball {
-    @apply relative z-[3] aspect-square h-[clamp(76px,10vw,112px)] rounded-full border border-[#e9edf4] shadow-card;
-    background:
-      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.95) 0 20%, transparent 34%),
-      radial-gradient(circle at 33% 30%, #ffffff 0 54%, #e1e7f0 76%, #a4afbf 100%);
-    box-shadow:
-      0 24px 35px rgba(0, 0, 0, 0.42),
-      inset -18px -20px 24px rgba(0, 0, 0, 0.2),
-      inset 14px 12px 20px rgba(255, 255, 255, 0.48);
-  }
-
-  .intro-ball::before {
-    content: "";
-    @apply absolute rounded-full opacity-[0.98];
-    inset: 6%;
-    background:
-      radial-gradient(circle at 52% 15%, #23272e 0 12%, transparent 12.8%),
-      radial-gradient(circle at 81% 30%, #23272e 0 12%, transparent 12.8%),
-      radial-gradient(circle at 83% 62%, #23272e 0 12%, transparent 12.8%),
-      radial-gradient(circle at 60% 84%, #23272e 0 12%, transparent 12.8%),
-      radial-gradient(circle at 30% 79%, #23272e 0 12%, transparent 12.8%),
-      radial-gradient(circle at 13% 52%, #23272e 0 12%, transparent 12.8%),
-      radial-gradient(circle at 20% 23%, #23272e 0 12%, transparent 12.8%);
-  }
-
-  .intro-ball::after {
-    content: "";
-    @apply absolute inset-[6%] rounded-full;
-    background:
-      radial-gradient(circle at 52% 15%, transparent 0 12%, rgba(80, 86, 97, 0.55) 12.3% 13.1%, transparent 13.5%),
-      radial-gradient(circle at 81% 30%, transparent 0 12%, rgba(80, 86, 97, 0.55) 12.3% 13.1%, transparent 13.5%),
-      radial-gradient(circle at 83% 62%, transparent 0 12%, rgba(80, 86, 97, 0.55) 12.3% 13.1%, transparent 13.5%),
-      radial-gradient(circle at 60% 84%, transparent 0 12%, rgba(80, 86, 97, 0.55) 12.3% 13.1%, transparent 13.5%),
-      radial-gradient(circle at 30% 79%, transparent 0 12%, rgba(80, 86, 97, 0.55) 12.3% 13.1%, transparent 13.5%),
-      radial-gradient(circle at 13% 52%, transparent 0 12%, rgba(80, 86, 97, 0.55) 12.3% 13.1%, transparent 13.5%),
-      radial-gradient(circle at 20% 23%, transparent 0 12%, rgba(80, 86, 97, 0.55) 12.3% 13.1%, transparent 13.5%),
-      radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.33) 0 11%, transparent 24%);
+  .intro-ball-image {
+    @apply relative z-[3] block aspect-square h-[clamp(140px,22vw,240px)] rounded-full;
+    object-fit: contain;
+    box-shadow: 0 24px 35px rgba(0, 0, 0, 0.42);
   }
 
   .intro-shadow {
@@ -864,11 +881,13 @@
   }
 }
 
-@media (max-width: 930px) {
-  .global-nav {
-    @apply top-1;
+@media (prefers-reduced-motion: reduce) {
+  .hero::after {
+    animation: none;
   }
+}
 
+@media (max-width: 930px) {
   .global-nav-row {
     @apply flex-col items-center;
   }
@@ -892,7 +911,7 @@
   }
 
   .hero-logo {
-    @apply w-[105px];
+    @apply w-[130px];
   }
 
   .global-nav-links {
@@ -916,7 +935,7 @@
   }
 
   .match-actions {
-    @apply grid-cols-1;
+    @apply flex-col items-stretch;
   }
 
   .match-actions a,

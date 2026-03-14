@@ -7,6 +7,7 @@ import { BackgroundMoodContext } from "../hooks/useBackgroundMood";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { motionTokens } from "../animations/motionTokens";
 import { uiText } from "../data/uiText";
+import brandLogo from "../images/Gemini_logo-removebg.png";
 
 function decodeSegment(value = "") {
   try {
@@ -56,8 +57,6 @@ export default function PageFrame() {
     () => buildCrumbs(location.pathname, location.search),
     [location.pathname, location.search]
   );
-
-  const currentLabel = crumbs[crumbs.length - 1]?.label ?? uiText.navigation.home;
 
   useEffect(() => {
     const onScroll = () => {
@@ -115,25 +114,11 @@ export default function PageFrame() {
         {uiText.navigation.skipToContent}
       </a>
 
-      <header className="global-nav" aria-label="Navegacao principal">
+      <header className="site-header" aria-label="Navegacao principal">
         <div className="global-nav-row">
           <Link to="/" className="brand-link">
-            GameGrid
+            <img src={brandLogo} alt="GameGrid" className="brand-logo" />
           </Link>
-
-          <nav className="global-nav-links">
-            <Link to="/" className={isHomeRoute ? "active" : ""}>
-              {uiText.navigation.home}
-            </Link>
-            {crumbs.length > 1 && crumbs[1].to ? (
-              <Link to={crumbs[1].to}>{crumbs[1].label}</Link>
-            ) : null}
-          </nav>
-        </div>
-
-        <div className="global-nav-meta">
-          <span>{uiText.navigation.nowYouAreHere}:</span>
-          <strong>{currentLabel}</strong>
         </div>
       </header>
 

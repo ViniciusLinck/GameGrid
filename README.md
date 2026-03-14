@@ -54,6 +54,7 @@ Site publicado: `https://viniciuslinck.github.io/GameGrid/`
 - Intro com GSAP
 - Fundo imersivo em Three.js (globo + estrelas)
 - Transicao de rotas e entrada progressiva de secoes/cards
+- Revelacao dos cards de partidas no scroll (GSAP ScrollTrigger)
 - Suporte a `prefers-reduced-motion`
 - Header global centralizado e resumo visual centralizado
 - Responsividade revisada para desktop, tablet e celular

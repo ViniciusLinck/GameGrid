@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import TeamBadge from "./TeamBadge";
 import { PollWidget } from "./poll";
@@ -8,6 +8,29 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
   month: "2-digit",
 });
+
+function formatCountdown(targetDate, now) {
+  const diffMs = targetDate.getTime() - now.getTime();
+  if (diffMs <= 0) {
+    return "Já começou";
+  }
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  return `${minutes}m ${seconds}s`;
+}
 
 function formatDateLabel(dateISO) {
   return dateFormatter
@@ -29,9 +52,23 @@ const CAZETV_YOUTUBE_URL = "https://www.youtube.com/@CazeTV";
 
 export default function MatchCard({ match }) {
   const [showPoll, setShowPoll] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const mapsUrl = match.mapsUrl ?? buildMapsUrl(match.venue);
   const isFeatured = match.id === 1;
   const startsAtUtc = `${match.date}T${(match.kickoff || "00:00").slice(0, 5)}:00Z`;
+  const countdownLabel = isFeatured ? formatCountdown(new Date(startsAtUtc), now) : null;
+
+  useEffect(() => {
+    if (!isFeatured) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isFeatured]);
 
   return (
     <article className={`match-card ${isFeatured ? "match-card-featured" : ""}`}>
@@ -39,6 +76,7 @@ export default function MatchCard({ match }) {
         <p>Jogo {match.id}</p>
         <span>{match.stage}</span>
       </div>
+      {countdownLabel ? <p className="match-countdown">Começa em {countdownLabel}</p> : null}
 
       <div className="match-sides">
         <Link to={teamRoute(match.homeTeam.name)} className="team-link">
@@ -73,7 +111,7 @@ export default function MatchCard({ match }) {
       <div className="match-actions">
         <button
           type="button"
-          className="rounded-full border border-[#8dcfff5e] px-2.5 py-[3px] text-[0.68rem] text-[#d3e8ff]"
+          className="rounded-full border border-[#8dcfff5e] px-3 py-1 text-[0.7rem] text-[#d3e8ff]"
           onClick={() => setShowPoll((current) => !current)}
           aria-expanded={showPoll}
           aria-controls={`poll-widget-${match.id}`}
@@ -85,7 +123,7 @@ export default function MatchCard({ match }) {
           href={CAZETV_YOUTUBE_URL}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-[#ff5a7d88] px-4 py-1.5 text-[0.8rem] font-semibold text-[#ffd7e1] no-underline"
+          className="match-action-watch"
           title="Assistir na CazeTV"
         >
           Assistir
