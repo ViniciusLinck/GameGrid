@@ -2,9 +2,9 @@
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 
 const MOOD_PRESETS = {
-  idle: { speed: 0.0022, glow: 0.24, starOpacity: 0.72, cometChance: 0.0012 },
-  focus: { speed: 0.0036, glow: 0.34, starOpacity: 0.88, cometChance: 0.0023 },
-  transition: { speed: 0.0056, glow: 0.45, starOpacity: 0.95, cometChance: 0.0042 },
+  idle: { speed: 0.0022, glow: 0.28, starOpacity: 0.78, cometChance: 0.0011 },
+  focus: { speed: 0.0036, glow: 0.38, starOpacity: 0.9, cometChance: 0.0021 },
+  transition: { speed: 0.0056, glow: 0.48, starOpacity: 0.98, cometChance: 0.0036 },
 };
 
 export default function WorldBackground({ mood = "idle" }) {
@@ -57,10 +57,10 @@ export default function WorldBackground({ mood = "idle" }) {
       renderer.setSize(window.innerWidth, window.innerHeight);
 
       const globeMaterial = new THREE.MeshBasicMaterial({
-        color: "#16a6b6",
+        color: "#1ab3c6",
         wireframe: true,
         transparent: true,
-        opacity: 0.26,
+        opacity: 0.3,
       });
 
       const globeSegments = lowPowerMode ? 26 : 40;
@@ -69,7 +69,7 @@ export default function WorldBackground({ mood = "idle" }) {
         globeMaterial
       );
 
-      const starCount = lowPowerMode ? 240 : 640;
+      const starCount = lowPowerMode ? 260 : 720;
       const starPositions = new Float32Array(starCount * 3);
       for (let i = 0; i < starCount; i += 1) {
         const radius = 5.4 + Math.random() * 2.8;
@@ -84,9 +84,11 @@ export default function WorldBackground({ mood = "idle" }) {
       starsGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
       const starsMaterial = new THREE.PointsMaterial({
         color: "#f5d061",
-        size: lowPowerMode ? 0.028 : 0.032,
+        size: lowPowerMode ? 0.03 : 0.034,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
       });
       const stars = new THREE.Points(starsGeometry, starsMaterial);
 
@@ -105,18 +107,18 @@ export default function WorldBackground({ mood = "idle" }) {
       let scrollTimeoutId = 0;
       let cometActive = false;
       let cometLife = 0;
-      let cometVelocity = { x: 0.12, y: -0.05, z: 0.02 };
+      let cometVelocity = { x: 0.1, y: -0.045, z: 0.015 };
       let isHidden = false;
       const clock = new THREE.Clock();
 
       const spawnComet = () => {
         comet.position.set(-4 + Math.random() * 8, 2.6 + Math.random() * 2.2, -2.5 + Math.random() * 1.5);
         cometVelocity = {
-          x: 0.13 + Math.random() * 0.06,
-          y: -0.06 - Math.random() * 0.05,
-          z: 0.01 + Math.random() * 0.03,
+          x: 0.09 + Math.random() * 0.05,
+          y: -0.04 - Math.random() * 0.04,
+          z: 0.008 + Math.random() * 0.02,
         };
-        cometLife = 1;
+        cometLife = 1.2;
         cometActive = true;
       };
 
@@ -199,8 +201,8 @@ export default function WorldBackground({ mood = "idle" }) {
           comet.position.x += cometVelocity.x;
           comet.position.y += cometVelocity.y;
           comet.position.z += cometVelocity.z;
-          cometLife -= 0.012;
-          cometMaterial.opacity = Math.max(0, cometLife * 0.9);
+          cometLife -= 0.009;
+          cometMaterial.opacity = Math.max(0, cometLife * 0.75);
 
           if (cometLife <= 0 || comet.position.x > 7) {
             cometActive = false;

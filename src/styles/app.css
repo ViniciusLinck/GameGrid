@@ -480,6 +480,20 @@
     @apply rounded-full border border-[#8bcfff59] bg-[#0b1f3ebd] px-3 py-1.5 text-[0.78rem] uppercase tracking-[0.04em] text-[#d5e9ff] no-underline;
   }
 
+  .section-nav a.active {
+    @apply border-[#FFC9068C] text-[#FFC906];
+  }
+
+  .section-nav.section-nav-sticky {
+    @apply sticky z-[26] rounded-[14px] border border-[#7ebeff3b] bg-[#091022e6] px-3 py-2;
+    top: 10px;
+    backdrop-filter: blur(6px);
+  }
+
+  .section-nav.section-nav-sticky a {
+    @apply text-[0.7rem] px-2.5 py-1;
+  }
+
   .text-link {
     @apply text-[#a7d2ff] no-underline hover:underline;
   }
@@ -769,7 +783,7 @@
   }
 
   .achievement-list {
-    @apply mt-3 grid gap-2 max-h-[360px] overflow-y-auto pr-1;
+    @apply mt-3 grid gap-2;
   }
 
   .achievement-item {
@@ -932,6 +946,12 @@
   }
 }
 
+@media (min-width: 900px) {
+  .achievements-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 930px) {
   .global-nav-row {
     @apply flex-col items-center;
@@ -1003,6 +1023,19 @@
   .section-nav a {
     flex: 1 1 auto;
     text-align: center;
+  }
+
+  .section-nav.section-nav-sticky {
+    position: static;
+    top: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    backdrop-filter: none;
+  }
+
+  .section-nav.section-nav-sticky a {
+    @apply text-[0.72rem];
   }
 
   .team-headline,

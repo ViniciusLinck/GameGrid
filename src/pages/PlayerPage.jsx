@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import {
@@ -15,7 +15,7 @@ import { seoDefaults, useSeo } from "../hooks/useSeo";
 
 function formatLabelDate(rawDate) {
   if (!rawDate || rawDate === "Nao informado") {
-    return "Não informado";
+    return "NÃ£o informado";
   }
 
   const date = new Date(rawDate);
@@ -28,7 +28,7 @@ function formatLabelDate(rawDate) {
 function shorten(text) {
   const cleaned = (text ?? "").replace(/\s+/g, " ").trim();
   if (!cleaned) {
-    return "Sem resumo disponível para este jogador.";
+    return "Sem resumo disponÃ­vel para este jogador.";
   }
   return cleaned.length > 300 ? `${cleaned.slice(0, 300)}...` : cleaned;
 }
@@ -50,10 +50,10 @@ function translatePosition(position) {
     "right winger": "Ponta direita",
     "left winger": "Ponta esquerda",
     striker: "Centroavante",
-    manager: "Técnico",
+    manager: "TÃ©cnico",
   };
 
-  return map[value] ?? position ?? "Posição não informada";
+  return map[value] ?? position ?? "PosiÃ§Ã£o nÃ£o informada";
 }
 
 function getInitials(name) {
@@ -73,14 +73,14 @@ function buildDefaultCoach(teamName) {
     return {
       name: "Carlo Ancelotti",
       team: "Brasil",
-      role: "Técnico",
+      role: "TÃ©cnico",
     };
   }
 
   return {
-    name: `Técnico de ${teamName}`,
+    name: `TÃ©cnico de ${teamName}`,
     team: teamName,
-    role: "Técnico",
+    role: "TÃ©cnico",
   };
 }
 
@@ -109,6 +109,7 @@ export default function PlayerPage() {
 
   const [player, setPlayer] = useState(location.state?.player ?? null);
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState("jogador-perfil");
   const [playerAchievements, setPlayerAchievements] = useState(
     location.state?.player?.achievements ?? []
   );
@@ -146,7 +147,7 @@ export default function PlayerPage() {
           previous
             ? {
                 ...previous,
-                description: "Descrição em português indisponível no momento.",
+                description: "DescriÃ§Ã£o em portuguÃªs indisponÃ­vel no momento.",
               }
             : previous
         );
@@ -184,7 +185,7 @@ export default function PlayerPage() {
 
         if (normalizeTeamName(teamLabel) === "brazil" && /^tecnico de /i.test(coachName)) {
           coachName = "Carlo Ancelotti";
-          coachRole = "Técnico";
+          coachRole = "TÃ©cnico";
         }
 
         const nextCoach = {
@@ -260,31 +261,28 @@ export default function PlayerPage() {
   }, [coachAchievements.length, playerAchievements.length, shouldAnimate]);
 
   useLayoutEffect(() => {
-    if (!shouldAnimate) {
+    if (!shouldAnimate || !pageRef.current) {
+      return undefined;
+    }
+
+    const sections = pageRef.current.querySelectorAll("[data-reveal]");
+    if (sections.length === 0) {
       return undefined;
     }
 
     const context = gsap.context(() => {
-      gsap.fromTo(
-        ".player-detail-card, .achievement-card",
-        { opacity: 0, y: motionTokens.distance.md },
-        {
-          opacity: 1,
-          y: 0,
-          duration: motionTokens.duration.medium,
-          stagger: motionTokens.stagger.regular,
-          ease: motionTokens.ease.enter,
+      sections.forEach((section) => {
+        const revealType = section.getAttribute("data-reveal");
+        if (revealType === "achievements") {
+          gsap.set(section.querySelectorAll(".achievement-card"), {
+            autoAlpha: 0,
+            y: motionTokens.distance.md,
+          });
+        } else {
+          gsap.set(section, { autoAlpha: 0, y: motionTokens.distance.md });
         }
-      );
+      });
     }, pageRef);
-
-    return () => context.revert();
-  }, [coach, coachAchievements, player, playerAchievements, shouldAnimate]);
-
-  useEffect(() => {
-    if (!pageRef.current || !shouldAnimate) {
-      return undefined;
-    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -293,32 +291,74 @@ export default function PlayerPage() {
             return;
           }
 
-          gsap.fromTo(
-            entry.target,
-            { opacity: 0, y: motionTokens.distance.sm },
-            {
-              opacity: 1,
+          const target = entry.target;
+          const revealType = target.getAttribute("data-reveal");
+
+          if (revealType === "achievements") {
+            gsap.to(target.querySelectorAll(".achievement-card"), {
+              autoAlpha: 1,
               y: 0,
-              duration: motionTokens.duration.fast,
-              ease: motionTokens.ease.soft,
+              duration: motionTokens.duration.medium,
+              stagger: motionTokens.stagger.regular,
+              ease: motionTokens.ease.enter,
               clearProps: "all",
-            }
-          );
-          observer.unobserve(entry.target);
+            });
+          } else {
+            gsap.to(target, {
+              autoAlpha: 1,
+              y: 0,
+              duration: motionTokens.duration.medium,
+              ease: motionTokens.ease.enter,
+              clearProps: "all",
+            });
+          }
+
+          observer.unobserve(target);
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
     );
 
-    const items = pageRef.current.querySelectorAll(".achievement-item");
-    items.forEach((item) => observer.observe(item));
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      observer.disconnect();
+      context.revert();
+    };
+  }, [coach, coachAchievements, player, playerAchievements, shouldAnimate]);
+
+  useEffect(() => {
+    if (!pageRef.current) {
+      return undefined;
+    }
+
+    const sections = pageRef.current.querySelectorAll("[data-section]");
+    if (sections.length === 0) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const nextSection = entry.target.getAttribute("data-section");
+            if (nextSection) {
+              setActiveSection(nextSection);
+            }
+          }
+        });
+      },
+      { threshold: 0.4, rootMargin: "-20% 0px -50% 0px" }
+    );
+
+    sections.forEach((section) => observer.observe(section));
 
     return () => observer.disconnect();
-  }, [coachAchievements, playerAchievements, shouldAnimate]);
+  }, [player, coach]);
 
   useSeo({
     title: `${player?.name ?? "Jogador"} | GameGrid`,
-    description: `Detalhes de ${player?.name ?? "jogador"}: posição, nacionalidade, dados físicos e conquistas.`,
+    description: `Detalhes de ${player?.name ?? "jogador"}: posiÃ§Ã£o, nacionalidade, dados fÃ­sicos e conquistas.`,
     path: `/jogador/${encodeURIComponent(playerId)}?team=${encodeURIComponent(teamName)}`,
     type: "profile",
     jsonLd: {
@@ -358,9 +398,13 @@ export default function PlayerPage() {
 
   return (
     <section ref={pageRef}>
-      <nav className="section-nav" aria-label="Atalhos da página do jogador">
-        <a href="#jogador-perfil">{uiText.player.quickNavProfile}</a>
-        <a href="#jogador-conquistas">{uiText.player.quickNavAchievements}</a>
+      <nav className="section-nav section-nav-sticky" aria-label="Atalhos da pÃ¡gina do jogador">
+        <a href="#jogador-perfil" className={activeSection === "jogador-perfil" ? "active" : ""}>
+          {uiText.player.quickNavProfile}
+        </a>
+        <a href="#jogador-conquistas" className={activeSection === "jogador-conquistas" ? "active" : ""}>
+          {uiText.player.quickNavAchievements}
+        </a>
       </nav>
 
       <article className="page-card">
@@ -368,7 +412,12 @@ export default function PlayerPage() {
           {uiText.player.backTeam}
         </Link>
 
-        <div className="player-detail-card section-anchor" id="jogador-perfil">
+        <div
+          className="player-detail-card section-anchor"
+          id="jogador-perfil"
+          data-section="jogador-perfil"
+          data-reveal="profile"
+        >
           <div className="player-detail-top">
             <div className="player-avatar large">
               {player.image ? (
@@ -406,11 +455,17 @@ export default function PlayerPage() {
           <p className="player-description">{shorten(player.description)}</p>
         </div>
 
-        <section className="section-anchor" aria-label="Lista de conquistas do jogador e técnico" id="jogador-conquistas">
+        <section
+          className="section-anchor"
+          aria-label="Lista de conquistas do jogador e tÃ©cnico"
+          id="jogador-conquistas"
+          data-section="jogador-conquistas"
+          data-reveal="achievements"
+        >
           <header className="squad-header">
             <h3 className="squad-title">Conquistas</h3>
             <p className="players-hint squad-subtitle">
-              Lista de títulos e premiações registradas para jogador e técnico.
+              Lista de tÃ­tulos e premiaÃ§Ãµes registradas para jogador e tÃ©cnico.
             </p>
           </header>
 
@@ -441,7 +496,7 @@ export default function PlayerPage() {
               </p>
 
               {coachAchievements.length > 0 ? (
-                <ul className="achievement-list" aria-label="Conquistas do técnico">
+                <ul className="achievement-list" aria-label="Conquistas do tÃ©cnico">
                   {coachAchievements.map((achievement) => (
                     <li className="achievement-item" key={achievement.id}>
                       <strong>{achievement.title}</strong>
@@ -460,3 +515,6 @@ export default function PlayerPage() {
     </section>
   );
 }
+
+
+

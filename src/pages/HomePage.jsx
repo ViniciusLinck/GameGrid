@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import MatchCard, { MatchCardSkeleton } from "../components/MatchCard";
 import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
 import { uiText } from "../data/uiText";
@@ -16,6 +17,8 @@ const dayFormatter = new Intl.DateTimeFormat("pt-BR", {
   month: "long",
   weekday: "long",
 });
+
+gsap.registerPlugin(ScrollTrigger);
 
 function formatDayHeading(dateISO) {
   const formatted = dayFormatter.format(new Date(`${dateISO}T12:00:00`));
@@ -103,6 +106,7 @@ export default function HomePage() {
   const previousRectsRef = useRef(new Map());
   const previousTotalRef = useRef(0);
   const hasLoadedMatchesRef = useRef(false);
+  const hasInitRevealRef = useRef(false);
   const { shouldAnimate } = useMotionPreferences();
   const { setBackgroundMood } = useBackgroundMood();
 
@@ -326,6 +330,66 @@ export default function HomePage() {
     previousRectsRef.current = captureRects(listRef.current, "[data-flip-key]");
     return undefined;
   }, [filteredMatches, selectedStage, shouldAnimate, teamQuery]);
+
+  useLayoutEffect(() => {
+    if (!listRef.current || !shouldAnimate || hasInitRevealRef.current || matchesByDay.length === 0) {
+      return undefined;
+    }
+
+    hasInitRevealRef.current = true;
+
+    const context = gsap.context(() => {
+      const days = gsap.utils.toArray(".day-group[data-flip-key]");
+      days.forEach((day) => {
+        const header = day.querySelector(".day-group-header");
+        const cards = day.querySelectorAll('[data-flip-key^="jogo-"]');
+
+        if (header) {
+          gsap.set(header, { autoAlpha: 0, y: motionTokens.distance.sm });
+        }
+        if (cards.length > 0) {
+          gsap.set(cards, { autoAlpha: 0, y: motionTokens.distance.sm });
+        }
+
+        const timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: day,
+            start: "top 80%",
+            once: true,
+          },
+        });
+
+        if (header) {
+          timeline.to(header, {
+            autoAlpha: 1,
+            y: 0,
+            duration: motionTokens.duration.fast,
+            ease: motionTokens.ease.soft,
+            clearProps: "transform,opacity",
+          });
+        }
+
+        if (cards.length > 0) {
+          timeline.to(
+            cards,
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: motionTokens.duration.fast,
+              ease: motionTokens.ease.soft,
+              stagger: motionTokens.stagger.tight,
+              clearProps: "transform,opacity",
+            },
+            header ? 0.05 : 0
+          );
+        }
+      });
+    }, listRef);
+
+    ScrollTrigger.refresh();
+
+    return () => context.revert();
+  }, [matchesByDay.length, shouldAnimate]);
 
   const hasActiveFilters =
     selectedStage !== uiText.home.allStages || teamQuery.trim().length > 0;

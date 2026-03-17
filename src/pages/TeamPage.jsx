@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Link, useParams } from "react-router-dom";
 import { getFlagByTeamName } from "../utils/flags";
@@ -34,10 +34,10 @@ function translatePosition(position) {
     "right winger": "Ponta direita",
     "left winger": "Ponta esquerda",
     striker: "Centroavante",
-    manager: "Técnico",
+    manager: "TÃ©cnico",
   };
 
-  return map[value] ?? position ?? "Posição não informada";
+  return map[value] ?? position ?? "PosiÃ§Ã£o nÃ£o informada";
 }
 
 function TeamSkeleton() {
@@ -61,6 +61,7 @@ export default function TeamPage() {
   const teamName = decodeRouteTeam(routeTeamName);
   const [teamDetails, setTeamDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState("time-resumo");
   const pageRef = useRef(null);
   const { shouldAnimate } = useMotionPreferences();
   const { setBackgroundMood } = useBackgroundMood();
@@ -88,39 +89,100 @@ export default function TeamPage() {
   }, [teamName]);
 
   useLayoutEffect(() => {
-    if (!shouldAnimate) {
+    if (!shouldAnimate || !pageRef.current) {
+      return undefined;
+    }
+
+    const sections = pageRef.current.querySelectorAll("[data-reveal]");
+    if (sections.length === 0) {
       return undefined;
     }
 
     const context = gsap.context(() => {
-      gsap.fromTo(
-        ".team-hero",
-        { opacity: 0, y: motionTokens.distance.md },
-        {
-          opacity: 1,
-          y: 0,
-          duration: motionTokens.duration.medium,
-          ease: motionTokens.ease.enter,
+      sections.forEach((section) => {
+        const revealType = section.getAttribute("data-reveal");
+        if (revealType === "squad") {
+          gsap.set(section.querySelectorAll(".player-preview-card"), {
+            autoAlpha: 0,
+            y: motionTokens.distance.sm,
+          });
+        } else {
+          gsap.set(section, { autoAlpha: 0, y: motionTokens.distance.md });
         }
-      );
-
-      gsap.fromTo(
-        ".player-grid .player-preview-card",
-        { opacity: 0, y: motionTokens.distance.sm, scale: 0.98 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: motionTokens.duration.medium,
-          stagger: motionTokens.stagger.tight,
-          ease: motionTokens.ease.soft,
-          clearProps: "all",
-        }
-      );
+      });
     }, pageRef);
 
-    return () => context.revert();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+
+          const target = entry.target;
+          const revealType = target.getAttribute("data-reveal");
+
+          if (revealType === "squad") {
+            gsap.to(target.querySelectorAll(".player-preview-card"), {
+              autoAlpha: 1,
+              y: 0,
+              duration: motionTokens.duration.medium,
+              ease: motionTokens.ease.soft,
+              stagger: motionTokens.stagger.tight,
+              clearProps: "all",
+            });
+          } else {
+            gsap.to(target, {
+              autoAlpha: 1,
+              y: 0,
+              duration: motionTokens.duration.medium,
+              ease: motionTokens.ease.enter,
+              clearProps: "all",
+            });
+          }
+
+          observer.unobserve(target);
+        });
+      },
+      { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      observer.disconnect();
+      context.revert();
+    };
   }, [shouldAnimate, teamDetails]);
+
+  useEffect(() => {
+    if (!pageRef.current) {
+      return undefined;
+    }
+
+    const sections = pageRef.current.querySelectorAll("[data-section]");
+    if (sections.length === 0) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const nextSection = entry.target.getAttribute("data-section");
+            if (nextSection) {
+              setActiveSection(nextSection);
+            }
+          }
+        });
+      },
+      { threshold: 0.4, rootMargin: "-20% 0px -50% 0px" }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+
+    return () => observer.disconnect();
+  }, [teamDetails]);
 
   useEffect(() => {
     if (!pageRef.current || !shouldAnimate) {
@@ -165,7 +227,7 @@ export default function TeamPage() {
 
   useSeo({
     title: `${teamDetails?.teamName ?? teamName} | GameGrid`,
-    description: `Perfil da seleção ${teamDetails?.teamName ?? teamName}: histórico de Copas, elenco principal e desempenho recente.`,
+    description: `Perfil da seleÃ§Ã£o ${teamDetails?.teamName ?? teamName}: histÃ³rico de Copas, elenco principal e desempenho recente.`,
     path: `/time/${encodeURIComponent(teamName)}`,
     type: "profile",
     jsonLd: {
@@ -203,12 +265,21 @@ export default function TeamPage() {
 
   return (
     <section ref={pageRef}>
-      <nav className="section-nav" aria-label="Atalhos da página do time">
-        <a href="#time-resumo">{uiText.team.quickNavSummary}</a>
-        <a href="#time-elenco">{uiText.team.quickNavSquad}</a>
+      <nav className="section-nav section-nav-sticky" aria-label="Atalhos da pÃ¡gina do time">
+        <a href="#time-resumo" className={activeSection === "time-resumo" ? "active" : ""}>
+          {uiText.team.quickNavSummary}
+        </a>
+        <a href="#time-elenco" className={activeSection === "time-elenco" ? "active" : ""}>
+          {uiText.team.quickNavSquad}
+        </a>
       </nav>
 
-      <article className="page-card team-hero section-anchor" id="time-resumo">
+      <article
+        className="page-card team-hero section-anchor"
+        id="time-resumo"
+        data-section="time-resumo"
+        data-reveal="hero"
+      >
         <Link to="/" className="text-link">
           {uiText.team.backToMatches}
         </Link>
@@ -247,7 +318,7 @@ export default function TeamPage() {
         </div>
 
         <div className="world-cup-history">
-          <h3>Últimas 5 Copas</h3>
+          <h3>Ãšltimas 5 Copas</h3>
           <div className="history-track">
             {historyLabels.map((label, index) => (
               <div className="history-item" key={label}>
@@ -261,7 +332,12 @@ export default function TeamPage() {
         <p className="team-description">{teamDetails.description}</p>
       </article>
 
-      <article className="page-card section-anchor" id="time-elenco">
+      <article
+        className="page-card section-anchor"
+        id="time-elenco"
+        data-section="time-elenco"
+        data-reveal="squad"
+      >
         <header className="squad-header">
           <h2 className="squad-title">11 Jogadores Principais</h2>
           <p className="players-hint squad-subtitle">
@@ -302,3 +378,6 @@ export default function TeamPage() {
     </section>
   );
 }
+
+
+
