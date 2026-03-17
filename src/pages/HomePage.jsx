@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import MatchCard from "../components/MatchCard";
+import MatchCard, { MatchCardSkeleton } from "../components/MatchCard";
 import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
 import { uiText } from "../data/uiText";
 import { motionTokens } from "../animations/motionTokens";
@@ -37,14 +37,16 @@ function getNextMatchLabel(match) {
 export default function HomePage() {
   const [selectedStage, setSelectedStage] = useState(uiText.home.allStages);
   const [teamQuery, setTeamQuery] = useState("");
-  const [matches, setMatches] = useState(FALLBACK_MATCHES_2026);
-  const [displayedTotal, setDisplayedTotal] = useState(FALLBACK_MATCHES_2026.length);
+  const [matches, setMatches] = useState([]);
+  const [displayedTotal, setDisplayedTotal] = useState(0);
+  const [isLoadingMatches, setIsLoadingMatches] = useState(true);
   const [displayedNext, setDisplayedNext] = useState("N/D");
   const appRef = useRef(null);
   const heroRef = useRef(null);
   const listRef = useRef(null);
   const previousRectsRef = useRef(new Map());
-  const previousTotalRef = useRef(FALLBACK_MATCHES_2026.length);
+  const previousTotalRef = useRef(0);
+  const hasLoadedMatchesRef = useRef(false);
   const { shouldAnimate } = useMotionPreferences();
   const { setBackgroundMood } = useBackgroundMood();
 
@@ -62,11 +64,19 @@ export default function HomePage() {
         return;
       }
 
+      if (!hasLoadedMatchesRef.current) {
+        setIsLoadingMatches(true);
+      }
+
       fetchWorldCupMatches2026().then((result) => {
         if (!mounted) {
           return;
         }
         setMatches(result.matches);
+        if (!hasLoadedMatchesRef.current) {
+          setIsLoadingMatches(false);
+          hasLoadedMatchesRef.current = true;
+        }
       });
     };
 
@@ -372,9 +382,26 @@ export default function HomePage() {
 
       <main className="calendar" ref={listRef} id="jogos-copa">
         {matchesByDay.length === 0 ? (
-          <section className="page-card">
-            {hasActiveFilters ? uiText.home.noMatchesWithFilter : uiText.common.loadingMatches}
-          </section>
+          hasActiveFilters ? (
+            <section className="page-card">{uiText.home.noMatchesWithFilter}</section>
+          ) : isLoadingMatches ? (
+            <section className="day-group" aria-label="Carregando jogos">
+              <div className="day-group-header skeleton-card">
+                <div className="skeleton-row w-60" />
+                <div className="skeleton-row w-70" />
+              </div>
+              <div className="match-grid">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <MatchCardSkeleton
+                    key={`skeleton-${index}`}
+                    featured={index === 0}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : (
+            <section className="page-card">{uiText.common.loadingMatches}</section>
+          )
         ) : null}
 
         {matchesByDay.map((day) => (

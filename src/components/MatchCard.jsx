@@ -146,3 +146,23 @@ export default function MatchCard({ match }) {
     </article>
   );
 }
+
+export function MatchCardSkeleton({ featured = false }) {
+  return (
+    <article
+      className={`match-card ${featured ? "match-card-featured" : ""} skeleton-card`}
+      aria-hidden="true"
+    >
+      <div className="skeleton-row w-60" />
+      <div className="skeleton-row w-80" />
+      <div className="skeleton-grid">
+        <div className="skeleton-box" />
+        <div className="skeleton-box" />
+        <div className="skeleton-box" />
+      </div>
+      <div className="skeleton-row w-70" />
+      <div className="skeleton-row w-90" />
+      <div className="skeleton-row w-60" />
+    </article>
+  );
+}
