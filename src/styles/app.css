@@ -266,6 +266,51 @@
     @apply rounded-full border border-[#8dcfff5e] bg-[#0f2748b8] px-3 py-1 text-[0.75rem] uppercase tracking-[0.04em] text-[#d3e8ff] no-underline;
   }
 
+  .hero-sentinel {
+    height: 1px;
+  }
+
+  .home-sticky-nav {
+    @apply sticky z-[30] mb-4 mt-2 rounded-[14px] border border-[#7ebeff3b] bg-[#091022e6] p-3;
+    top: 10px;
+    backdrop-filter: blur(6px);
+  }
+
+  .dashboard-row-compact {
+    @apply flex flex-wrap items-center justify-center gap-2.5;
+  }
+
+  .dashboard-row-compact .dashboard-search {
+    flex: 1 1 300px;
+    max-width: 420px;
+  }
+
+  .dashboard-row-compact .dashboard-action {
+    flex: 0 1 170px;
+  }
+
+  .home-sticky-nav .dashboard-item {
+    @apply px-3 py-2;
+    min-height: auto;
+  }
+
+  .home-sticky-nav .dashboard-label {
+    @apply text-[0.68rem];
+  }
+
+  .home-sticky-nav .dashboard-control select,
+  .home-sticky-nav .dashboard-control input {
+    @apply text-[0.82rem] py-[6px];
+  }
+
+  .hero-shortcuts-compact {
+    @apply mt-2;
+  }
+
+  .hero-shortcuts-compact a {
+    @apply text-[0.68rem] px-2.5 py-0.5;
+  }
+
   .calendar {
     @apply grid gap-[18px];
   }
@@ -967,6 +1012,10 @@
 
   .intro-title {
     @apply mb-2.5;
+  }
+
+  .home-sticky-nav {
+    display: none;
   }
 }
 

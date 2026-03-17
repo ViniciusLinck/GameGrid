@@ -32,7 +32,10 @@ export default function WorldBackground({ mood = "idle" }) {
       }
 
       const isNarrowScreen = window.innerWidth < 900;
-      const lowPowerMode = !shouldAnimate || isNarrowScreen;
+      const deviceMemory = navigator.deviceMemory ?? 8;
+      const cpuCores = navigator.hardwareConcurrency ?? 8;
+      const isLowEndDevice = deviceMemory <= 4 || cpuCores <= 4;
+      const lowPowerMode = !shouldAnimate || isNarrowScreen || isLowEndDevice;
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(
@@ -45,10 +48,12 @@ export default function WorldBackground({ mood = "idle" }) {
 
       const renderer = new THREE.WebGLRenderer({
         canvas,
-        antialias: true,
+        antialias: !lowPowerMode,
         alpha: true,
+        powerPreference: lowPowerMode ? "low-power" : "high-performance",
       });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPowerMode ? 1.5 : 2));
+      const maxPixelRatio = lowPowerMode ? 1.1 : 1.6;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
       renderer.setSize(window.innerWidth, window.innerHeight);
 
       const globeMaterial = new THREE.MeshBasicMaterial({
@@ -58,9 +63,13 @@ export default function WorldBackground({ mood = "idle" }) {
         opacity: 0.26,
       });
 
-      const globe = new THREE.Mesh(new THREE.SphereGeometry(2.6, 40, 40), globeMaterial);
+      const globeSegments = lowPowerMode ? 26 : 40;
+      const globe = new THREE.Mesh(
+        new THREE.SphereGeometry(2.6, globeSegments, globeSegments),
+        globeMaterial
+      );
 
-      const starCount = lowPowerMode ? 320 : 760;
+      const starCount = lowPowerMode ? 240 : 640;
       const starPositions = new Float32Array(starCount * 3);
       for (let i = 0; i < starCount; i += 1) {
         const radius = 5.4 + Math.random() * 2.8;
@@ -92,6 +101,8 @@ export default function WorldBackground({ mood = "idle" }) {
 
       const pointer = { x: 0, y: 0 };
       const scrollDrift = { y: 0 };
+      let isScrolling = false;
+      let scrollTimeoutId = 0;
       let cometActive = false;
       let cometLife = 0;
       let cometVelocity = { x: 0.12, y: -0.05, z: 0.02 };
@@ -116,6 +127,14 @@ export default function WorldBackground({ mood = "idle" }) {
 
       const onScroll = () => {
         scrollDrift.y = Math.min(window.scrollY / 1200, 1.2);
+        isScrolling = true;
+        if (scrollTimeoutId) {
+          window.clearTimeout(scrollTimeoutId);
+        }
+        scrollTimeoutId = window.setTimeout(() => {
+          isScrolling = false;
+          scrollTimeoutId = 0;
+        }, 150);
       };
 
       const onVisibility = () => {
@@ -126,7 +145,7 @@ export default function WorldBackground({ mood = "idle" }) {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPowerMode ? 1.5 : 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
       };
 
       window.addEventListener("resize", onResize);
@@ -135,11 +154,29 @@ export default function WorldBackground({ mood = "idle" }) {
       document.addEventListener("visibilitychange", onVisibility);
 
       let animationFrame = 0;
-      const animate = () => {
+      const baseFps = lowPowerMode ? 30 : 60;
+      const frameInterval = 1000 / baseFps;
+      let lastFrame = 0;
+
+      const animate = (time) => {
         if (isHidden) {
           animationFrame = window.requestAnimationFrame(animate);
           return;
         }
+
+        const currentTime = typeof time === "number" ? time : 0;
+
+        if (isScrolling) {
+          animationFrame = window.requestAnimationFrame(animate);
+          return;
+        }
+
+        if (currentTime - lastFrame < frameInterval) {
+          animationFrame = window.requestAnimationFrame(animate);
+          return;
+        }
+
+        lastFrame = currentTime;
 
         const moodConfig = MOOD_PRESETS[moodRef.current] ?? MOOD_PRESETS.idle;
         const elapsed = clock.getElapsedTime();
@@ -154,7 +191,7 @@ export default function WorldBackground({ mood = "idle" }) {
         stars.position.y += (-pointer.y * 0.12 - stars.position.y) * 0.03;
         starsMaterial.opacity += (moodConfig.starOpacity - starsMaterial.opacity) * 0.08;
 
-        if (!cometActive && Math.random() < moodConfig.cometChance && !lowPowerMode) {
+        if (!cometActive && Math.random() < moodConfig.cometChance && !lowPowerMode && !isScrolling) {
           spawnComet();
         }
 
@@ -176,13 +213,16 @@ export default function WorldBackground({ mood = "idle" }) {
         animationFrame = window.requestAnimationFrame(animate);
       };
 
-      animate();
+      animate(0);
 
       cleanup = () => {
         window.removeEventListener("resize", onResize);
         window.removeEventListener("pointermove", onPointerMove);
         window.removeEventListener("scroll", onScroll);
         document.removeEventListener("visibilitychange", onVisibility);
+        if (scrollTimeoutId) {
+          window.clearTimeout(scrollTimeoutId);
+        }
         window.cancelAnimationFrame(animationFrame);
         renderer.dispose();
         globe.geometry.dispose();

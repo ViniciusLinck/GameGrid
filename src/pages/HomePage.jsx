@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import MatchCard, { MatchCardSkeleton } from "../components/MatchCard";
 import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
 import { uiText } from "../data/uiText";
@@ -18,8 +17,6 @@ const dayFormatter = new Intl.DateTimeFormat("pt-BR", {
   weekday: "long",
 });
 
-gsap.registerPlugin(ScrollTrigger);
-
 function formatDayHeading(dateISO) {
   const formatted = dayFormatter.format(new Date(`${dateISO}T12:00:00`));
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
@@ -34,6 +31,63 @@ function getNextMatchLabel(match) {
   return `Jogo ${match.id} | ${date} ${match.kickoff}`;
 }
 
+function MatchFiltersBar({
+  idPrefix,
+  stageOptions,
+  selectedStage,
+  onStageChange,
+  teamQuery,
+  onTeamQueryChange,
+  hasActiveFilters,
+  onClear,
+  compact = false,
+}) {
+  return (
+    <div className={`dashboard-row ${compact ? "dashboard-row-compact" : "dashboard-row-bottom"}`}>
+      <div className="dashboard-item dashboard-control">
+        <label htmlFor={`${idPrefix}-stage-select`} className="dashboard-label">
+          {uiText.home.stage}
+        </label>
+        <select
+          id={`${idPrefix}-stage-select`}
+          value={selectedStage}
+          onChange={(event) => onStageChange(event.target.value)}
+        >
+          {stageOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="dashboard-item dashboard-control dashboard-search">
+        <label htmlFor={`${idPrefix}-team-search`} className="dashboard-label">
+          {uiText.home.searchTeam}
+        </label>
+        <input
+          id={`${idPrefix}-team-search`}
+          type="search"
+          value={teamQuery}
+          placeholder={uiText.home.searchPlaceholder}
+          onChange={(event) => onTeamQueryChange(event.target.value)}
+        />
+      </div>
+
+      <div className="dashboard-item dashboard-action">
+        <button
+          type="button"
+          className="dashboard-clear-btn"
+          onClick={onClear}
+          disabled={!hasActiveFilters}
+        >
+          {uiText.home.clearSearch}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [selectedStage, setSelectedStage] = useState(uiText.home.allStages);
   const [teamQuery, setTeamQuery] = useState("");
@@ -41,8 +95,10 @@ export default function HomePage() {
   const [displayedTotal, setDisplayedTotal] = useState(0);
   const [isLoadingMatches, setIsLoadingMatches] = useState(true);
   const [displayedNext, setDisplayedNext] = useState("N/D");
+  const [showStickyNav, setShowStickyNav] = useState(false);
   const appRef = useRef(null);
   const heroRef = useRef(null);
+  const heroSentinelRef = useRef(null);
   const listRef = useRef(null);
   const previousRectsRef = useRef(new Map());
   const previousTotalRef = useRef(0);
@@ -55,6 +111,23 @@ export default function HomePage() {
   }, [selectedStage, setBackgroundMood]);
 
   useEffect(() => () => setBackgroundMood("transition"), [setBackgroundMood]);
+
+  useEffect(() => {
+    const sentinel = heroSentinelRef.current;
+    if (!sentinel) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickyNav(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -250,56 +323,8 @@ export default function HomePage() {
       ease: motionTokens.ease.soft,
     });
 
-    const context = gsap.context(() => {
-      const days = gsap.utils.toArray(".day-group");
-      days.forEach((day) => {
-        const header = day.querySelector(".day-group-header");
-        const cards = day.querySelectorAll(".match-card");
-
-        if (header) {
-          gsap.fromTo(
-            header,
-            { autoAlpha: 0, y: motionTokens.distance.sm },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: motionTokens.duration.fast,
-              ease: motionTokens.ease.soft,
-              clearProps: "transform,opacity",
-              scrollTrigger: {
-                trigger: day,
-                start: "top 85%",
-                once: true,
-              },
-            }
-          );
-        }
-
-        cards.forEach((card) => {
-          gsap.fromTo(
-            card,
-            { autoAlpha: 0 },
-            {
-              autoAlpha: 1,
-              duration: 0.45,
-              ease: motionTokens.ease.soft,
-              clearProps: "opacity",
-              scrollTrigger: {
-                trigger: card,
-                start: "top bottom",
-                once: true,
-              },
-            }
-          );
-        });
-      });
-    }, listRef);
-
     previousRectsRef.current = captureRects(listRef.current, "[data-flip-key]");
-
-    ScrollTrigger.refresh();
-
-    return () => context.revert();
+    return undefined;
   }, [filteredMatches, selectedStage, shouldAnimate, teamQuery]);
 
   const hasActiveFilters =
@@ -323,50 +348,18 @@ export default function HomePage() {
               {uiText.home.totalMatches(displayedTotal)}
             </div>
             <div className="dashboard-item dashboard-kpi">{uiText.home.nextMatch(displayedNext)}</div>
-
-            <div className="dashboard-item dashboard-control">
-              <label htmlFor="stage-select" className="dashboard-label">
-                {uiText.home.stage}
-              </label>
-              <select
-                id="stage-select"
-                value={selectedStage}
-                onChange={(event) => setSelectedStage(event.target.value)}
-              >
-                {stageOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
-          <div className="dashboard-row dashboard-row-bottom">
-            <div className="dashboard-item dashboard-control dashboard-search">
-              <label htmlFor="team-search" className="dashboard-label">
-                {uiText.home.searchTeam}
-              </label>
-              <input
-                id="team-search"
-                type="search"
-                value={teamQuery}
-                placeholder={uiText.home.searchPlaceholder}
-                onChange={(event) => setTeamQuery(event.target.value)}
-              />
-            </div>
-
-            <div className="dashboard-item dashboard-action">
-              <button
-                type="button"
-                className="dashboard-clear-btn"
-                onClick={clearFilters}
-                disabled={!hasActiveFilters}
-              >
-                {uiText.home.clearSearch}
-              </button>
-            </div>
-          </div>
+          <MatchFiltersBar
+            idPrefix="hero"
+            stageOptions={stageOptions}
+            selectedStage={selectedStage}
+            onStageChange={setSelectedStage}
+            teamQuery={teamQuery}
+            onTeamQueryChange={setTeamQuery}
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearFilters}
+          />
         </div>
 
         <nav className="hero-shortcuts" aria-label="Atalhos da pagina">
@@ -374,6 +367,27 @@ export default function HomePage() {
           <a href="#jogos-copa">Jogos</a>
         </nav>
       </header>
+      <div ref={heroSentinelRef} className="hero-sentinel" aria-hidden="true" />
+
+      {showStickyNav ? (
+        <div className="home-sticky-nav" aria-label="Navegacao rapida">
+          <MatchFiltersBar
+            idPrefix="sticky"
+            stageOptions={stageOptions}
+            selectedStage={selectedStage}
+            onStageChange={setSelectedStage}
+            teamQuery={teamQuery}
+            onTeamQueryChange={setTeamQuery}
+            hasActiveFilters={hasActiveFilters}
+            onClear={clearFilters}
+            compact
+          />
+          <nav className="hero-shortcuts hero-shortcuts-compact" aria-label="Atalhos rapidos">
+            <a href="#resumo-copa">Resumo</a>
+            <a href="#jogos-copa">Jogos</a>
+          </nav>
+        </div>
+      ) : null}
 
       <main className="calendar" ref={listRef} id="jogos-copa">
         {matchesByDay.length === 0 ? (
