@@ -278,20 +278,15 @@ export default function HomePage() {
         cards.forEach((card) => {
           gsap.fromTo(
             card,
-            { autoAlpha: 0, y: motionTokens.distance.sm },
+            { autoAlpha: 0 },
             {
               autoAlpha: 1,
-              y: 0,
-              duration: motionTokens.duration.fast,
-              ease: motionTokens.ease.soft,
-              clearProps: "transform,opacity",
+              duration: 0.18,
+              ease: "none",
+              clearProps: "opacity",
               scrollTrigger: {
                 trigger: card,
-                start: () => {
-                  const cardHeight = card.getBoundingClientRect().height || 0;
-                  const startPx = window.innerHeight - cardHeight * 0.4;
-                  return `top ${Math.round(startPx)}px`;
-                },
+                start: "top bottom",
                 once: true,
               },
             }
