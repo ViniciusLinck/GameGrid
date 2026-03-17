@@ -281,8 +281,8 @@ export default function HomePage() {
             { autoAlpha: 0 },
             {
               autoAlpha: 1,
-              duration: 0.18,
-              ease: "none",
+              duration: 0.45,
+              ease: motionTokens.ease.soft,
               clearProps: "opacity",
               scrollTrigger: {
                 trigger: card,
