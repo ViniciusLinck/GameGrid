@@ -8,6 +8,7 @@ import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { useBackgroundMood } from "../hooks/useBackgroundMood";
 import { uiText } from "../data/uiText";
 import { seoDefaults, useSeo } from "../hooks/useSeo";
+import ProfileShowcaseCard from "../components/ProfileShowcaseCard";
 
 function decodeRouteTeam(routeValue) {
   try {
@@ -102,6 +103,14 @@ export default function TeamPage() {
       sections.forEach((section) => {
         const revealType = section.getAttribute("data-reveal");
         if (revealType === "squad") {
+          const spotlight = section.querySelector(".coach-spotlight-card");
+          if (spotlight) {
+            gsap.set(spotlight, {
+              autoAlpha: 0,
+              y: motionTokens.distance.md,
+              scale: 0.98,
+            });
+          }
           gsap.set(section.querySelectorAll(".player-preview-card"), {
             autoAlpha: 0,
             y: motionTokens.distance.sm,
@@ -123,14 +132,34 @@ export default function TeamPage() {
           const revealType = target.getAttribute("data-reveal");
 
           if (revealType === "squad") {
-            gsap.to(target.querySelectorAll(".player-preview-card"), {
-              autoAlpha: 1,
-              y: 0,
-              duration: motionTokens.duration.medium,
-              ease: motionTokens.ease.soft,
-              stagger: motionTokens.stagger.tight,
-              clearProps: "all",
-            });
+            const spotlight = target.querySelector(".coach-spotlight-card");
+            const cards = target.querySelectorAll(".player-preview-card");
+
+            const timeline = gsap.timeline();
+
+            if (spotlight) {
+              timeline.to(spotlight, {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: motionTokens.duration.slow,
+                ease: motionTokens.ease.emphasis,
+                clearProps: "all",
+              });
+            }
+
+            timeline.to(
+              cards,
+              {
+                autoAlpha: 1,
+                y: 0,
+                duration: motionTokens.duration.medium,
+                ease: motionTokens.ease.soft,
+                stagger: motionTokens.stagger.tight,
+                clearProps: "all",
+              },
+              spotlight ? 0.08 : 0
+            );
           } else {
             gsap.to(target, {
               autoAlpha: 1,
@@ -189,23 +218,108 @@ export default function TeamPage() {
       return undefined;
     }
 
+    const supportsHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (!supportsHover) {
+      return undefined;
+    }
+
     const cards = pageRef.current.querySelectorAll(".player-preview-card");
 
     const onMove = (event) => {
       const target = event.currentTarget;
       const rect = target.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width - 0.5) * 8;
-      const y = ((event.clientY - rect.top) / rect.height - 0.5) * -8;
-      target.style.setProperty("--tiltX", `${y.toFixed(2)}deg`);
-      target.style.setProperty("--tiltY", `${x.toFixed(2)}deg`);
-      target.classList.add("tilt-active");
+      const rotateY = ((event.clientX - rect.left) / rect.width - 0.5) * 8.5;
+      const rotateX = ((event.clientY - rect.top) / rect.height - 0.5) * -7.5;
+      const media = target.querySelector(".player-card-media > img, .player-card-fallback");
+      const content = target.querySelector(".player-card-content");
+      const sheen = target.querySelector(".player-card-sheen");
+
+      gsap.to(target, {
+        rotateX,
+        rotateY,
+        y: -8,
+        duration: 0.28,
+        ease: motionTokens.ease.soft,
+        overwrite: true,
+      });
+
+      if (media) {
+        gsap.to(media, {
+          x: rotateY * 1.35,
+          y: rotateX * -1.15,
+          scale: 1.05,
+          duration: 0.3,
+          ease: motionTokens.ease.soft,
+          overwrite: true,
+        });
+      }
+
+      if (content) {
+        gsap.to(content, {
+          x: rotateY * 0.8,
+          y: -6 + rotateX * 0.25,
+          duration: 0.3,
+          ease: motionTokens.ease.soft,
+          overwrite: true,
+        });
+      }
+
+      if (sheen) {
+        gsap.to(sheen, {
+          xPercent: 22 + rotateY * 8,
+          opacity: 0.92,
+          duration: 0.32,
+          ease: motionTokens.ease.soft,
+          overwrite: true,
+        });
+      }
     };
 
     const onLeave = (event) => {
       const target = event.currentTarget;
-      target.style.setProperty("--tiltX", "0deg");
-      target.style.setProperty("--tiltY", "0deg");
-      target.classList.remove("tilt-active");
+      const media = target.querySelector(".player-card-media > img, .player-card-fallback");
+      const content = target.querySelector(".player-card-content");
+      const sheen = target.querySelector(".player-card-sheen");
+
+      gsap.to(target, {
+        rotateX: 0,
+        rotateY: 0,
+        y: 0,
+        duration: 0.6,
+        ease: "back.out(1.6)",
+        overwrite: true,
+      });
+
+      if (media) {
+        gsap.to(media, {
+          x: 0,
+          y: 0,
+          scale: 1,
+          duration: 0.5,
+          ease: motionTokens.ease.soft,
+          overwrite: true,
+        });
+      }
+
+      if (content) {
+        gsap.to(content, {
+          x: 0,
+          y: 0,
+          duration: 0.5,
+          ease: motionTokens.ease.soft,
+          overwrite: true,
+        });
+      }
+
+      if (sheen) {
+        gsap.to(sheen, {
+          xPercent: -42,
+          opacity: 0,
+          duration: 0.38,
+          ease: motionTokens.ease.exit,
+          overwrite: true,
+        });
+      }
     };
 
     cards.forEach((card) => {
@@ -345,6 +459,31 @@ export default function TeamPage() {
           </p>
         </header>
 
+        <ProfileShowcaseCard
+          variant="spotlight"
+          className="coach-spotlight-card"
+          title={teamDetails.coach?.name ?? "Comando técnico"}
+          subtitle={`${teamDetails.teamName} | ${teamDetails.coach?.role ?? "Técnico"}`}
+          eyebrow="Comando técnico"
+          badge={teamDetails.coach?.role ?? "Técnico"}
+          description="Liderança, leitura do elenco principal e preparação visual da seleção para o torneio."
+          image={teamDetails.coach?.image ?? ""}
+          imageAlt={teamDetails.coach?.name ?? "Técnico"}
+          mediaClassName="profile-showcase-media-coach"
+          showAura
+        >
+          <div className="coach-spotlight-meta">
+            <div>
+              <span>Seleção</span>
+              <strong>{teamDetails.teamName}</strong>
+            </div>
+            <div>
+              <span>Base</span>
+              <strong>{teamDetails.stadium}</strong>
+            </div>
+          </div>
+        </ProfileShowcaseCard>
+
         <div className="player-grid squad-grid">
           {teamDetails.players.slice(0, 11).map((player) => (
             <Link
@@ -355,6 +494,7 @@ export default function TeamPage() {
               className="player-preview-card"
               key={player.id}
             >
+              <div className="player-card-sheen" aria-hidden="true" />
               <div className="player-card-media">
                 {player.image ? (
                   <img src={player.image} alt={player.name} loading="lazy" />
@@ -364,6 +504,7 @@ export default function TeamPage() {
               </div>
 
               <section className="player-card-content">
+                <span className="player-card-kicker">Seleção principal</span>
                 <h3>{player.name}</h3>
                 <p>{translatePosition(player.position)}</p>
                 <div className="player-card-meta">

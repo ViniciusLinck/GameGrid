@@ -592,103 +592,107 @@
   }
 
   .player-preview-card {
-    @apply relative block overflow-hidden rounded-[26px] border border-[#c8d8ff3a] bg-[#e7ebf380] p-2 no-underline transition duration-300;
-    min-height: 332px;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 16px 34px rgba(3, 7, 19, 0.45);
-    transform:
-      perspective(900px)
-      rotateX(var(--tiltX, 0deg))
-      rotateY(var(--tiltY, 0deg))
-      translateY(0);
+    @apply relative block overflow-hidden rounded-[30px] border border-[#d8e8ff38] p-2 no-underline text-left;
+    min-height: 352px;
+    backdrop-filter: blur(8px);
+    background:
+      radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.22), transparent 32%),
+      linear-gradient(180deg, rgba(8, 16, 33, 0.08), rgba(8, 16, 33, 0) 32%),
+      linear-gradient(160deg, rgba(245, 248, 255, 0.86), rgba(160, 177, 205, 0.55));
+    box-shadow: 0 22px 42px rgba(2, 7, 19, 0.46);
+    transform-style: preserve-3d;
+    will-change: transform;
   }
 
   .player-preview-card:hover {
-    @apply -translate-y-1 border-[#f3f6ff80];
+    @apply border-[#f6f8ff78];
   }
 
-  .player-preview-card.tilt-active {
-    box-shadow:
-      0 18px 38px rgba(6, 12, 26, 0.48),
-      0 0 0 1px rgba(163, 219, 255, 0.2) inset;
-  }
-
-  .player-preview-card::before {
-    content: "";
-    @apply absolute left-2 right-2 bottom-2 rounded-b-[22px];
-    top: 60%;
-    background: linear-gradient(180deg, rgba(8, 16, 33, 0) 0%, rgba(8, 16, 33, 0.92) 78%);
-    z-index: 1;
-    transition: transform 260ms ease;
-    transform: translateY(0);
-  }
-
-  .player-preview-card:hover::before {
-    transform: translateY(100%);
+  .player-card-sheen {
+    @apply pointer-events-none absolute inset-y-[-18%] left-[-40%] z-[2] w-[44%];
+    opacity: 0;
+    transform: skewX(-18deg);
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.18),
+      rgba(255, 255, 255, 0.72),
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0)
+    );
+    mix-blend-mode: screen;
   }
 
   .player-card-media {
     @apply relative overflow-hidden rounded-[22px];
     aspect-ratio: 2 / 3;
-    background: linear-gradient(160deg, #ced8e8, #93a4c2);
+    background:
+      radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.3), transparent 32%),
+      linear-gradient(160deg, #d2dced, #7f93b8);
+  }
+
+  .player-card-media::after {
+    content: "";
+    @apply absolute inset-0;
+    background:
+      linear-gradient(180deg, rgba(10, 16, 32, 0) 48%, rgba(7, 12, 24, 0.7) 86%, rgba(7, 12, 24, 0.94) 100%),
+      linear-gradient(140deg, rgba(255, 208, 97, 0.15), transparent 48%);
+    z-index: 1;
   }
 
   .player-card-media img {
     @apply h-full w-full object-cover;
     object-position: 50% 14%;
-    transition: object-position 260ms ease, transform 260ms ease;
-  }
-
-  .player-preview-card:hover .player-card-media img {
-    transform: scale(1.03);
-    object-position: 50% 10%;
+    will-change: transform;
   }
 
   .player-card-media.coach {
     background:
-      radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.65), transparent 42%),
-      linear-gradient(160deg, #20344f, #0e1729);
+      radial-gradient(circle at 24% 20%, rgba(255, 255, 255, 0.4), transparent 40%),
+      linear-gradient(160deg, #243b5e, #0c1427);
   }
 
   .player-card-fallback {
     @apply flex h-full w-full items-center justify-center text-[2rem] font-bold tracking-[0.06em] text-white;
     background:
       radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.35), transparent 42%),
-      linear-gradient(160deg, #1c4a80, #0d1c34);
+      linear-gradient(160deg, #19467a, #0c1830);
+    will-change: transform;
   }
 
   .player-card-content {
-    @apply absolute inset-x-5 bottom-5 z-[2];
-    transition: transform 260ms ease;
+    @apply absolute inset-x-5 bottom-5 z-[3];
+    will-change: transform;
   }
 
-  .player-preview-card:hover .player-card-content {
-    transform: translateY(-3px);
+  .player-card-kicker {
+    @apply inline-flex rounded-full border border-[#ffffff36] bg-[#ffffff14] px-2.5 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.08em] text-[#eef5ff];
+    margin-bottom: 10px;
+    backdrop-filter: blur(6px);
   }
 
   .player-card-content h3 {
-    @apply text-[1.28rem] leading-[1.12] text-white;
+    @apply text-[1.34rem] leading-[1.06] text-white;
+    text-shadow: 0 10px 22px rgba(0, 0, 0, 0.34);
   }
 
   .player-card-content p {
-    @apply mt-1 text-[0.86rem] text-[#dde7ff];
+    @apply mt-1 text-[0.86rem] text-[#e5ecff];
   }
 
   .player-card-meta {
-    @apply mt-3 flex flex-wrap items-center justify-between gap-1.5;
+    @apply mt-3 flex flex-wrap items-center justify-between gap-2;
   }
 
   .player-card-tag {
-    @apply rounded-full bg-[#ffffff17] px-2.5 py-1 text-[0.72rem] uppercase tracking-[0.05em] text-[#edf4ff];
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    @apply rounded-full px-2.5 py-1 text-[0.7rem] uppercase tracking-[0.06em] text-[#f8fbff];
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .player-card-action {
-    @apply rounded-full bg-[#f3f6ffd9] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#111827];
-  }
-
-  .coach-preview-card .player-card-action {
-    @apply bg-[#ffe8a7] text-[#211100];
+    @apply rounded-full bg-[#f5d061] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.05em] text-[#1c1200];
+    box-shadow: 0 8px 18px rgba(245, 208, 97, 0.22);
   }
 
   .player-avatar {
@@ -745,24 +749,160 @@
     @apply mt-[14px] leading-[1.55] text-ink-300 text-center;
   }
 
-  .coach-spotlight-card {
-    @apply mt-4 rounded-[18px] border border-[#FFC90666] px-5 py-4 text-center;
+  .profile-showcase-card {
+    @apply relative overflow-hidden rounded-[28px] border border-[#78b9ff42];
     background:
-      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 35%),
-      linear-gradient(160deg, rgba(18, 31, 54, 0.95), rgba(7, 15, 27, 0.95));
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.14), transparent 36%),
+      linear-gradient(160deg, rgba(11, 22, 43, 0.96), rgba(7, 14, 27, 0.92));
+    box-shadow: 0 20px 40px rgba(3, 7, 19, 0.42);
+    transition: transform 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
   }
 
-  .coach-spotlight-card h3 {
-    @apply text-[1.28rem] font-bold text-[#f7fbff];
+  .profile-showcase-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 24px 48px rgba(3, 7, 19, 0.5);
   }
 
-  .coach-spotlight-card p {
-    @apply mt-1 text-[0.96rem] text-[#d5e6ff];
+  .profile-showcase-card-spotlight {
+    @apply mt-5;
+    min-height: 308px;
   }
 
-  .coach-spotlight-card span {
-    @apply mt-2 inline-block rounded-full border border-[#ffffff38] bg-[#ffffff12] px-3 py-1 text-[0.76rem] uppercase tracking-[0.06em] text-[#FFC906];
+  .profile-showcase-card-panel {
+    min-height: 100%;
+  }
+
+  .profile-showcase-aura {
+    @apply absolute inset-0 z-0 pointer-events-none;
+    opacity: 0.88;
+  }
+
+  .profile-showcase-shell {
+    @apply relative z-[1] grid gap-4 p-5;
+  }
+
+  .profile-showcase-card-spotlight .profile-showcase-shell {
+    grid-template-columns: minmax(0, 230px) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .profile-showcase-card-panel .profile-showcase-shell {
+    grid-template-columns: minmax(0, 120px) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .profile-showcase-media {
+    @apply relative overflow-hidden rounded-[24px];
+    aspect-ratio: 3 / 4;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background:
+      radial-gradient(circle at 25% 18%, rgba(255, 255, 255, 0.32), transparent 34%),
+      linear-gradient(160deg, #ccd7e9, #89a1c6);
+  }
+
+  .profile-showcase-card-panel .profile-showcase-media {
+    aspect-ratio: 4 / 5;
+  }
+
+  .profile-showcase-media::after {
+    content: "";
+    @apply absolute inset-0;
+    background:
+      linear-gradient(180deg, rgba(7, 12, 24, 0) 40%, rgba(7, 12, 24, 0.3) 100%),
+      linear-gradient(150deg, rgba(255, 208, 97, 0.08), transparent 50%);
+  }
+
+  .profile-showcase-media img,
+  .profile-showcase-fallback {
+    @apply h-full w-full object-cover;
+  }
+
+  .profile-showcase-media img {
+    object-position: 50% 16%;
+  }
+
+  .profile-showcase-media-coach {
+    background:
+      radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.3), transparent 34%),
+      linear-gradient(160deg, #213654, #101a2e);
+  }
+
+  .profile-showcase-fallback {
+    @apply flex items-center justify-center text-[2rem] font-bold tracking-[0.06em] text-white;
+    background:
+      radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.28), transparent 36%),
+      linear-gradient(160deg, #1b4677, #0b172d);
+  }
+
+  .profile-showcase-copy {
+    @apply min-w-0;
+  }
+
+  .profile-showcase-eyebrow {
+    @apply text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[#8fd3ff];
+  }
+
+  .profile-showcase-heading {
+    @apply mt-2 flex flex-wrap items-start justify-between gap-3;
+  }
+
+  .profile-showcase-heading h3 {
+    @apply font-display text-[clamp(1.5rem,2.6vw,2.35rem)] leading-[0.96] tracking-[0.04em] text-[#f6f9ff];
+    text-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .profile-showcase-card-panel .profile-showcase-heading h3 {
+    @apply text-[1.45rem];
+  }
+
+  .profile-showcase-pill {
+    @apply inline-flex rounded-full border border-[#ffffff2e] bg-[#ffffff12] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-[#ffd061];
+  }
+
+  .profile-showcase-subtitle {
+    @apply mt-2 text-[0.95rem] text-[#dce8ff];
+  }
+
+  .profile-showcase-description {
+    @apply mt-3 max-w-[58ch] text-[0.88rem] leading-[1.5] text-ink-300;
+  }
+
+  .profile-showcase-metric {
+    @apply mt-4 inline-flex items-end gap-2 rounded-[18px] border border-[#8acfff3d] bg-[#091529cc] px-4 py-3;
+  }
+
+  .profile-showcase-metric strong {
+    @apply font-display text-[2rem] leading-none text-[#f8fbff];
+  }
+
+  .profile-showcase-metric span {
+    @apply text-[0.8rem] uppercase tracking-[0.08em] text-[#8fd3ff];
+  }
+
+  .profile-showcase-extra {
+    @apply mt-4;
+  }
+
+  .coach-spotlight-card {
+    border-color: rgba(255, 208, 97, 0.32);
+  }
+
+  .coach-spotlight-meta {
+    @apply grid gap-3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .coach-spotlight-meta div {
+    @apply rounded-[18px] border border-[#ffffff1f] bg-[#081427c9] px-4 py-3;
+    backdrop-filter: blur(5px);
+  }
+
+  .coach-spotlight-meta span {
+    @apply block text-[0.7rem] uppercase tracking-[0.08em] text-[#8fd3ff];
+  }
+
+  .coach-spotlight-meta strong {
+    @apply mt-2 block text-[0.92rem] leading-[1.35] text-[#f5f9ff];
   }
 
   .achievements-grid {
@@ -771,7 +911,7 @@
   }
 
   .achievement-card {
-    @apply rounded-[14px] border border-[#73b8ff47] bg-[#081427d6] p-4;
+    border-color: rgba(115, 184, 255, 0.24);
   }
 
   .achievement-card h4 {
@@ -783,11 +923,13 @@
   }
 
   .achievement-list {
-    @apply mt-3 grid gap-2;
+    @apply mt-4 grid gap-2;
   }
 
   .achievement-item {
-    @apply rounded-[10px] border border-[#6aaeff42] bg-[#0d1e39c9] px-3 py-2;
+    @apply rounded-[14px] border border-[#6aaeff33] px-3 py-3;
+    background:
+      linear-gradient(160deg, rgba(12, 27, 52, 0.96), rgba(9, 19, 37, 0.9));
   }
 
   .achievement-item strong {
@@ -926,17 +1068,8 @@
     transform: none;
   }
 
-  .player-preview-card::before,
-  .player-preview-card:hover::before {
-    transform: translateY(0);
-  }
-
-  .player-preview-card:hover .player-card-media img {
-    transform: none;
-  }
-
-  .player-preview-card:hover .player-card-content {
-    transform: none;
+  .player-card-sheen {
+    opacity: 0;
   }
 }
 
@@ -963,6 +1096,10 @@
 
   .player-grid {
     @apply grid-cols-2;
+  }
+
+  .profile-showcase-card-spotlight .profile-showcase-shell {
+    grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
   }
 }
 
@@ -1016,6 +1153,21 @@
     min-height: 300px;
   }
 
+  .profile-showcase-shell,
+  .profile-showcase-card-spotlight .profile-showcase-shell,
+  .profile-showcase-card-panel .profile-showcase-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-showcase-card-panel .profile-showcase-media,
+  .profile-showcase-card-spotlight .profile-showcase-media {
+    max-width: 240px;
+  }
+
+  .coach-spotlight-meta {
+    grid-template-columns: 1fr;
+  }
+
   .section-anchor {
     scroll-margin-top: 72px;
   }
@@ -1055,5 +1207,9 @@
 @media (max-width: 420px) {
   .history-track {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-showcase-card-panel .profile-showcase-heading {
+    @apply flex-col;
   }
 }

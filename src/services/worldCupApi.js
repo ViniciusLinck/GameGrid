@@ -5,7 +5,7 @@ import { normalizeTeamName } from "../utils/flags";
 const SPORTS_DB_BASE = "https://www.thesportsdb.com/api/v1/json/3";
 const SOCCER_WC_LEAGUE_ID = "4429";
 const TRANSLATION_API_BASE = "https://api.mymemory.translated.net/get";
-const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v1";
+const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v2";
 const MATCHES_CACHE_TTL_MS = 3 * 60 * 1000;
 const translationCache = new Map();
 
@@ -387,7 +387,10 @@ export async function fetchWorldCupMatches2026() {
 
     if (apiEvents.length === 0) {
       const fallbackResult = {
-        matches: FALLBACK_MATCHES_2026,
+        matches: FALLBACK_MATCHES_2026.map((match) => ({
+          ...match,
+          kickoffUtc: null,
+        })),
         sourceLabel: "local",
       };
       writeMatchesCache(fallbackResult);
@@ -401,6 +404,7 @@ export async function fetchWorldCupMatches2026() {
       if (!apiEvent) {
         return {
           ...fallbackMatch,
+          kickoffUtc: fallbackMatch.kickoffUtc ?? null,
           mapsUrl: createMapsUrl(fallbackMatch.venue),
         };
       }
@@ -415,6 +419,7 @@ export async function fetchWorldCupMatches2026() {
         stage: withStageFallback(apiEvent.strRound, fallbackMatch.stage),
         date: apiEvent.dateEvent ?? fallbackMatch.date,
         kickoff: normalizeKickoff(apiEvent.strTimeLocal ?? apiEvent.strTime),
+        kickoffUtc: apiEvent.strTimestamp ?? null,
         venue,
         mapsUrl: createMapsUrl(venue),
         homeTeam: { name: apiEvent.strHomeTeam ?? fallbackMatch.homeTeam.name },
@@ -436,6 +441,7 @@ export async function fetchWorldCupMatches2026() {
     const fallbackResult = {
       matches: FALLBACK_MATCHES_2026.map((match) => ({
         ...match,
+        kickoffUtc: null,
         mapsUrl: createMapsUrl(match.venue),
       })),
       sourceLabel: "local",

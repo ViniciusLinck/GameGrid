@@ -10,6 +10,7 @@ import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { useBackgroundMood } from "../hooks/useBackgroundMood";
 import { seoDefaults, useSeo } from "../hooks/useSeo";
 import { fetchWorldCupMatches2026 } from "../services/worldCupApi";
+import { normalizeTeamName, normalizeText } from "../utils/flags";
 import logo from "../../assets/logo.svg";
 
 const dayFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -26,12 +27,36 @@ function formatDayHeading(dateISO) {
 }
 
 function getNextMatchLabel(match) {
-  const date = new Intl.DateTimeFormat("pt-BR", {
+  const startDate = getMatchStartDate(match);
+  if (!startDate) {
+    const date = new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+    }).format(new Date(`${match.date}T12:00:00`));
+    return `Jogo ${match.id} | ${date} ${match.kickoff}`;
+  }
+
+  const label = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
-  }).format(new Date(`${match.date}T12:00:00`));
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(startDate);
 
-  return `Jogo ${match.id} | ${date} ${match.kickoff}`;
+  return `Jogo ${match.id} | ${label.replace(",", "")}`;
+}
+
+function getMatchStartDate(match) {
+  if (match?.kickoffUtc) {
+    const startDate = new Date(match.kickoffUtc);
+    if (!Number.isNaN(startDate.getTime())) {
+      return startDate;
+    }
+  }
+
+  const fallbackDate = new Date(`${match?.date}T${match?.kickoff ?? "00:00"}:00`);
+  return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
 }
 
 function MatchFiltersBar({
@@ -185,15 +210,25 @@ export default function HomePage() {
   }, [matches]);
 
   const filteredMatches = useMemo(() => {
-    const normalizedQuery = teamQuery.trim().toLowerCase();
+    const rawQuery = normalizeText(teamQuery);
+    const canonicalQuery = normalizeTeamName(teamQuery);
+    const queryTerms = Array.from(new Set([rawQuery, canonicalQuery].filter(Boolean)));
 
     return matches.filter((match) => {
       const matchesStage =
         selectedStage === uiText.home.allStages ? true : match.stage === selectedStage;
       const matchesTeam =
-        normalizedQuery.length === 0
+        queryTerms.length === 0
           ? true
-          : `${match.homeTeam.name} ${match.awayTeam.name}`.toLowerCase().includes(normalizedQuery);
+          : [match.homeTeam.name, match.awayTeam.name].some((teamName) => {
+              const teamTerms = Array.from(
+                new Set([normalizeText(teamName), normalizeTeamName(teamName)].filter(Boolean))
+              );
+
+              return queryTerms.some((queryTerm) =>
+                teamTerms.some((teamTerm) => teamTerm.includes(queryTerm))
+              );
+            });
 
       return matchesStage && matchesTeam;
     });
@@ -218,8 +253,8 @@ export default function HomePage() {
     const now = new Date();
     return (
       matches.find((match) => {
-        const kickoffDate = new Date(`${match.date}T${match.kickoff}:00`);
-        return kickoffDate >= now;
+        const kickoffDate = getMatchStartDate(match);
+        return kickoffDate ? kickoffDate >= now : false;
       }) ?? matches[matches.length - 1]
     );
   }, [matches]);
@@ -242,7 +277,8 @@ export default function HomePage() {
           "@type": "SportsEvent",
           position: index + 1,
           name: `${match.homeTeam.name} x ${match.awayTeam.name}`,
-          startDate: `${match.date}T${match.kickoff}:00`,
+          startDate:
+            getMatchStartDate(match)?.toISOString() ?? `${match.date}T${match.kickoff}:00`,
           location: {
             "@type": "Place",
             name: match.venue.stadium,

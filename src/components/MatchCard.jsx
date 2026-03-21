@@ -8,6 +8,11 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
   month: "2-digit",
 });
+const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
 
 function formatCountdown(targetDate, now) {
   const diffMs = targetDate.getTime() - now.getTime();
@@ -48,6 +53,18 @@ function teamRoute(teamName) {
   return `/time/${encodeURIComponent(teamName)}`;
 }
 
+function resolveMatchStart(match) {
+  if (match?.kickoffUtc) {
+    const startDate = new Date(match.kickoffUtc);
+    if (!Number.isNaN(startDate.getTime())) {
+      return startDate;
+    }
+  }
+
+  const fallbackDate = new Date(`${match?.date}T${(match?.kickoff || "00:00").slice(0, 5)}:00`);
+  return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
+}
+
 const CAZETV_YOUTUBE_URL = "https://www.youtube.com/@CazeTV";
 
 export default function MatchCard({ match }) {
@@ -55,8 +72,11 @@ export default function MatchCard({ match }) {
   const [now, setNow] = useState(() => new Date());
   const mapsUrl = match.mapsUrl ?? buildMapsUrl(match.venue);
   const isFeatured = match.id === 1;
-  const startsAtUtc = `${match.date}T${(match.kickoff || "00:00").slice(0, 5)}:00Z`;
-  const countdownLabel = isFeatured ? formatCountdown(new Date(startsAtUtc), now) : null;
+  const startsAt = resolveMatchStart(match);
+  const startsAtIso = startsAt?.toISOString() ?? "";
+  const countdownLabel = isFeatured && startsAt ? formatCountdown(startsAt, now) : null;
+  const displayDate = startsAt ? formatDateLabel(startsAtIso.slice(0, 10)) : formatDateLabel(match.date);
+  const displayTime = startsAt ? timeFormatter.format(startsAt) : match.kickoff;
 
   useEffect(() => {
     if (!isFeatured) {
@@ -71,7 +91,7 @@ export default function MatchCard({ match }) {
   }, [isFeatured]);
 
   return (
-    <article className={`match-card ${isFeatured ? "match-card-featured" : ""}`}>
+    <article id={`match-${match.id}`} className={`match-card ${isFeatured ? "match-card-featured" : ""}`}>
       <div className="match-header">
         <p>Jogo {match.id}</p>
         <span>{match.stage}</span>
@@ -91,8 +111,8 @@ export default function MatchCard({ match }) {
       </div>
 
       <div className="match-footer">
-        <p>{formatDateLabel(match.date)}</p>
-        <p>{match.kickoff}</p>
+        <p>{displayDate}</p>
+        <p>{displayTime}</p>
         <p>
           <a
             href={mapsUrl}
@@ -136,7 +156,7 @@ export default function MatchCard({ match }) {
             matchId={match.id}
             homeName={match.homeTeam.name}
             awayName={match.awayTeam.name}
-            startsAtUtc={startsAtUtc}
+            startsAtUtc={startsAtIso}
             venue={match.venue}
             mode={import.meta.env.VITE_POLL_MODE === "remote" ? "remote" : "local"}
             lang={(import.meta.env.VITE_POLL_LANG || "pt").slice(0, 2)}

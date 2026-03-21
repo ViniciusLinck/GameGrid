@@ -12,6 +12,7 @@ import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { useBackgroundMood } from "../hooks/useBackgroundMood";
 import { uiText } from "../data/uiText";
 import { seoDefaults, useSeo } from "../hooks/useSeo";
+import ProfileShowcaseCard from "../components/ProfileShowcaseCard";
 
 function formatLabelDate(rawDate) {
   if (!rawDate || rawDate === "Nao informado") {
@@ -74,6 +75,7 @@ function buildDefaultCoach(teamName) {
       name: "Carlo Ancelotti",
       team: "Brasil",
       role: "TÃ©cnico",
+      image: "",
     };
   }
 
@@ -81,6 +83,7 @@ function buildDefaultCoach(teamName) {
     name: `TÃ©cnico de ${teamName}`,
     team: teamName,
     role: "TÃ©cnico",
+    image: "",
   };
 }
 
@@ -192,6 +195,7 @@ export default function PlayerPage() {
           name: coachName,
           team: teamLabel,
           role: coachRole,
+          image: teamPayload.coach?.image ?? "",
         };
 
         setCoach(nextCoach);
@@ -470,10 +474,19 @@ export default function PlayerPage() {
           </header>
 
           <div className="achievements-grid">
-            <article className="achievement-card">
-              <h4>{player.name}</h4>
-              <p className="achievement-summary">{playerCount} conquistas registradas</p>
-
+            <ProfileShowcaseCard
+              variant="panel"
+              className="achievement-card"
+              title={player.name}
+              subtitle={player.team}
+              eyebrow="Jogador"
+              badge={translatePosition(player.position)}
+              description="Perfil principal com leitura rapida das conquistas registradas para o torneio."
+              metricValue={String(playerCount)}
+              metricLabel="conquistas registradas"
+              image={player.image}
+              imageAlt={player.name}
+            >
               {playerAchievements.length > 0 ? (
                 <ul className="achievement-list" aria-label="Conquistas do jogador">
                   {playerAchievements.map((achievement) => (
@@ -487,14 +500,22 @@ export default function PlayerPage() {
               ) : (
                 <p className="achievement-empty">{uiText.player.noAchievements}</p>
               )}
-            </article>
+            </ProfileShowcaseCard>
 
-            <article className="achievement-card">
-              <h4>{coach.name}</h4>
-              <p className="achievement-summary">
-                {coach.role} | {coachCount} conquistas registradas
-              </p>
-
+            <ProfileShowcaseCard
+              variant="panel"
+              className="achievement-card"
+              title={coach.name}
+              subtitle={coach.team}
+              eyebrow="Comando técnico"
+              badge={coach.role}
+              description="Leitura visual do técnico responsável pelo desenho tático e gestão do elenco."
+              metricValue={String(coachCount)}
+              metricLabel="conquistas registradas"
+              image={coach.image}
+              imageAlt={coach.name}
+              mediaClassName="profile-showcase-media-coach"
+            >
               {coachAchievements.length > 0 ? (
                 <ul className="achievement-list" aria-label="Conquistas do tÃ©cnico">
                   {coachAchievements.map((achievement) => (
@@ -508,7 +529,7 @@ export default function PlayerPage() {
               ) : (
                 <p className="achievement-empty">{uiText.player.noAchievements}</p>
               )}
-            </article>
+            </ProfileShowcaseCard>
           </div>
         </section>
       </article>

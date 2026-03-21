@@ -3,8 +3,8 @@ const flagFiles = import.meta.glob("../../assets/*-bg.svg", {
   import: "default",
 });
 
-const normalize = (value) =>
-  value
+export const normalizeText = (value = "") =>
+  String(value)
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -73,13 +73,13 @@ const aliasToAssetName = {
 const flagsByCountry = new Map(
   Object.entries(flagFiles).map(([filePath, fileUrl]) => {
     const fileName = filePath.split("/").pop()?.replace("-bg.svg", "") ?? "";
-    return [normalize(fileName), fileUrl];
+    return [normalizeText(fileName), fileUrl];
   })
 );
 
 export function normalizeTeamName(name) {
-  const normalized = normalize(name);
-  return normalize(aliasToAssetName[normalized] ?? normalized);
+  const normalized = normalizeText(name);
+  return normalizeText(aliasToAssetName[normalized] ?? normalized);
 }
 
 export function getFlagByTeamName(teamName) {
