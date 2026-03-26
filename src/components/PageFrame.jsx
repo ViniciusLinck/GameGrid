@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import IntroKickoff from "./IntroKickoff";
 import WorldBackground from "./WorldBackground";
+import Footer from "./Footer";
 import { BackgroundMoodContext } from "../hooks/useBackgroundMood";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { motionTokens } from "../animations/motionTokens";
@@ -142,6 +143,7 @@ export default function PageFrame() {
         <main className="page-content" ref={pageRef} id="conteudo-principal">
           <Outlet />
         </main>
+        <Footer />
       </BackgroundMoodContext.Provider>
 
       <button
