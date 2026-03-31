@@ -128,9 +128,12 @@ export default function PageFrame() {
             <img src={brandLogo} alt="GameGrid" className="brand-logo" />
           </Link>
           <div className="global-nav-controls">
-            <label className="language-switcher">
-              <span>{uiText.language.label}</span>
+            <div className="language-switcher">
+              <label htmlFor="language-select" className="language-switcher-label">
+                {uiText.language.label}
+              </label>
               <select
+                id="language-select"
                 value={language}
                 onChange={(event) => setLanguage(event.target.value)}
                 aria-label={uiText.language.aria}
@@ -142,7 +145,7 @@ export default function PageFrame() {
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
           </div>
         </div>
       </header>

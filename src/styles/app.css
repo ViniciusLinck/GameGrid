@@ -131,18 +131,30 @@
 
   .global-nav-controls {
     @apply flex items-center justify-center;
+    position: relative;
+    z-index: 6;
   }
 
   .language-switcher {
     @apply flex items-center gap-2 rounded-full border border-[#8bcfff52] bg-[#0d1f3eb8] px-3 py-2 text-[0.8rem] text-ink-300;
+    position: relative;
+    z-index: 6;
+    pointer-events: auto;
   }
 
-  .language-switcher span {
+  .language-switcher-label {
     @apply uppercase tracking-[0.04em] text-ink-400;
+    cursor: pointer;
   }
 
   .language-select {
     @apply rounded-full border border-[#84c6ff57] bg-[#0f1e3ad6] px-3 py-1.5 text-[0.84rem] text-ink-100 outline-none;
+    appearance: auto;
+    min-width: 148px;
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+    z-index: 7;
   }
 
   .brand-link {
@@ -1485,6 +1497,11 @@
 
   .language-switcher {
     @apply flex-col rounded-[18px] px-4 py-3;
+  }
+
+  .language-switcher-label {
+    width: 100%;
+    text-align: center;
   }
 
   .language-select {
