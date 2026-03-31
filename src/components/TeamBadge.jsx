@@ -21,8 +21,8 @@ function getInitials(name) {
   return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
 }
 
-export default function TeamBadge({ name }) {
-  const flagSrc = getFlagByTeamName(name);
+export default function TeamBadge({ name, flagSrc: explicitFlagSrc = "" }) {
+  const flagSrc = explicitFlagSrc || getFlagByTeamName(name);
 
   return (
     <div className="team-badge">

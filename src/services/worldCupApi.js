@@ -3,11 +3,50 @@ import { getWorldCupProfile } from "../data/worldCupInsights";
 import { normalizeTeamName } from "../utils/flags";
 
 const SPORTS_DB_BASE = "https://www.thesportsdb.com/api/v1/json/3";
-const SOCCER_WC_LEAGUE_ID = "4429";
+const FIFA_API_BASE = "https://api.fifa.com/api/v3";
+const FIFA_WC_SEASON_ID = "285023";
 const TRANSLATION_API_BASE = "https://api.mymemory.translated.net/get";
-const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v2";
+const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v4";
 const MATCHES_CACHE_TTL_MS = 3 * 60 * 1000;
 const translationCache = new Map();
+
+const fifaStageLabels = {
+  "First Stage": "Fase de grupos",
+  "Round of 32": "16 avos de final",
+  "Round of 16": "Oitavas de final",
+  "Quarter-final": "Quartas de final",
+  "Semi-final": "Semifinal",
+  "Play-off for third place": "Disputa de 3º lugar",
+  Final: "Final",
+};
+
+const fifaVenueAliases = {
+  "Mexico City Stadium": { stadium: "Estadio Azteca", city: "Mexico City" },
+  "Guadalajara Stadium": { stadium: "Estadio Akron", city: "Guadalajara" },
+  "Monterrey Stadium": { stadium: "Estadio BBVA", city: "Monterrey" },
+  "Vancouver Stadium": { stadium: "BC Place", city: "Vancouver" },
+  "Toronto Stadium": { stadium: "BMO Field", city: "Toronto" },
+  "Seattle Stadium": { stadium: "Lumen Field", city: "Seattle" },
+  "San Francisco Bay Area Stadium": {
+    stadium: "Levi's Stadium",
+    city: "San Francisco Bay Area",
+  },
+  "Los Angeles Stadium": { stadium: "SoFi Stadium", city: "Los Angeles" },
+  "Dallas Stadium": { stadium: "AT&T Stadium", city: "Dallas" },
+  "Houston Stadium": { stadium: "NRG Stadium", city: "Houston" },
+  "Kansas City Stadium": { stadium: "Arrowhead Stadium", city: "Kansas City" },
+  "Atlanta Stadium": { stadium: "Mercedes-Benz Stadium", city: "Atlanta" },
+  "Miami Stadium": { stadium: "Hard Rock Stadium", city: "Miami" },
+  "Boston Stadium": { stadium: "Gillette Stadium", city: "Boston" },
+  "Philadelphia Stadium": {
+    stadium: "Lincoln Financial Field",
+    city: "Philadelphia",
+  },
+  "New York/New Jersey Stadium": {
+    stadium: "MetLife Stadium",
+    city: "New York New Jersey",
+  },
+};
 
 const teamNameAliases = {
   "united states": "USA",
@@ -89,16 +128,142 @@ function withStageFallback(stageName, fallbackStage) {
   return stageName || fallbackStage || "Fase de grupos";
 }
 
-function normalizeKickoff(timeValue) {
-  if (!timeValue) {
-    return "A definir";
-  }
-  return timeValue.slice(0, 5);
-}
-
 function createMapsUrl(venue) {
   const query = `${venue.stadium}, ${venue.city}`;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+function localDateKeyFromIso(dateTime) {
+  const date = new Date(dateTime);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatLocalKickoff(dateTime) {
+  const date = new Date(dateTime);
+  if (Number.isNaN(date.getTime())) {
+    return "A definir";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function fifaLabel(entries, fallback = "") {
+  return entries?.[0]?.Description?.trim() || fallback;
+}
+
+function translateFifaStage(stageName) {
+  return fifaStageLabels[stageName] ?? withStageFallback(stageName, "Fase de grupos");
+}
+
+function formatGroupStageRank(code) {
+  const match = String(code ?? "").trim().match(/^([1234])([A-L])$/i);
+  if (!match) {
+    return "";
+  }
+
+  return `${match[1]}º do Grupo ${match[2].toUpperCase()}`;
+}
+
+function formatBestThirdCode(code) {
+  const match = String(code ?? "").trim().match(/^3([A-L]+)$/i);
+  if (!match) {
+    return "";
+  }
+
+  return `Melhor 3º entre ${match[1].toUpperCase().split("").join("/")}`;
+}
+
+function formatKnockoutCode(code) {
+  const winnerMatch = String(code ?? "").trim().match(/^W(\d{1,3})$/i);
+  if (winnerMatch) {
+    return `Vencedor do Jogo ${winnerMatch[1]}`;
+  }
+
+  const loserMatch = String(code ?? "").trim().match(/^L(\d{1,3})$/i);
+  if (loserMatch) {
+    return `Perdedor do Jogo ${loserMatch[1]}`;
+  }
+
+  return "";
+}
+
+function formatFifaPlaceholder(code) {
+  return (
+    formatGroupStageRank(code) ||
+    formatBestThirdCode(code) ||
+    formatKnockoutCode(code) ||
+    String(code ?? "").trim() ||
+    "A definir"
+  );
+}
+
+function normalizeFifaFlagUrl(flagUrl) {
+  if (!flagUrl) {
+    return "";
+  }
+
+  return flagUrl.replace("flags-{format}-{size}/", "flags-sq-4/");
+}
+
+function isPlayoffPlaceholder(teamName, placeholderCode) {
+  const safeName = String(teamName ?? "").trim();
+  if (!safeName) {
+    return Boolean(placeholderCode);
+  }
+
+  return /\/|qualifier|play-off/i.test(safeName);
+}
+
+function toVenueView(stadiumData, fallbackVenue) {
+  const officialStadium = fifaLabel(stadiumData?.Name, fallbackVenue?.stadium ?? "A definir");
+  const officialCity = fifaLabel(stadiumData?.CityName, fallbackVenue?.city ?? "A definir");
+  return fifaVenueAliases[officialStadium] ?? {
+    stadium: officialStadium,
+    city: officialCity,
+  };
+}
+
+function toMatchTeam(side, placeholderCode) {
+  const teamName = fifaLabel(side?.TeamName, "");
+  const isPlaceholder = isPlayoffPlaceholder(teamName, placeholderCode);
+
+  return {
+    name: isPlaceholder ? teamName || formatFifaPlaceholder(placeholderCode) : teamName,
+    code: side?.IdCountry ?? side?.Abbreviation ?? "",
+    flagSrc: isPlaceholder ? "" : normalizeFifaFlagUrl(side?.PictureUrl),
+    isPlaceholder,
+  };
+}
+
+function toFifaMatchView(match) {
+  const kickoffUtc = match?.Date ?? null;
+  const venue = toVenueView(match?.Stadium);
+  const stage = translateFifaStage(fifaLabel(match?.StageName));
+  const group = fifaLabel(match?.GroupName, "");
+
+  return {
+    id: Number(match?.MatchNumber ?? match?.IdMatch ?? 0),
+    stage,
+    group,
+    date: kickoffUtc ? localDateKeyFromIso(kickoffUtc) : "",
+    kickoff: kickoffUtc ? formatLocalKickoff(kickoffUtc) : "A definir",
+    kickoffUtc,
+    venue,
+    mapsUrl: createMapsUrl(venue),
+    homeTeam: toMatchTeam(match?.Home, match?.PlaceHolderA),
+    awayTeam: toMatchTeam(match?.Away, match?.PlaceHolderB),
+  };
 }
 
 function fallbackPlayer(teamName, position, index) {
@@ -379,17 +544,26 @@ export async function fetchWorldCupMatches2026() {
 
   try {
     const data = await fetchJson(
-      `${SPORTS_DB_BASE}/eventsseason.php?id=${SOCCER_WC_LEAGUE_ID}&s=2026`
+      `${FIFA_API_BASE}/calendar/matches?language=en&count=500&idSeason=${FIFA_WC_SEASON_ID}`
     );
-    const apiEvents = (data.events ?? []).filter(
-      (event) => event.strHomeTeam && event.strAwayTeam
-    );
+    const fifaMatches = (data.Results ?? [])
+      .map(toFifaMatchView)
+      .filter((match) => match.id > 0 && match.date)
+      .sort((left, right) => {
+        const leftTime = left.kickoffUtc ? new Date(left.kickoffUtc).getTime() : 0;
+        const rightTime = right.kickoffUtc ? new Date(right.kickoffUtc).getTime() : 0;
+        return leftTime - rightTime || left.id - right.id;
+      });
 
-    if (apiEvents.length === 0) {
+    if (fifaMatches.length === 0) {
       const fallbackResult = {
         matches: FALLBACK_MATCHES_2026.map((match) => ({
           ...match,
           kickoffUtc: null,
+          group: "",
+          homeTeam: { ...match.homeTeam, flagSrc: "", code: "", isPlaceholder: true },
+          awayTeam: { ...match.awayTeam, flagSrc: "", code: "", isPlaceholder: true },
+          mapsUrl: createMapsUrl(match.venue),
         })),
         sourceLabel: "local",
       };
@@ -397,39 +571,9 @@ export async function fetchWorldCupMatches2026() {
       return fallbackResult;
     }
 
-    // A API publica ainda nao retorna os 104 jogos completos;
-    // fazemos merge dos jogos existentes da API no calendario base.
-    const mergedMatches = FALLBACK_MATCHES_2026.map((fallbackMatch, index) => {
-      const apiEvent = apiEvents[index];
-      if (!apiEvent) {
-        return {
-          ...fallbackMatch,
-          kickoffUtc: fallbackMatch.kickoffUtc ?? null,
-          mapsUrl: createMapsUrl(fallbackMatch.venue),
-        };
-      }
-
-      const venue = {
-        stadium: apiEvent.strVenue ?? fallbackMatch.venue.stadium,
-        city: apiEvent.strCity ?? fallbackMatch.venue.city,
-      };
-
-      return {
-        ...fallbackMatch,
-        stage: withStageFallback(apiEvent.strRound, fallbackMatch.stage),
-        date: apiEvent.dateEvent ?? fallbackMatch.date,
-        kickoff: normalizeKickoff(apiEvent.strTimeLocal ?? apiEvent.strTime),
-        kickoffUtc: apiEvent.strTimestamp ?? null,
-        venue,
-        mapsUrl: createMapsUrl(venue),
-        homeTeam: { name: apiEvent.strHomeTeam ?? fallbackMatch.homeTeam.name },
-        awayTeam: { name: apiEvent.strAwayTeam ?? fallbackMatch.awayTeam.name },
-      };
-    });
-
     const apiResult = {
-      matches: mergedMatches,
-      sourceLabel: "api+local",
+      matches: fifaMatches,
+      sourceLabel: "fifa-official",
     };
     writeMatchesCache(apiResult);
     return apiResult;
@@ -442,6 +586,9 @@ export async function fetchWorldCupMatches2026() {
       matches: FALLBACK_MATCHES_2026.map((match) => ({
         ...match,
         kickoffUtc: null,
+        group: "",
+        homeTeam: { ...match.homeTeam, flagSrc: "", code: "", isPlaceholder: true },
+        awayTeam: { ...match.awayTeam, flagSrc: "", code: "", isPlaceholder: true },
         mapsUrl: createMapsUrl(match.venue),
       })),
       sourceLabel: "local",

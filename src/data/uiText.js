@@ -16,14 +16,17 @@ export const uiText = {
   home: {
     title: "Copa do Mundo Masculina 2026",
     subtitle:
-      "Calendario interativo com 104 jogos, filtros por fase e detalhes de times e jogadores.",
+      "Calendario interativo com 104 jogos oficiais, filtros por fase, dia e time, alem de detalhes de selecoes e jogadores.",
     totalMatches: (count) => `${count} jogos no total`,
     nextMatch: (value) => `Proximo: ${value}`,
     stage: "Fase:",
+    day: "Dia:",
     searchTeam: "Buscar selecao:",
     searchPlaceholder: "Ex.: Brasil, Franca, Argentina",
     clearSearch: "Limpar",
     allStages: "Todas as fases",
+    allDays: "Todos os dias",
+    visibleMatches: (count) => `${count} jogos visiveis`,
     noMatchesWithFilter: "Nenhum jogo encontrado com os filtros atuais.",
   },
   team: {

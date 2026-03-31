@@ -311,6 +311,66 @@
     @apply cursor-not-allowed border-[#ffffff24] bg-[#1a2338a8] text-ink-400;
   }
 
+  .dashboard-meta-row {
+    @apply mt-1 flex flex-wrap items-center justify-between gap-2 px-1 text-[0.78rem];
+  }
+
+  .dashboard-source-note {
+    @apply text-[#9fd9ff];
+  }
+
+  .dashboard-filtered-note {
+    @apply text-ink-400;
+  }
+
+  .team-filter-strip {
+    @apply flex flex-wrap items-center justify-center gap-2;
+  }
+
+  .team-filter-strip-compact {
+    @apply justify-start overflow-x-auto pb-1;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+  }
+
+  .team-filter-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-[#76b8ff3f] bg-[#0a1730bf] px-2.5 py-1.5 text-left text-[0.76rem] text-[#d9edff];
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease,
+      color 180ms ease;
+  }
+
+  .team-filter-chip:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 201, 6, 0.48);
+    box-shadow: 0 10px 18px rgba(3, 7, 19, 0.24);
+  }
+
+  .team-filter-chip.active {
+    color: #fffdf0;
+    border-color: rgba(255, 201, 6, 0.66);
+    background: linear-gradient(135deg, rgba(204, 30, 74, 0.22), rgba(14, 33, 62, 0.94));
+  }
+
+  .team-filter-flag {
+    @apply inline-flex h-8 w-8 flex-none items-center justify-center overflow-hidden rounded-full border border-[#ffffff26] bg-[#10203dcc];
+  }
+
+  .team-filter-flag img {
+    @apply block h-full w-full object-cover;
+  }
+
+  .team-filter-flag span {
+    @apply text-[0.7rem] font-semibold text-[#FFC906];
+  }
+
+  .team-filter-name {
+    @apply whitespace-nowrap;
+  }
+
   .hero-shortcuts {
     @apply mt-3 flex flex-wrap items-center justify-center gap-2;
   }
@@ -422,6 +482,10 @@
     @apply flex w-full min-w-0 justify-center rounded-[10px] no-underline transition-transform duration-200;
   }
 
+  .team-link-static {
+    cursor: default;
+  }
+
   .team-link:first-child {
     @apply justify-center;
   }
@@ -432,6 +496,10 @@
 
   .team-link:hover {
     @apply -translate-y-0.5;
+  }
+
+  .team-link-static:hover {
+    transform: none;
   }
 
   .versus {
@@ -1179,6 +1247,16 @@
 
   .hero-logo {
     @apply w-[130px];
+  }
+
+  .dashboard-meta-row {
+    @apply flex-col items-start;
+  }
+
+  .team-filter-strip {
+    @apply justify-start overflow-x-auto pb-1;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
   }
 
   .global-nav-links {

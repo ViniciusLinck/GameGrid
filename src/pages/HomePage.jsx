@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import MatchCard, { MatchCardSkeleton } from "../components/MatchCard";
-import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
 import { uiText } from "../data/uiText";
 import { motionTokens } from "../animations/motionTokens";
 import { captureRects, playFlip } from "../animations/flip";
@@ -10,7 +9,7 @@ import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { useBackgroundMood } from "../hooks/useBackgroundMood";
 import { seoDefaults, useSeo } from "../hooks/useSeo";
 import { fetchWorldCupMatches2026 } from "../services/worldCupApi";
-import { normalizeTeamName, normalizeText } from "../utils/flags";
+import { getFlagByTeamName, normalizeTeamName, normalizeText } from "../utils/flags";
 import logo from "../../assets/logo.svg";
 
 const dayFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -24,6 +23,21 @@ gsap.registerPlugin(ScrollTrigger);
 function formatDayHeading(dateISO) {
   const formatted = dayFormatter.format(new Date(`${dateISO}T12:00:00`));
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+function getSourceSummary(sourceLabel) {
+  switch (sourceLabel) {
+    case "fifa-official":
+      return "Fonte oficial: API de calendario da FIFA";
+    case "local":
+      return "Fonte: calendario local de contingencia";
+    default:
+      return "Fonte: calendario sincronizado";
+  }
+}
+
+function teamKeyFromName(teamName) {
+  return normalizeTeamName(teamName);
 }
 
 function getNextMatchLabel(match) {
@@ -64,62 +78,120 @@ function MatchFiltersBar({
   stageOptions,
   selectedStage,
   onStageChange,
+  dayOptions,
+  selectedDay,
+  onDayChange,
+  teamOptions,
+  selectedTeamKey,
+  onTeamToggle,
   teamQuery,
   onTeamQueryChange,
   hasActiveFilters,
   onClear,
+  filteredCount,
+  sourceSummary,
   compact = false,
 }) {
   return (
-    <div className={`dashboard-row ${compact ? "dashboard-row-compact" : "dashboard-row-bottom"}`}>
-      <div className="dashboard-item dashboard-control">
-        <label htmlFor={`${idPrefix}-stage-select`} className="dashboard-label">
-          {uiText.home.stage}
-        </label>
-        <select
-          id={`${idPrefix}-stage-select`}
-          value={selectedStage}
-          onChange={(event) => onStageChange(event.target.value)}
-        >
-          {stageOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+    <>
+      <div className={`dashboard-row ${compact ? "dashboard-row-compact" : "dashboard-row-bottom"}`}>
+        <div className="dashboard-item dashboard-control">
+          <label htmlFor={`${idPrefix}-stage-select`} className="dashboard-label">
+            {uiText.home.stage}
+          </label>
+          <select
+            id={`${idPrefix}-stage-select`}
+            value={selectedStage}
+            onChange={(event) => onStageChange(event.target.value)}
+          >
+            {stageOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="dashboard-item dashboard-control">
+          <label htmlFor={`${idPrefix}-day-select`} className="dashboard-label">
+            {uiText.home.day}
+          </label>
+          <select
+            id={`${idPrefix}-day-select`}
+            value={selectedDay}
+            onChange={(event) => onDayChange(event.target.value)}
+          >
+            {dayOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="dashboard-item dashboard-control dashboard-search">
+          <label htmlFor={`${idPrefix}-team-search`} className="dashboard-label">
+            {uiText.home.searchTeam}
+          </label>
+          <input
+            id={`${idPrefix}-team-search`}
+            type="search"
+            value={teamQuery}
+            placeholder={uiText.home.searchPlaceholder}
+            onChange={(event) => onTeamQueryChange(event.target.value)}
+          />
+        </div>
+
+        <div className="dashboard-item dashboard-action">
+          <button
+            type="button"
+            className="dashboard-clear-btn"
+            onClick={onClear}
+            disabled={!hasActiveFilters}
+          >
+            {uiText.home.clearSearch}
+          </button>
+        </div>
       </div>
 
-      <div className="dashboard-item dashboard-control dashboard-search">
-        <label htmlFor={`${idPrefix}-team-search`} className="dashboard-label">
-          {uiText.home.searchTeam}
-        </label>
-        <input
-          id={`${idPrefix}-team-search`}
-          type="search"
-          value={teamQuery}
-          placeholder={uiText.home.searchPlaceholder}
-          onChange={(event) => onTeamQueryChange(event.target.value)}
-        />
+      <div className="dashboard-meta-row">
+        <p className="dashboard-source-note">{sourceSummary}</p>
+        <p className="dashboard-filtered-note">{uiText.home.visibleMatches(filteredCount)}</p>
       </div>
 
-      <div className="dashboard-item dashboard-action">
-        <button
-          type="button"
-          className="dashboard-clear-btn"
-          onClick={onClear}
-          disabled={!hasActiveFilters}
-        >
-          {uiText.home.clearSearch}
-        </button>
+      <div className={`team-filter-strip ${compact ? "team-filter-strip-compact" : ""}`}>
+        {teamOptions.map((team) => {
+          const flagSrc = team.flagSrc || getFlagByTeamName(team.name);
+          const isActive = selectedTeamKey === team.key;
+
+          return (
+            <button
+              key={team.key}
+              type="button"
+              className={`team-filter-chip ${isActive ? "active" : ""}`}
+              onClick={() => onTeamToggle(team.key)}
+              aria-pressed={isActive}
+              title={`${isActive ? "Remover filtro de" : "Filtrar por"} ${team.name}`}
+            >
+              <span className="team-filter-flag" aria-hidden="true">
+                {flagSrc ? <img src={flagSrc} alt="" loading="lazy" /> : <span>{team.shortName}</span>}
+              </span>
+              <span className="team-filter-name">{team.name}</span>
+            </button>
+          );
+        })}
       </div>
-    </div>
+    </>
   );
 }
 
 export default function HomePage() {
   const [selectedStage, setSelectedStage] = useState(uiText.home.allStages);
+  const [selectedDay, setSelectedDay] = useState(uiText.home.allDays);
+  const [selectedTeamKey, setSelectedTeamKey] = useState("");
   const [teamQuery, setTeamQuery] = useState("");
   const [matches, setMatches] = useState([]);
+  const [matchesSource, setMatchesSource] = useState("local");
   const [displayedTotal, setDisplayedTotal] = useState(0);
   const [isLoadingMatches, setIsLoadingMatches] = useState(true);
   const [displayedNext, setDisplayedNext] = useState("N/D");
@@ -134,10 +206,16 @@ export default function HomePage() {
   const hasInitRevealRef = useRef(false);
   const { shouldAnimate } = useMotionPreferences();
   const { setBackgroundMood } = useBackgroundMood();
+  const sourceSummary = useMemo(() => getSourceSummary(matchesSource), [matchesSource]);
+  const hasActiveFilters =
+    selectedStage !== uiText.home.allStages ||
+    selectedDay !== uiText.home.allDays ||
+    selectedTeamKey.length > 0 ||
+    teamQuery.trim().length > 0;
 
   useEffect(() => {
-    setBackgroundMood(selectedStage === uiText.home.allStages ? "idle" : "focus");
-  }, [selectedStage, setBackgroundMood]);
+    setBackgroundMood(hasActiveFilters ? "focus" : "idle");
+  }, [hasActiveFilters, setBackgroundMood]);
 
   useEffect(() => () => setBackgroundMood("transition"), [setBackgroundMood]);
 
@@ -175,6 +253,7 @@ export default function HomePage() {
           return;
         }
         setMatches(result.matches);
+        setMatchesSource(result.sourceLabel ?? "local");
         if (!hasLoadedMatchesRef.current) {
           setIsLoadingMatches(false);
           hasLoadedMatchesRef.current = true;
@@ -209,6 +288,45 @@ export default function HomePage() {
     return [uiText.home.allStages, ...Array.from(allStages)];
   }, [matches]);
 
+  const dayOptions = useMemo(
+    () => [
+      { value: uiText.home.allDays, label: uiText.home.allDays },
+      ...Array.from(new Set(matches.map((match) => match.date))).map((date) => ({
+        value: date,
+        label: formatDayHeading(date),
+      })),
+    ],
+    [matches]
+  );
+
+  const teamOptions = useMemo(() => {
+    const uniqueTeams = new Map();
+
+    for (const match of matches) {
+      for (const team of [match.homeTeam, match.awayTeam]) {
+        if (!team?.name || team.isPlaceholder) {
+          continue;
+        }
+
+        const key = teamKeyFromName(team.name);
+        if (!key || uniqueTeams.has(key)) {
+          continue;
+        }
+
+        uniqueTeams.set(key, {
+          key,
+          name: team.name,
+          shortName: team.name.slice(0, 2).toUpperCase(),
+          flagSrc: team.flagSrc ?? "",
+        });
+      }
+    }
+
+    return Array.from(uniqueTeams.values()).sort((left, right) =>
+      left.name.localeCompare(right.name, "pt-BR")
+    );
+  }, [matches]);
+
   const filteredMatches = useMemo(() => {
     const rawQuery = normalizeText(teamQuery);
     const canonicalQuery = normalizeTeamName(teamQuery);
@@ -217,6 +335,13 @@ export default function HomePage() {
     return matches.filter((match) => {
       const matchesStage =
         selectedStage === uiText.home.allStages ? true : match.stage === selectedStage;
+      const matchesDay = selectedDay === uiText.home.allDays ? true : match.date === selectedDay;
+      const matchesSelectedTeam =
+        selectedTeamKey.length === 0
+          ? true
+          : [match.homeTeam.name, match.awayTeam.name].some(
+              (teamName) => teamKeyFromName(teamName) === selectedTeamKey
+            );
       const matchesTeam =
         queryTerms.length === 0
           ? true
@@ -230,9 +355,9 @@ export default function HomePage() {
               );
             });
 
-      return matchesStage && matchesTeam;
+      return matchesStage && matchesDay && matchesSelectedTeam && matchesTeam;
     });
-  }, [matches, selectedStage, teamQuery]);
+  }, [matches, selectedDay, selectedStage, selectedTeamKey, teamQuery]);
 
   const matchesByDay = useMemo(() => {
     const grouped = new Map();
@@ -365,7 +490,7 @@ export default function HomePage() {
 
     previousRectsRef.current = captureRects(listRef.current, "[data-flip-key]");
     return undefined;
-  }, [filteredMatches, selectedStage, shouldAnimate, teamQuery]);
+  }, [filteredMatches, selectedDay, selectedStage, selectedTeamKey, shouldAnimate, teamQuery]);
 
   useLayoutEffect(() => {
     if (!listRef.current || !shouldAnimate || hasInitRevealRef.current || matchesByDay.length === 0) {
@@ -427,11 +552,10 @@ export default function HomePage() {
     return () => context.revert();
   }, [matchesByDay.length, shouldAnimate]);
 
-  const hasActiveFilters =
-    selectedStage !== uiText.home.allStages || teamQuery.trim().length > 0;
-
   function clearFilters() {
     setSelectedStage(uiText.home.allStages);
+    setSelectedDay(uiText.home.allDays);
+    setSelectedTeamKey("");
     setTeamQuery("");
   }
 
@@ -455,10 +579,26 @@ export default function HomePage() {
             stageOptions={stageOptions}
             selectedStage={selectedStage}
             onStageChange={setSelectedStage}
+            dayOptions={dayOptions}
+            selectedDay={selectedDay}
+            onDayChange={setSelectedDay}
+            teamOptions={teamOptions}
+            selectedTeamKey={selectedTeamKey}
+            onTeamToggle={(teamKey) => {
+              setSelectedTeamKey((current) => (current === teamKey ? "" : teamKey));
+              setTeamQuery("");
+            }}
             teamQuery={teamQuery}
-            onTeamQueryChange={setTeamQuery}
+            onTeamQueryChange={(value) => {
+              setTeamQuery(value);
+              if (value.trim()) {
+                setSelectedTeamKey("");
+              }
+            }}
             hasActiveFilters={hasActiveFilters}
             onClear={clearFilters}
+            filteredCount={filteredMatches.length}
+            sourceSummary={sourceSummary}
           />
         </div>
 
@@ -476,10 +616,26 @@ export default function HomePage() {
             stageOptions={stageOptions}
             selectedStage={selectedStage}
             onStageChange={setSelectedStage}
+            dayOptions={dayOptions}
+            selectedDay={selectedDay}
+            onDayChange={setSelectedDay}
+            teamOptions={teamOptions}
+            selectedTeamKey={selectedTeamKey}
+            onTeamToggle={(teamKey) => {
+              setSelectedTeamKey((current) => (current === teamKey ? "" : teamKey));
+              setTeamQuery("");
+            }}
             teamQuery={teamQuery}
-            onTeamQueryChange={setTeamQuery}
+            onTeamQueryChange={(value) => {
+              setTeamQuery(value);
+              if (value.trim()) {
+                setSelectedTeamKey("");
+              }
+            }}
             hasActiveFilters={hasActiveFilters}
             onClear={clearFilters}
+            filteredCount={filteredMatches.length}
+            sourceSummary={sourceSummary}
             compact
           />
           <nav className="hero-shortcuts hero-shortcuts-compact" aria-label="Atalhos rapidos">

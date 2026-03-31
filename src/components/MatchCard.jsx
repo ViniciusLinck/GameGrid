@@ -37,11 +37,8 @@ function formatCountdown(targetDate, now) {
   return `${minutes}m ${seconds}s`;
 }
 
-function formatDateLabel(dateISO) {
-  return dateFormatter
-    .format(new Date(`${dateISO}T12:00:00`))
-    .replace(".", "")
-    .toUpperCase();
+function formatDateLabel(dateValue) {
+  return dateFormatter.format(dateValue).replace(".", "").toUpperCase();
 }
 
 function buildMapsUrl(venue) {
@@ -51,6 +48,20 @@ function buildMapsUrl(venue) {
 
 function teamRoute(teamName) {
   return `/time/${encodeURIComponent(teamName)}`;
+}
+
+function TeamSide({ team }) {
+  const content = <TeamBadge name={team.name} flagSrc={team.flagSrc} />;
+
+  if (team?.isPlaceholder) {
+    return <div className="team-link team-link-static">{content}</div>;
+  }
+
+  return (
+    <Link to={teamRoute(team.name)} className="team-link">
+      {content}
+    </Link>
+  );
 }
 
 function resolveMatchStart(match) {
@@ -75,7 +86,9 @@ export default function MatchCard({ match }) {
   const startsAt = resolveMatchStart(match);
   const startsAtIso = startsAt?.toISOString() ?? "";
   const countdownLabel = isFeatured && startsAt ? formatCountdown(startsAt, now) : null;
-  const displayDate = startsAt ? formatDateLabel(startsAtIso.slice(0, 10)) : formatDateLabel(match.date);
+  const displayDate = startsAt
+    ? formatDateLabel(startsAt)
+    : formatDateLabel(new Date(`${match.date}T12:00:00`));
   const displayTime = startsAt ? timeFormatter.format(startsAt) : match.kickoff;
 
   useEffect(() => {
@@ -94,20 +107,16 @@ export default function MatchCard({ match }) {
     <article id={`match-${match.id}`} className={`match-card ${isFeatured ? "match-card-featured" : ""}`}>
       <div className="match-header">
         <p>Jogo {match.id}</p>
-        <span>{match.stage}</span>
+        <span>{match.group ? `${match.stage} | ${match.group}` : match.stage}</span>
       </div>
       {countdownLabel ? <p className="match-countdown">Começa em {countdownLabel}</p> : null}
 
       <div className="match-sides">
-        <Link to={teamRoute(match.homeTeam.name)} className="team-link">
-          <TeamBadge name={match.homeTeam.name} />
-        </Link>
+        <TeamSide team={match.homeTeam} />
 
         <span className="versus">x</span>
 
-        <Link to={teamRoute(match.awayTeam.name)} className="team-link">
-          <TeamBadge name={match.awayTeam.name} />
-        </Link>
+        <TeamSide team={match.awayTeam} />
       </div>
 
       <div className="match-footer">
