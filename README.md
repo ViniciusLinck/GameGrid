@@ -1,6 +1,6 @@
 # GameGrid | Copa do Mundo 2026
 
-SPA em React para acompanhar a Copa do Mundo 2026 com foco em UX, dados dinamicos, animacoes e navegacao rapida.
+Projeto em React para acompanhar a Copa do Mundo 2026 com foco em UX, dados dinamicos, animacoes e navegacao rapida.
 
 Site publicado: `https://viniciuslinck.github.io/GameGrid/`
 
@@ -67,51 +67,13 @@ Site publicado: `https://viniciuslinck.github.io/GameGrid/`
 - Limpeza de dados locais pelo proprio usuario
 - Identificador tecnico da enquete com retencao limitada no navegador
 
-## Responsividade (ultimos ajustes)
-
-- Melhor distribuicao da `dashboard-bar` com grid adaptativo
-- Acoes do card de partida (`Previsao` e `Assistir`) em layout flexivel
-- Widget de previsao ajustado para mobile (opcoes em uma coluna no celular)
-- Rodape dos cards de partida com melhor leitura em telas pequenas
-
-## SEO e Descoberta
-
-- Meta tags base em `index.html`
-- SEO dinamico por rota com `useSeo`
-- Open Graph e Twitter Cards
-- JSON-LD por pagina (Home, Time, Jogador)
-- `robots.txt`, `sitemap.xml` e `site.webmanifest`
-
 ## APIs e Integracoes
 
 - TheSportsDB: partidas, times, jogadores e conquistas
 - MyMemory Translation API: traducao quando necessario
 - Google Maps Search URL: abertura de estadio/cidade no mapa
 
-## Arquivos Importantes
-
-- `src/services/worldCupApi.js`: integracao principal de dados + fallback local
-- `src/services/sportsdbApi.js`: funcoes MVP com filtros/tabela
-- `src/services/translationApi.js`: traducao
-- `src/services/mapsHelper.js`: links de mapa
-- `src/components/poll/*`: widget e resultados da previsao
-- `src/hooks/usePollLocal.js` e `src/hooks/usePollRemote.js`
-- `src/components/mvp/*`: exemplos completos (GameCard, MatchModal, FiltersBar, GroupTable, Countdown)
-- `docs/POLL_README.md`: documentacao da feature de poll
-- `docs/POLL_ISSUES.md`: backlog em formato de issues
-- `docs/SCALING.md`: diretrizes de escalonamento
-- `serverless-example/polls-serverless.js`: exemplo de endpoint para votos globais
-
 ## Variaveis de Ambiente
-
-Crie um `.env` para controlar o modo de poll:
-
-```bash
-VITE_POLL_MODE=local
-VITE_POLL_LANG=pt
-# somente modo remoto:
-VITE_POLL_API_BASE_URL=https://seu-endpoint.com/api
-```
 
 ## Scripts
 
@@ -122,21 +84,4 @@ npm run build
 npm run preview
 ```
 
-## Deploy (GitHub Pages)
 
-Workflows:
-
-- `.github/workflows/ci.yml`: validacao automatica de build na `master`
-- `.github/workflows/deploy-pages.yml`: deploy no GitHub Pages pela `master`
-
-- Build com Vite
-- Copia `dist/index.html` para `dist/404.html` (SPA fallback)
-- Publica no GitHub Pages
-- Trigger por push em `master`
-
-## Observacoes
-
-- Projeto sem backend obrigatorio (frontend-first)
-- Sem banco de dados interno
-- Favoritos e votos locais ficam no navegador do usuario
-- Em caso de falha de API externa, o app usa fallback local para manter a experiencia
