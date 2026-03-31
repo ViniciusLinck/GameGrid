@@ -1,4 +1,4 @@
-﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Link, useParams } from "react-router-dom";
 import { getFlagByTeamName } from "../utils/flags";
@@ -6,8 +6,9 @@ import { fetchTeamDetails } from "../services/worldCupApi";
 import { motionTokens } from "../animations/motionTokens";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { useBackgroundMood } from "../hooks/useBackgroundMood";
-import { uiText } from "../data/uiText";
 import { seoDefaults, useSeo } from "../hooks/useSeo";
+import { useLanguage } from "../context/LanguageContext";
+import { translateBestFinish, translatePosition } from "../utils/footballText";
 import ProfileShowcaseCard from "../components/ProfileShowcaseCard";
 
 function decodeRouteTeam(routeValue) {
@@ -18,32 +19,9 @@ function decodeRouteTeam(routeValue) {
   }
 }
 
-function translatePosition(position) {
-  const value = (position ?? "").trim().toLowerCase();
-  const map = {
-    goalkeeper: "Goleiro",
-    defender: "Defensor",
-    "centre-back": "Zagueiro",
-    "center-back": "Zagueiro",
-    "right-back": "Lateral direito",
-    "left-back": "Lateral esquerdo",
-    midfielder: "Meio-campista",
-    "defensive midfield": "Volante",
-    "central midfield": "Meio-campista central",
-    forward: "Atacante",
-    "centre-forward": "Centroavante",
-    "right winger": "Ponta direita",
-    "left winger": "Ponta esquerda",
-    striker: "Centroavante",
-    manager: "TÃ©cnico",
-  };
-
-  return map[value] ?? position ?? "PosiÃ§Ã£o nÃ£o informada";
-}
-
-function TeamSkeleton() {
+function TeamSkeleton({ label }) {
   return (
-    <section className="page-card skeleton-card" aria-label="Carregando time">
+    <section className="page-card skeleton-card" aria-label={label}>
       <div className="skeleton-row" />
       <div className="skeleton-row w-70" />
       <div className="skeleton-grid">
@@ -66,6 +44,7 @@ export default function TeamPage() {
   const pageRef = useRef(null);
   const { shouldAnimate } = useMotionPreferences();
   const { setBackgroundMood } = useBackgroundMood();
+  const { language, apiLanguage, uiText } = useLanguage();
 
   useEffect(() => {
     setBackgroundMood("focus");
@@ -76,7 +55,7 @@ export default function TeamPage() {
     let mounted = true;
     setLoading(true);
 
-    fetchTeamDetails(teamName).then((payload) => {
+    fetchTeamDetails(teamName, apiLanguage).then((payload) => {
       if (!mounted) {
         return;
       }
@@ -87,7 +66,7 @@ export default function TeamPage() {
     return () => {
       mounted = false;
     };
-  }, [teamName]);
+  }, [apiLanguage, teamName]);
 
   useLayoutEffect(() => {
     if (!shouldAnimate || !pageRef.current) {
@@ -341,14 +320,14 @@ export default function TeamPage() {
 
   useSeo({
     title: `${teamDetails?.teamName ?? teamName} | GameGrid`,
-    description: `Perfil da seleÃ§Ã£o ${teamDetails?.teamName ?? teamName}: histÃ³rico de Copas, elenco principal e desempenho recente.`,
+    description: uiText.team.pageDescription(teamDetails?.teamName ?? teamName),
     path: `/time/${encodeURIComponent(teamName)}`,
     type: "profile",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "SportsTeam",
       name: teamDetails?.teamName ?? teamName,
-      sport: "Futebol",
+      sport: "Football",
       url: `${seoDefaults.siteUrl}/time/${encodeURIComponent(teamName)}`,
       member: (teamDetails?.players ?? []).slice(0, 11).map((player) => ({
         "@type": "Person",
@@ -360,8 +339,8 @@ export default function TeamPage() {
   if (loading) {
     return (
       <>
-        <TeamSkeleton />
-        <TeamSkeleton />
+        <TeamSkeleton label={uiText.common.loadingTeam} />
+        <TeamSkeleton label={uiText.common.loadingTeam} />
       </>
     );
   }
@@ -379,7 +358,7 @@ export default function TeamPage() {
 
   return (
     <section ref={pageRef}>
-      <nav className="section-nav section-nav-sticky" aria-label="Atalhos da pÃ¡gina do time">
+      <nav className="section-nav section-nav-sticky" aria-label={uiText.team.quickNavAria}>
         <a href="#time-resumo" className={activeSection === "time-resumo" ? "active" : ""}>
           {uiText.team.quickNavSummary}
         </a>
@@ -400,7 +379,7 @@ export default function TeamPage() {
 
         <div className="team-headline">
           {flagSrc ? (
-            <img className="team-main-flag" src={flagSrc} alt={`Bandeira de ${teamName}`} />
+            <img className="team-main-flag" src={flagSrc} alt={teamName} />
           ) : (
             <div className="team-main-flag fallback">?</div>
           )}
@@ -418,21 +397,27 @@ export default function TeamPage() {
 
         <div className="team-stats-grid">
           <article className="team-stat-card">
-            <span>Copas do Mundo</span>
+            <span>{uiText.team.worldCups}</span>
             <strong>{profile?.worldCups ?? uiText.common.notAvailable}</strong>
           </article>
           <article className="team-stat-card">
-            <span>Melhor campanha</span>
-            <strong>{profile?.bestFinish ?? uiText.common.notAvailable}</strong>
+            <span>{uiText.team.bestCampaign}</span>
+            <strong>
+              {profile?.bestFinish
+                ? translateBestFinish(profile.bestFinish, language)
+                : uiText.common.notAvailable}
+            </strong>
           </article>
           <article className="team-stat-card">
-            <span>Ranking FIFA</span>
-            <strong>#{profile?.fifaRank ?? uiText.common.notAvailable}</strong>
+            <span>{uiText.team.fifaRank}</span>
+            <strong>
+              {profile?.fifaRank ? `#${profile.fifaRank}` : uiText.common.notAvailable}
+            </strong>
           </article>
         </div>
 
         <div className="world-cup-history">
-          <h3>Ãšltimas 5 Copas</h3>
+          <h3>{uiText.team.lastFiveWorldCups}</h3>
           <div className="history-track">
             {historyLabels.map((label, index) => (
               <div className="history-item" key={label}>
@@ -453,32 +438,32 @@ export default function TeamPage() {
         data-reveal="squad"
       >
         <header className="squad-header">
-          <h2 className="squad-title">11 Jogadores Principais</h2>
-          <p className="players-hint squad-subtitle">
-            Clique em um jogador para abrir os detalhes completos.
-          </p>
+          <h2 className="squad-title">{uiText.team.mainPlayers}</h2>
+          <p className="players-hint squad-subtitle">{uiText.team.clickPlayerHint}</p>
         </header>
 
         <ProfileShowcaseCard
           variant="spotlight"
           className="coach-spotlight-card"
-          title={teamDetails.coach?.name ?? "Comando técnico"}
-          subtitle={`${teamDetails.teamName} | ${teamDetails.coach?.role ?? "Técnico"}`}
-          eyebrow="Comando técnico"
-          badge={teamDetails.coach?.role ?? "Técnico"}
-          description="Liderança, leitura do elenco principal e preparação visual da seleção para o torneio."
+          title={teamDetails.coach?.name ?? uiText.team.coachCommand}
+          subtitle={`${teamDetails.teamName} | ${
+            teamDetails.coach?.role ?? uiText.player.coachRole
+          }`}
+          eyebrow={uiText.team.coachCommand}
+          badge={teamDetails.coach?.role ?? uiText.player.coachRole}
+          description={uiText.team.coachDescription}
           image={teamDetails.coach?.image ?? ""}
-          imageAlt={teamDetails.coach?.name ?? "Técnico"}
+          imageAlt={teamDetails.coach?.name ?? uiText.team.coachCommand}
           mediaClassName="profile-showcase-media-coach"
           showAura
         >
           <div className="coach-spotlight-meta">
             <div>
-              <span>Seleção</span>
+              <span>{uiText.team.selectionLabel}</span>
               <strong>{teamDetails.teamName}</strong>
             </div>
             <div>
-              <span>Base</span>
+              <span>{uiText.team.baseLabel}</span>
               <strong>{teamDetails.stadium}</strong>
             </div>
           </div>
@@ -504,12 +489,12 @@ export default function TeamPage() {
               </div>
 
               <section className="player-card-content">
-                <span className="player-card-kicker">Seleção principal</span>
+                <span className="player-card-kicker">{uiText.team.mainSelection}</span>
                 <h3>{player.name}</h3>
-                <p>{translatePosition(player.position)}</p>
+                <p>{translatePosition(player.position, language)}</p>
                 <div className="player-card-meta">
-                  <span className="player-card-tag">Jogador</span>
-                  <span className="player-card-action">Abrir perfil</span>
+                  <span className="player-card-tag">{uiText.team.playerTag}</span>
+                  <span className="player-card-action">{uiText.team.openProfile}</span>
                 </div>
               </section>
             </Link>
@@ -519,6 +504,3 @@ export default function TeamPage() {
     </section>
   );
 }
-
-
-

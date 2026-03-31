@@ -10,7 +10,7 @@ const BAR_COLORS = {
 function historyLabel(item, lang) {
   const t = getPollText(lang);
   const when = new Date(item.createdAt ?? item.clearedAt ?? Date.now()).toLocaleString(
-    lang === "pt" ? "pt-BR" : lang
+    lang === "pt" ? "pt-BR" : lang === "es" ? "es-ES" : "en-US"
   );
 
   if (item.type === "clear") {

@@ -230,7 +230,7 @@ export default function PollWidget({
               rel="noreferrer"
               className="rounded-full border border-[#8dcfff5e] px-2 py-1 text-[#d3e8ff] no-underline"
             >
-              Mapa estadio
+              {t.stadiumMap}
             </a>
           </div>
         </div>

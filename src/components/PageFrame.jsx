@@ -4,10 +4,11 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import IntroKickoff from "./IntroKickoff";
 import WorldBackground from "./WorldBackground";
 import Footer from "./Footer";
+import PrivacyBanner from "./PrivacyBanner";
 import { BackgroundMoodContext } from "../hooks/useBackgroundMood";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { motionTokens } from "../animations/motionTokens";
-import { uiText } from "../data/uiText";
+import { useLanguage } from "../context/LanguageContext";
 import brandLogo from "../images/Gemini_logo-removebg.png";
 
 function decodeSegment(value = "") {
@@ -18,7 +19,7 @@ function decodeSegment(value = "") {
   }
 }
 
-function buildCrumbs(pathname, search) {
+function buildCrumbs(pathname, search, uiText) {
   const segments = pathname.split("/").filter(Boolean);
   const searchParams = new URLSearchParams(search);
   const crumbs = [{ to: "/", label: uiText.navigation.home }];
@@ -41,6 +42,11 @@ function buildCrumbs(pathname, search) {
     return crumbs;
   }
 
+  if (segments[0] === "privacidade") {
+    crumbs.push({ label: uiText.navigation.privacy });
+    return crumbs;
+  }
+
   return crumbs;
 }
 
@@ -53,10 +59,11 @@ export default function PageFrame() {
   const pageRef = useRef(null);
   const overlayRef = useRef(null);
   const { shouldAnimate } = useMotionPreferences();
+  const { language, options, setLanguage, uiText } = useLanguage();
 
   const crumbs = useMemo(
-    () => buildCrumbs(location.pathname, location.search),
-    [location.pathname, location.search]
+    () => buildCrumbs(location.pathname, location.search, uiText),
+    [location.pathname, location.search, uiText]
   );
 
   useEffect(() => {
@@ -115,21 +122,40 @@ export default function PageFrame() {
         {uiText.navigation.skipToContent}
       </a>
 
-      <header className="site-header" aria-label="Navegacao principal">
+      <header className="site-header" aria-label={uiText.navigation.mainAria}>
         <div className="global-nav-row">
           <Link to="/" className="brand-link">
             <img src={brandLogo} alt="GameGrid" className="brand-logo" />
           </Link>
+          <div className="global-nav-controls">
+            <label className="language-switcher">
+              <span>{uiText.language.label}</span>
+              <select
+                value={language}
+                onChange={(event) => setLanguage(event.target.value)}
+                aria-label={uiText.language.aria}
+                className="language-select"
+              >
+                {options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
       </header>
 
-      <nav className="breadcrumbs" aria-label="Breadcrumb">
+      <nav className="breadcrumbs" aria-label={uiText.navigation.breadcrumbsAria}>
         {crumbs.map((crumb, index) => (
           <span key={`${crumb.label}-${index}`} className="breadcrumb-item">
             {crumb.to ? <Link to={crumb.to}>{crumb.label}</Link> : <strong>{crumb.label}</strong>}
           </span>
         ))}
       </nav>
+
+      <PrivacyBanner />
 
       {showIntro && isHomeRoute ? <IntroKickoff onFinish={() => setShowIntro(false)} /> : null}
       <div className="route-transition-layer" ref={overlayRef} />

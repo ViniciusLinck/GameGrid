@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
+import { LanguageProvider } from "./context/LanguageContext.jsx";
+import { PrivacyProvider } from "./context/PrivacyContext.jsx";
 import "./styles/app.css";
 
 const queryClient = new QueryClient({
@@ -17,9 +19,13 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <App />
-      </BrowserRouter>
+      <LanguageProvider>
+        <PrivacyProvider>
+          <BrowserRouter basename={import.meta.env.BASE_URL}>
+            <App />
+          </BrowserRouter>
+        </PrivacyProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );

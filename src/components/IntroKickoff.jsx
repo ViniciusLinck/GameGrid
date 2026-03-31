@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { motionTokens } from "../animations/motionTokens";
+import { useLanguage } from "../context/LanguageContext";
 import introBall from "../images/bola.gif";
 
 export default function IntroKickoff({ onFinish }) {
@@ -13,6 +14,7 @@ export default function IntroKickoff({ onFinish }) {
   const titleRef = useRef(null);
   const timelineRef = useRef(null);
   const { shouldAnimate } = useMotionPreferences();
+  const { uiText } = useLanguage();
 
   useEffect(() => {
     const overlay = overlayRef.current;
@@ -137,7 +139,7 @@ export default function IntroKickoff({ onFinish }) {
         <div className="intro-streak" ref={streakRef} />
         <img
           src={introBall}
-          alt="Bola"
+          alt={uiText.intro.ballAlt}
           className="intro-ball-image"
           ref={ballRef}
           loading="eager"
@@ -147,7 +149,7 @@ export default function IntroKickoff({ onFinish }) {
       </div>
 
       <button className="intro-skip" onClick={skipIntro} type="button">
-        Pular
+        {uiText.intro.skip}
       </button>
     </div>
   );

@@ -1,23 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
+import { usePrivacy } from "../context/PrivacyContext";
 import TeamBadge from "./TeamBadge";
 import { PollWidget } from "./poll";
 
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  weekday: "short",
-  day: "2-digit",
-  month: "2-digit",
-});
-const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
+const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
+const CAZETV_YOUTUBE_URL = "https://www.youtube.com/@CazeTV";
 
 function formatCountdown(targetDate, now) {
   const diffMs = targetDate.getTime() - now.getTime();
   if (diffMs <= 0) {
-    return "Já começou";
+    return "0m 0s";
   }
 
   const totalSeconds = Math.floor(diffMs / 1000);
@@ -35,10 +29,6 @@ function formatCountdown(targetDate, now) {
   }
 
   return `${minutes}m ${seconds}s`;
-}
-
-function formatDateLabel(dateValue) {
-  return dateFormatter.format(dateValue).replace(".", "").toUpperCase();
 }
 
 function buildMapsUrl(venue) {
@@ -76,23 +66,54 @@ function resolveMatchStart(match) {
   return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
 }
 
-const CAZETV_YOUTUBE_URL = "https://www.youtube.com/@CazeTV";
-
-export default function MatchCard({ match }) {
+export default function MatchCard({ match, featured = false }) {
   const [showPoll, setShowPoll] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const { locale, pollLanguage, uiText } = useLanguage();
+  const { preferences } = usePrivacy();
   const mapsUrl = match.mapsUrl ?? buildMapsUrl(match.venue);
-  const isFeatured = match.id === 1;
   const startsAt = resolveMatchStart(match);
   const startsAtIso = startsAt?.toISOString() ?? "";
-  const countdownLabel = isFeatured && startsAt ? formatCountdown(startsAt, now) : null;
+  const isLive =
+    startsAt &&
+    now.getTime() >= startsAt.getTime() &&
+    now.getTime() < startsAt.getTime() + MATCH_DURATION_MS;
+  const countdownLabel = featured && startsAt && !isLive ? formatCountdown(startsAt, now) : null;
+  const pollMode =
+    import.meta.env.VITE_POLL_MODE === "remote" && preferences.allowRemotePoll
+      ? "remote"
+      : "local";
+
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+      }),
+    [locale]
+  );
+
+  const timeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+    [locale]
+  );
+
   const displayDate = startsAt
-    ? formatDateLabel(startsAt)
-    : formatDateLabel(new Date(`${match.date}T12:00:00`));
+    ? dateFormatter.format(startsAt).replace(".", "").toUpperCase()
+    : dateFormatter
+        .format(new Date(`${match.date}T12:00:00`))
+        .replace(".", "")
+        .toUpperCase();
   const displayTime = startsAt ? timeFormatter.format(startsAt) : match.kickoff;
 
   useEffect(() => {
-    if (!isFeatured) {
+    if (!featured) {
       return undefined;
     }
 
@@ -101,15 +122,16 @@ export default function MatchCard({ match }) {
     }, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [isFeatured]);
+  }, [featured]);
 
   return (
-    <article id={`match-${match.id}`} className={`match-card ${isFeatured ? "match-card-featured" : ""}`}>
+    <article id={`match-${match.id}`} className={`match-card ${featured ? "match-card-featured" : ""}`}>
       <div className="match-header">
-        <p>Jogo {match.id}</p>
+        <p>{uiText.match.matchNumber(match.id)}</p>
         <span>{match.group ? `${match.stage} | ${match.group}` : match.stage}</span>
       </div>
-      {countdownLabel ? <p className="match-countdown">Começa em {countdownLabel}</p> : null}
+      {featured && isLive ? <p className="match-live-badge">{uiText.match.liveBadge}</p> : null}
+      {countdownLabel ? <p className="match-countdown">{uiText.match.startsIn(countdownLabel)}</p> : null}
 
       <div className="match-sides">
         <TeamSide team={match.homeTeam} />
@@ -128,7 +150,7 @@ export default function MatchCard({ match }) {
             target="_blank"
             rel="noreferrer"
             className="venue-link"
-            title={`Abrir ${match.venue.stadium} no Google Maps`}
+            title={uiText.match.mapsTitle(match.venue.stadium)}
           >
             {match.venue.stadium}
             <br />
@@ -145,7 +167,7 @@ export default function MatchCard({ match }) {
           aria-expanded={showPoll}
           aria-controls={`poll-widget-${match.id}`}
         >
-          {showPoll ? "Ocultar previsao" : "Previsao da torcida"}
+          {showPoll ? uiText.match.hidePrediction : uiText.match.crowdPrediction}
         </button>
 
         <a
@@ -153,9 +175,9 @@ export default function MatchCard({ match }) {
           target="_blank"
           rel="noreferrer"
           className="match-action-watch"
-          title="Assistir na CazeTV"
+          title={uiText.match.watchTitle}
         >
-          Assistir
+          {uiText.match.watch}
         </a>
       </div>
 
@@ -167,8 +189,8 @@ export default function MatchCard({ match }) {
             awayName={match.awayTeam.name}
             startsAtUtc={startsAtIso}
             venue={match.venue}
-            mode={import.meta.env.VITE_POLL_MODE === "remote" ? "remote" : "local"}
-            lang={(import.meta.env.VITE_POLL_LANG || "pt").slice(0, 2)}
+            mode={pollMode}
+            lang={pollLanguage}
           />
         </div>
       ) : null}

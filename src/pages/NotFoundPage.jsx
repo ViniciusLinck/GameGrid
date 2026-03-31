@@ -1,10 +1,13 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useSeo } from "../hooks/useSeo";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function NotFoundPage() {
+  const { uiText } = useLanguage();
+
   useSeo({
-    title: "Página não encontrada | GameGrid",
-    description: "A página solicitada não existe no GameGrid.",
+    title: uiText.notFound.title,
+    description: uiText.notFound.description,
     path: "/404",
     robots: "noindex,nofollow",
   });
@@ -12,13 +15,10 @@ export default function NotFoundPage() {
   return (
     <section className="page-card not-found-card">
       <p className="not-found-code">404</p>
-      <h1>Página não encontrada</h1>
-      <p>
-        A página que você tentou acessar não existe. Verifique o endereço e tente
-        novamente.
-      </p>
+      <h1>{uiText.notFound.heading}</h1>
+      <p>{uiText.notFound.body}</p>
       <Link to="/" className="home-button">
-        Voltar para o início
+        {uiText.notFound.backHome}
       </Link>
     </section>
   );

@@ -2,63 +2,45 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import MatchCard, { MatchCardSkeleton } from "../components/MatchCard";
-import { uiText } from "../data/uiText";
 import { motionTokens } from "../animations/motionTokens";
 import { captureRects, playFlip } from "../animations/flip";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { useBackgroundMood } from "../hooks/useBackgroundMood";
 import { seoDefaults, useSeo } from "../hooks/useSeo";
 import { fetchWorldCupMatches2026 } from "../services/worldCupApi";
-import { getFlagByTeamName, normalizeTeamName, normalizeText } from "../utils/flags";
+import { normalizeTeamName, normalizeText } from "../utils/flags";
+import { useLanguage } from "../context/LanguageContext";
 import logo from "../../assets/logo.svg";
 
-const dayFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "long",
-  weekday: "long",
-});
+const ALL_STAGES = "all";
+const ALL_DAYS = "all";
+const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
 
 gsap.registerPlugin(ScrollTrigger);
 
-function formatDayHeading(dateISO) {
-  const formatted = dayFormatter.format(new Date(`${dateISO}T12:00:00`));
+function formatDayHeading(dateISO, locale) {
+  const formatter = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "long",
+    weekday: "long",
+  });
+  const formatted = formatter.format(new Date(`${dateISO}T12:00:00`));
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
 
-function getSourceSummary(sourceLabel) {
+function getSourceSummary(sourceLabel, uiText) {
   switch (sourceLabel) {
     case "fifa-official":
-      return "Fonte oficial: API de calendario da FIFA";
+      return uiText.home.sourceOfficial;
     case "local":
-      return "Fonte: calendario local de contingencia";
+      return uiText.home.sourceFallback;
     default:
-      return "Fonte: calendario sincronizado";
+      return uiText.home.sourceSynced;
   }
 }
 
 function teamKeyFromName(teamName) {
   return normalizeTeamName(teamName);
-}
-
-function getNextMatchLabel(match) {
-  const startDate = getMatchStartDate(match);
-  if (!startDate) {
-    const date = new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-    }).format(new Date(`${match.date}T12:00:00`));
-    return `Jogo ${match.id} | ${date} ${match.kickoff}`;
-  }
-
-  const label = new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(startDate);
-
-  return `Jogo ${match.id} | ${label.replace(",", "")}`;
 }
 
 function getMatchStartDate(match) {
@@ -73,17 +55,70 @@ function getMatchStartDate(match) {
   return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
 }
 
+function getNextMatchLabel(match, locale, uiText) {
+  const startDate = getMatchStartDate(match);
+  const dateFormatter = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "2-digit",
+  });
+
+  if (!startDate) {
+    const date = dateFormatter.format(new Date(`${match.date}T12:00:00`));
+    return `${uiText.match.matchNumber(match.id)} | ${date} ${match.kickoff}`;
+  }
+
+  const label = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(startDate);
+
+  return `${uiText.match.matchNumber(match.id)} | ${label.replace(",", "")}`;
+}
+
+function getFeaturedMatchState(matches) {
+  const now = new Date();
+  const liveMatch = matches.find((match) => {
+    const kickoffDate = getMatchStartDate(match);
+    if (!kickoffDate) {
+      return false;
+    }
+
+    const startTime = kickoffDate.getTime();
+    return now.getTime() >= startTime && now.getTime() < startTime + MATCH_DURATION_MS;
+  });
+
+  if (liveMatch) {
+    return { match: liveMatch, mode: "live" };
+  }
+
+  const nextMatch = matches.find((match) => {
+    const kickoffDate = getMatchStartDate(match);
+    return kickoffDate ? kickoffDate >= now : false;
+  });
+
+  if (nextMatch) {
+    return { match: nextMatch, mode: "upcoming" };
+  }
+
+  return { match: matches[0] ?? null, mode: "upcoming" };
+}
+
 function MatchFiltersBar({
   idPrefix,
+  locale,
+  uiText,
   stageOptions,
-  selectedStage,
+  selectedStageKey,
   onStageChange,
   dayOptions,
   selectedDay,
   onDayChange,
   teamOptions,
   selectedTeamKey,
-  onTeamToggle,
+  onTeamChange,
   teamQuery,
   onTeamQueryChange,
   hasActiveFilters,
@@ -101,12 +136,30 @@ function MatchFiltersBar({
           </label>
           <select
             id={`${idPrefix}-stage-select`}
-            value={selectedStage}
+            value={selectedStageKey}
             onChange={(event) => onStageChange(event.target.value)}
           >
             {stageOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="dashboard-item dashboard-control">
+          <label htmlFor={`${idPrefix}-team-select`} className="dashboard-label">
+            {uiText.home.team}
+          </label>
+          <select
+            id={`${idPrefix}-team-select`}
+            value={selectedTeamKey}
+            onChange={(event) => onTeamChange(event.target.value)}
+          >
+            <option value="">{uiText.home.allTeams}</option>
+            {teamOptions.map((team) => (
+              <option key={team.key} value={team.key}>
+                {team.name}
               </option>
             ))}
           </select>
@@ -139,6 +192,7 @@ function MatchFiltersBar({
             value={teamQuery}
             placeholder={uiText.home.searchPlaceholder}
             onChange={(event) => onTeamQueryChange(event.target.value)}
+            lang={locale}
           />
         </div>
 
@@ -158,36 +212,13 @@ function MatchFiltersBar({
         <p className="dashboard-source-note">{sourceSummary}</p>
         <p className="dashboard-filtered-note">{uiText.home.visibleMatches(filteredCount)}</p>
       </div>
-
-      <div className={`team-filter-strip ${compact ? "team-filter-strip-compact" : ""}`}>
-        {teamOptions.map((team) => {
-          const flagSrc = team.flagSrc || getFlagByTeamName(team.name);
-          const isActive = selectedTeamKey === team.key;
-
-          return (
-            <button
-              key={team.key}
-              type="button"
-              className={`team-filter-chip ${isActive ? "active" : ""}`}
-              onClick={() => onTeamToggle(team.key)}
-              aria-pressed={isActive}
-              title={`${isActive ? "Remover filtro de" : "Filtrar por"} ${team.name}`}
-            >
-              <span className="team-filter-flag" aria-hidden="true">
-                {flagSrc ? <img src={flagSrc} alt="" loading="lazy" /> : <span>{team.shortName}</span>}
-              </span>
-              <span className="team-filter-name">{team.name}</span>
-            </button>
-          );
-        })}
-      </div>
     </>
   );
 }
 
 export default function HomePage() {
-  const [selectedStage, setSelectedStage] = useState(uiText.home.allStages);
-  const [selectedDay, setSelectedDay] = useState(uiText.home.allDays);
+  const [selectedStageKey, setSelectedStageKey] = useState(ALL_STAGES);
+  const [selectedDay, setSelectedDay] = useState(ALL_DAYS);
   const [selectedTeamKey, setSelectedTeamKey] = useState("");
   const [teamQuery, setTeamQuery] = useState("");
   const [matches, setMatches] = useState([]);
@@ -197,19 +228,19 @@ export default function HomePage() {
   const [displayedNext, setDisplayedNext] = useState("N/D");
   const [showStickyNav, setShowStickyNav] = useState(false);
   const appRef = useRef(null);
-  const heroRef = useRef(null);
   const heroSentinelRef = useRef(null);
   const listRef = useRef(null);
   const previousRectsRef = useRef(new Map());
   const previousTotalRef = useRef(0);
-  const hasLoadedMatchesRef = useRef(false);
   const hasInitRevealRef = useRef(false);
   const { shouldAnimate } = useMotionPreferences();
   const { setBackgroundMood } = useBackgroundMood();
-  const sourceSummary = useMemo(() => getSourceSummary(matchesSource), [matchesSource]);
+  const { apiLanguage, locale, uiText } = useLanguage();
+
+  const sourceSummary = useMemo(() => getSourceSummary(matchesSource, uiText), [matchesSource, uiText]);
   const hasActiveFilters =
-    selectedStage !== uiText.home.allStages ||
-    selectedDay !== uiText.home.allDays ||
+    selectedStageKey !== ALL_STAGES ||
+    selectedDay !== ALL_DAYS ||
     selectedTeamKey.length > 0 ||
     teamQuery.trim().length > 0;
 
@@ -244,26 +275,20 @@ export default function HomePage() {
         return;
       }
 
-      if (!hasLoadedMatchesRef.current) {
-        setIsLoadingMatches(true);
-      }
+      setIsLoadingMatches(true);
 
-      fetchWorldCupMatches2026().then((result) => {
+      fetchWorldCupMatches2026(apiLanguage).then((result) => {
         if (!mounted) {
           return;
         }
         setMatches(result.matches);
         setMatchesSource(result.sourceLabel ?? "local");
-        if (!hasLoadedMatchesRef.current) {
-          setIsLoadingMatches(false);
-          hasLoadedMatchesRef.current = true;
-        }
+        setIsLoadingMatches(false);
       });
     };
 
     loadMatches({ force: true });
 
-    // Adiciona jitter para reduzir picos simultaneos de requisicoes em larga escala.
     const jitterMs = Math.floor(Math.random() * 20000);
     const intervalId = window.setInterval(loadMatches, 300000 + jitterMs);
     const onVisibility = () => {
@@ -281,22 +306,31 @@ export default function HomePage() {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("online", onOnline);
     };
-  }, []);
+  }, [apiLanguage]);
 
   const stageOptions = useMemo(() => {
-    const allStages = new Set(matches.map((match) => match.stage));
-    return [uiText.home.allStages, ...Array.from(allStages)];
-  }, [matches]);
+    const values = new Map();
+    matches.forEach((match) => {
+      if (!values.has(match.stageKey)) {
+        values.set(match.stageKey, match.stage);
+      }
+    });
+
+    return [
+      { value: ALL_STAGES, label: uiText.home.allStages },
+      ...Array.from(values.entries()).map(([value, label]) => ({ value, label })),
+    ];
+  }, [matches, uiText]);
 
   const dayOptions = useMemo(
     () => [
-      { value: uiText.home.allDays, label: uiText.home.allDays },
+      { value: ALL_DAYS, label: uiText.home.allDays },
       ...Array.from(new Set(matches.map((match) => match.date))).map((date) => ({
         value: date,
-        label: formatDayHeading(date),
+        label: formatDayHeading(date, locale),
       })),
     ],
-    [matches]
+    [locale, matches, uiText]
   );
 
   const teamOptions = useMemo(() => {
@@ -316,16 +350,14 @@ export default function HomePage() {
         uniqueTeams.set(key, {
           key,
           name: team.name,
-          shortName: team.name.slice(0, 2).toUpperCase(),
-          flagSrc: team.flagSrc ?? "",
         });
       }
     }
 
     return Array.from(uniqueTeams.values()).sort((left, right) =>
-      left.name.localeCompare(right.name, "pt-BR")
+      left.name.localeCompare(right.name, locale)
     );
-  }, [matches]);
+  }, [locale, matches]);
 
   const filteredMatches = useMemo(() => {
     const rawQuery = normalizeText(teamQuery);
@@ -333,9 +365,8 @@ export default function HomePage() {
     const queryTerms = Array.from(new Set([rawQuery, canonicalQuery].filter(Boolean)));
 
     return matches.filter((match) => {
-      const matchesStage =
-        selectedStage === uiText.home.allStages ? true : match.stage === selectedStage;
-      const matchesDay = selectedDay === uiText.home.allDays ? true : match.date === selectedDay;
+      const matchesStage = selectedStageKey === ALL_STAGES ? true : match.stageKey === selectedStageKey;
+      const matchesDay = selectedDay === ALL_DAYS ? true : match.date === selectedDay;
       const matchesSelectedTeam =
         selectedTeamKey.length === 0
           ? true
@@ -357,7 +388,7 @@ export default function HomePage() {
 
       return matchesStage && matchesDay && matchesSelectedTeam && matchesTeam;
     });
-  }, [matches, selectedDay, selectedStage, selectedTeamKey, teamQuery]);
+  }, [matches, selectedDay, selectedStageKey, selectedTeamKey, teamQuery]);
 
   const matchesByDay = useMemo(() => {
     const grouped = new Map();
@@ -374,6 +405,11 @@ export default function HomePage() {
     }));
   }, [filteredMatches]);
 
+  const featuredMatchState = useMemo(() => {
+    const pool = filteredMatches.length > 0 ? filteredMatches : matches;
+    return getFeaturedMatchState(pool);
+  }, [filteredMatches, matches]);
+
   const nextMatch = useMemo(() => {
     const now = new Date();
     return (
@@ -385,17 +421,16 @@ export default function HomePage() {
   }, [matches]);
 
   useSeo({
-    title: "GameGrid | Calendário da Copa do Mundo 2026",
-    description: `Veja os ${matches.length} jogos da Copa de 2026 com filtros por fase, locais e horários atualizados.`,
+    title: `GameGrid | ${uiText.home.collectionTitle}`,
+    description: uiText.home.pageDescription(matches.length),
     path: "/",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
-      name: "Calendário da Copa do Mundo 2026",
-      description:
-        "Calendário interativo da Copa de 2026 com detalhes de times, jogadores, estádios e horários.",
+      name: uiText.home.collectionTitle,
+      description: uiText.home.collectionDescription,
       url: `${seoDefaults.siteUrl}/`,
-      inLanguage: "pt-BR",
+      inLanguage: locale,
       mainEntity: {
         "@type": "ItemList",
         itemListElement: matches.slice(0, 15).map((match, index) => ({
@@ -415,7 +450,7 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    const nextLabel = nextMatch ? getNextMatchLabel(nextMatch) : "N/D";
+    const nextLabel = nextMatch ? getNextMatchLabel(nextMatch, locale, uiText) : uiText.common.notAvailable;
     setDisplayedNext(nextLabel);
 
     if (!shouldAnimate) {
@@ -437,7 +472,7 @@ export default function HomePage() {
     });
 
     return () => tween.kill();
-  }, [matches.length, nextMatch, shouldAnimate]);
+  }, [locale, matches.length, nextMatch, shouldAnimate, uiText]);
 
   useLayoutEffect(() => {
     if (!shouldAnimate) {
@@ -490,7 +525,7 @@ export default function HomePage() {
 
     previousRectsRef.current = captureRects(listRef.current, "[data-flip-key]");
     return undefined;
-  }, [filteredMatches, selectedDay, selectedStage, selectedTeamKey, shouldAnimate, teamQuery]);
+  }, [filteredMatches, selectedDay, selectedStageKey, selectedTeamKey, shouldAnimate, teamQuery]);
 
   useLayoutEffect(() => {
     if (!listRef.current || !shouldAnimate || hasInitRevealRef.current || matchesByDay.length === 0) {
@@ -553,16 +588,16 @@ export default function HomePage() {
   }, [matchesByDay.length, shouldAnimate]);
 
   function clearFilters() {
-    setSelectedStage(uiText.home.allStages);
-    setSelectedDay(uiText.home.allDays);
+    setSelectedStageKey(ALL_STAGES);
+    setSelectedDay(ALL_DAYS);
     setSelectedTeamKey("");
     setTeamQuery("");
   }
 
   return (
     <div ref={appRef}>
-      <header className="hero" ref={heroRef} id="resumo-copa">
-        <img src={logo} alt="Logo do GameGrid" className="hero-logo" />
+      <header className="hero" id="resumo-copa">
+        <img src={logo} alt="GameGrid" className="hero-logo" />
         <h1 className="hero-title">{uiText.home.title}</h1>
         <p className="hero-subtitle">{uiText.home.subtitle}</p>
 
@@ -576,16 +611,18 @@ export default function HomePage() {
 
           <MatchFiltersBar
             idPrefix="hero"
+            locale={locale}
+            uiText={uiText}
             stageOptions={stageOptions}
-            selectedStage={selectedStage}
-            onStageChange={setSelectedStage}
+            selectedStageKey={selectedStageKey}
+            onStageChange={setSelectedStageKey}
             dayOptions={dayOptions}
             selectedDay={selectedDay}
             onDayChange={setSelectedDay}
             teamOptions={teamOptions}
             selectedTeamKey={selectedTeamKey}
-            onTeamToggle={(teamKey) => {
-              setSelectedTeamKey((current) => (current === teamKey ? "" : teamKey));
+            onTeamChange={(teamKey) => {
+              setSelectedTeamKey(teamKey);
               setTeamQuery("");
             }}
             teamQuery={teamQuery}
@@ -602,27 +639,29 @@ export default function HomePage() {
           />
         </div>
 
-        <nav className="hero-shortcuts" aria-label="Atalhos da pagina">
-          <a href="#resumo-copa">Resumo</a>
-          <a href="#jogos-copa">Jogos</a>
+        <nav className="hero-shortcuts" aria-label={uiText.home.shortcutsAria}>
+          <a href="#resumo-copa">{uiText.home.summaryShortcut}</a>
+          <a href="#jogos-copa">{uiText.home.matchesShortcut}</a>
         </nav>
       </header>
       <div ref={heroSentinelRef} className="hero-sentinel" aria-hidden="true" />
 
       {showStickyNav ? (
-        <div className="home-sticky-nav" aria-label="Navegacao rapida">
+        <div className="home-sticky-nav" aria-label={uiText.home.stickyAria}>
           <MatchFiltersBar
             idPrefix="sticky"
+            locale={locale}
+            uiText={uiText}
             stageOptions={stageOptions}
-            selectedStage={selectedStage}
-            onStageChange={setSelectedStage}
+            selectedStageKey={selectedStageKey}
+            onStageChange={setSelectedStageKey}
             dayOptions={dayOptions}
             selectedDay={selectedDay}
             onDayChange={setSelectedDay}
             teamOptions={teamOptions}
             selectedTeamKey={selectedTeamKey}
-            onTeamToggle={(teamKey) => {
-              setSelectedTeamKey((current) => (current === teamKey ? "" : teamKey));
+            onTeamChange={(teamKey) => {
+              setSelectedTeamKey(teamKey);
               setTeamQuery("");
             }}
             teamQuery={teamQuery}
@@ -638,11 +677,23 @@ export default function HomePage() {
             sourceSummary={sourceSummary}
             compact
           />
-          <nav className="hero-shortcuts hero-shortcuts-compact" aria-label="Atalhos rapidos">
-            <a href="#resumo-copa">Resumo</a>
-            <a href="#jogos-copa">Jogos</a>
+          <nav className="hero-shortcuts hero-shortcuts-compact" aria-label={uiText.home.stickyShortcutsAria}>
+            <a href="#resumo-copa">{uiText.home.summaryShortcut}</a>
+            <a href="#jogos-copa">{uiText.home.matchesShortcut}</a>
           </nav>
         </div>
+      ) : null}
+
+      {featuredMatchState.match ? (
+        <section className="featured-match-section page-card" aria-label={uiText.home.featuredMatch}>
+          <div className="featured-match-copy">
+            <span className="featured-match-kicker">
+              {featuredMatchState.mode === "live" ? uiText.home.liveNow : uiText.home.upcomingMatch}
+            </span>
+            <h2>{uiText.home.featuredMatch}</h2>
+          </div>
+          <MatchCard match={featuredMatchState.match} featured />
+        </section>
       ) : null}
 
       <main className="calendar" ref={listRef} id="jogos-copa">
@@ -650,17 +701,14 @@ export default function HomePage() {
           hasActiveFilters ? (
             <section className="page-card">{uiText.home.noMatchesWithFilter}</section>
           ) : isLoadingMatches ? (
-            <section className="day-group" aria-label="Carregando jogos">
+            <section className="day-group" aria-label={uiText.common.loadingMatches}>
               <div className="day-group-header skeleton-card">
                 <div className="skeleton-row w-60" />
                 <div className="skeleton-row w-70" />
               </div>
               <div className="match-grid">
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <MatchCardSkeleton
-                    key={`skeleton-${index}`}
-                    featured={index === 0}
-                  />
+                  <MatchCardSkeleton key={`skeleton-${index}`} featured={index === 0} />
                 ))}
               </div>
             </section>
@@ -672,8 +720,8 @@ export default function HomePage() {
         {matchesByDay.map((day) => (
           <section className="day-group" key={day.date} data-flip-key={`dia-${day.date}`}>
             <div className="day-group-header">
-              <h2>{formatDayHeading(day.date)}</h2>
-              <span>{day.matches.length} jogos</span>
+              <h2>{formatDayHeading(day.date, locale)}</h2>
+              <span>{uiText.home.matchCount(day.matches.length)}</span>
             </div>
 
             <div className="match-grid">

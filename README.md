@@ -42,7 +42,7 @@ Site publicado: `https://viniciuslinck.github.io/GameGrid/`
 ### Previsao da torcida (poll)
 
 - Modo local com persistencia em `localForage`
-- Modo remoto opcional com API serverless
+- Modo remoto opcional com API serverless e opt-in de privacidade
 - Troca e limpeza de voto
 - Barras com percentuais e total de votos
 - Historico curto de votos
@@ -58,6 +58,14 @@ Site publicado: `https://viniciuslinck.github.io/GameGrid/`
 - Suporte a `prefers-reduced-motion`
 - Header global centralizado e resumo visual centralizado
 - Responsividade revisada para desktop, tablet e celular
+
+### Privacidade e LGPD
+
+- Pagina de privacidade com transparência sobre dados locais e servicos externos
+- Banner de aviso de privacidade no layout global
+- Controle para manter a enquete apenas em modo local ou liberar o modo remoto
+- Limpeza de dados locais pelo proprio usuario
+- Identificador tecnico da enquete com retencao limitada no navegador
 
 ## Responsividade (ultimos ajustes)
 
@@ -116,12 +124,15 @@ npm run preview
 
 ## Deploy (GitHub Pages)
 
-Workflow: `.github/workflows/deploy-pages.yml`
+Workflows:
+
+- `.github/workflows/ci.yml`: validacao automatica de build na `master`
+- `.github/workflows/deploy-pages.yml`: deploy no GitHub Pages pela `master`
 
 - Build com Vite
 - Copia `dist/index.html` para `dist/404.html` (SPA fallback)
 - Publica no GitHub Pages
-- Trigger por push em `main` e `master`
+- Trigger por push em `master`
 
 ## Observacoes
 

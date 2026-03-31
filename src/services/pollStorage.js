@@ -9,6 +9,7 @@ const pollStore = localforage.createInstance({
 const VOTE_PREFIX = "poll_vote:";
 const HISTORY_PREFIX = "poll_history:";
 const CLIENT_ID_KEY = "gamegrid_poll_client_id";
+const CLIENT_ID_TTL_MS = 180 * 24 * 60 * 60 * 1000;
 
 function voteKey(matchId) {
   return `${VOTE_PREFIX}${String(matchId)}`;
@@ -25,11 +26,30 @@ function fallbackUuid() {
 export function getClientId() {
   const existing = localStorage.getItem(CLIENT_ID_KEY);
   if (existing) {
-    return existing;
+    try {
+      const parsed = JSON.parse(existing);
+      if (
+        parsed &&
+        typeof parsed.value === "string" &&
+        parsed.value &&
+        typeof parsed.expiresAt === "number" &&
+        parsed.expiresAt > Date.now()
+      ) {
+        return parsed.value;
+      }
+    } catch {
+      return existing;
+    }
   }
 
   const next = globalThis.crypto?.randomUUID?.() ?? fallbackUuid();
-  localStorage.setItem(CLIENT_ID_KEY, next);
+  localStorage.setItem(
+    CLIENT_ID_KEY,
+    JSON.stringify({
+      value: next,
+      expiresAt: Date.now() + CLIENT_ID_TTL_MS,
+    })
+  );
   return next;
 }
 

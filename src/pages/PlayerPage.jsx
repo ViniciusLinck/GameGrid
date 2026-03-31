@@ -1,4 +1,4 @@
-﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import {
@@ -10,51 +10,30 @@ import { normalizeTeamName } from "../utils/flags";
 import { motionTokens } from "../animations/motionTokens";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { useBackgroundMood } from "../hooks/useBackgroundMood";
-import { uiText } from "../data/uiText";
 import { seoDefaults, useSeo } from "../hooks/useSeo";
+import { useLanguage } from "../context/LanguageContext";
+import { translatePosition } from "../utils/footballText";
 import ProfileShowcaseCard from "../components/ProfileShowcaseCard";
 
-function formatLabelDate(rawDate) {
-  if (!rawDate || rawDate === "Nao informado") {
-    return "NÃ£o informado";
+function formatLabelDate(rawDate, locale, fallback) {
+  if (!rawDate) {
+    return fallback;
   }
 
   const date = new Date(rawDate);
   if (Number.isNaN(date.getTime())) {
     return rawDate;
   }
-  return new Intl.DateTimeFormat("pt-BR").format(date);
+
+  return new Intl.DateTimeFormat(locale).format(date);
 }
 
-function shorten(text) {
+function shorten(text, fallback) {
   const cleaned = (text ?? "").replace(/\s+/g, " ").trim();
   if (!cleaned) {
-    return "Sem resumo disponÃ­vel para este jogador.";
+    return fallback;
   }
   return cleaned.length > 300 ? `${cleaned.slice(0, 300)}...` : cleaned;
-}
-
-function translatePosition(position) {
-  const value = (position ?? "").trim().toLowerCase();
-  const map = {
-    goalkeeper: "Goleiro",
-    defender: "Defensor",
-    "centre-back": "Zagueiro",
-    "center-back": "Zagueiro",
-    "right-back": "Lateral direito",
-    "left-back": "Lateral esquerdo",
-    midfielder: "Meio-campista",
-    "defensive midfield": "Volante",
-    "central midfield": "Meio-campista central",
-    forward: "Atacante",
-    "centre-forward": "Centroavante",
-    "right winger": "Ponta direita",
-    "left winger": "Ponta esquerda",
-    striker: "Centroavante",
-    manager: "TÃ©cnico",
-  };
-
-  return map[value] ?? position ?? "PosiÃ§Ã£o nÃ£o informada";
 }
 
 function getInitials(name) {
@@ -69,27 +48,27 @@ function getInitials(name) {
   return initials || "??";
 }
 
-function buildDefaultCoach(teamName) {
+function buildDefaultCoach(teamName, uiText) {
   if (normalizeTeamName(teamName) === "brazil") {
     return {
       name: "Carlo Ancelotti",
-      team: "Brasil",
-      role: "TÃ©cnico",
+      team: teamName,
+      role: uiText.player.coachRole,
       image: "",
     };
   }
 
   return {
-    name: `TÃ©cnico de ${teamName}`,
+    name: uiText.player.defaultCoachName(teamName),
     team: teamName,
-    role: "TÃ©cnico",
+    role: uiText.player.coachRole,
     image: "",
   };
 }
 
-function PlayerSkeleton() {
+function PlayerSkeleton({ label }) {
   return (
-    <section className="page-card skeleton-card" aria-label="Carregando jogador">
+    <section className="page-card skeleton-card" aria-label={label}>
       <div className="skeleton-row" />
       <div className="skeleton-row w-60" />
       <div className="skeleton-grid">
@@ -108,8 +87,7 @@ export default function PlayerPage() {
   const location = useLocation();
 
   const playerId = decodeURIComponent(routePlayerId ?? "");
-  const teamName = searchParams.get("team") ?? "Time";
-
+  const teamName = searchParams.get("team") ?? "Team";
   const [player, setPlayer] = useState(location.state?.player ?? null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("jogador-perfil");
@@ -117,7 +95,7 @@ export default function PlayerPage() {
     location.state?.player?.achievements ?? []
   );
   const [playerCount, setPlayerCount] = useState(0);
-  const [coach, setCoach] = useState(() => buildDefaultCoach(teamName));
+  const [coach, setCoach] = useState(null);
   const [coachAchievements, setCoachAchievements] = useState([]);
   const [coachCount, setCoachCount] = useState(0);
   const previousPlayerCountRef = useRef(0);
@@ -125,6 +103,7 @@ export default function PlayerPage() {
   const pageRef = useRef(null);
   const { shouldAnimate } = useMotionPreferences();
   const { setBackgroundMood } = useBackgroundMood();
+  const { language, locale, apiLanguage, uiText } = useLanguage();
 
   useEffect(() => {
     setBackgroundMood("focus");
@@ -134,7 +113,7 @@ export default function PlayerPage() {
   useEffect(() => {
     let mounted = true;
 
-    fetchPlayerById(playerId, teamName).then((payload) => {
+    fetchPlayerById(playerId, teamName, apiLanguage).then((payload) => {
       if (!mounted) {
         return;
       }
@@ -150,7 +129,7 @@ export default function PlayerPage() {
           previous
             ? {
                 ...previous,
-                description: "DescriÃ§Ã£o em portuguÃªs indisponÃ­vel no momento.",
+                description: uiText.player.noDescriptionNow,
               }
             : previous
         );
@@ -166,18 +145,18 @@ export default function PlayerPage() {
     return () => {
       mounted = false;
     };
-  }, [location.state, playerId, teamName]);
+  }, [apiLanguage, location.state, playerId, teamName, uiText.player.noDescriptionNow]);
 
   useEffect(() => {
     let mounted = true;
-    const defaultCoach = buildDefaultCoach(teamName);
+    const defaultCoach = buildDefaultCoach(teamName, uiText);
 
     const loadCoach = async () => {
       setCoach(defaultCoach);
       setCoachAchievements([]);
 
       try {
-        const teamPayload = await fetchTeamDetails(teamName);
+        const teamPayload = await fetchTeamDetails(teamName, apiLanguage);
         if (!mounted || !teamPayload) {
           return;
         }
@@ -186,9 +165,9 @@ export default function PlayerPage() {
         let coachName = teamPayload.coach?.name ?? defaultCoach.name;
         let coachRole = teamPayload.coach?.role ?? defaultCoach.role;
 
-        if (normalizeTeamName(teamLabel) === "brazil" && /^tecnico de /i.test(coachName)) {
+        if (normalizeTeamName(teamLabel) === "brazil" && /^tecnico de |^coach of |^entrenador de /i.test(coachName)) {
           coachName = "Carlo Ancelotti";
-          coachRole = "TÃ©cnico";
+          coachRole = uiText.player.coachRole;
         }
 
         const nextCoach = {
@@ -200,7 +179,11 @@ export default function PlayerPage() {
 
         setCoach(nextCoach);
 
-        const achievements = await fetchPersonAchievementsByName(coachName, teamLabel);
+        const achievements = await fetchPersonAchievementsByName(
+          coachName,
+          teamLabel,
+          apiLanguage
+        );
         if (!mounted) {
           return;
         }
@@ -208,7 +191,8 @@ export default function PlayerPage() {
       } catch {
         const achievements = await fetchPersonAchievementsByName(
           defaultCoach.name,
-          defaultCoach.team
+          defaultCoach.team,
+          apiLanguage
         );
         if (!mounted) {
           return;
@@ -222,7 +206,7 @@ export default function PlayerPage() {
     return () => {
       mounted = false;
     };
-  }, [teamName]);
+  }, [apiLanguage, teamName, uiText]);
 
   useEffect(() => {
     if (!shouldAnimate) {
@@ -361,14 +345,14 @@ export default function PlayerPage() {
   }, [player, coach]);
 
   useSeo({
-    title: `${player?.name ?? "Jogador"} | GameGrid`,
-    description: `Detalhes de ${player?.name ?? "jogador"}: posiÃ§Ã£o, nacionalidade, dados fÃ­sicos e conquistas.`,
+    title: `${player?.name ?? uiText.player.defaultPlayerName} | GameGrid`,
+    description: uiText.player.pageDescription(player?.name ?? uiText.player.defaultPlayerName),
     path: `/jogador/${encodeURIComponent(playerId)}?team=${encodeURIComponent(teamName)}`,
     type: "profile",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "Person",
-      name: player?.name ?? "Jogador",
+      name: player?.name ?? uiText.player.defaultPlayerName,
       nationality: player?.nationality ?? undefined,
       memberOf: {
         "@type": "SportsTeam",
@@ -383,8 +367,8 @@ export default function PlayerPage() {
   if (loading) {
     return (
       <>
-        <PlayerSkeleton />
-        <PlayerSkeleton />
+        <PlayerSkeleton label={uiText.common.loadingPlayer} />
+        <PlayerSkeleton label={uiText.common.loadingPlayer} />
       </>
     );
   }
@@ -402,11 +386,14 @@ export default function PlayerPage() {
 
   return (
     <section ref={pageRef}>
-      <nav className="section-nav section-nav-sticky" aria-label="Atalhos da pÃ¡gina do jogador">
+      <nav className="section-nav section-nav-sticky" aria-label={uiText.player.quickNavAria}>
         <a href="#jogador-perfil" className={activeSection === "jogador-perfil" ? "active" : ""}>
           {uiText.player.quickNavProfile}
         </a>
-        <a href="#jogador-conquistas" className={activeSection === "jogador-conquistas" ? "active" : ""}>
+        <a
+          href="#jogador-conquistas"
+          className={activeSection === "jogador-conquistas" ? "active" : ""}
+        >
           {uiText.player.quickNavAchievements}
         </a>
       </nav>
@@ -424,53 +411,51 @@ export default function PlayerPage() {
         >
           <div className="player-detail-top">
             <div className="player-avatar large">
-              {player.image ? (
-                <img src={player.image} alt={player.name} />
-              ) : (
-                <span>{getInitials(player.name)}</span>
-              )}
+              {player.image ? <img src={player.image} alt={player.name} /> : <span>{getInitials(player.name)}</span>}
             </div>
             <div>
               <h1>{player.name}</h1>
               <p>{player.team}</p>
-              <p>{translatePosition(player.position)}</p>
+              <p>{translatePosition(player.position, language)}</p>
             </div>
           </div>
 
           <div className="player-detail-grid">
             <div>
-              <span>Nacionalidade</span>
+              <span>{uiText.common.labels.nationality}</span>
               <strong>{player.nationality}</strong>
             </div>
             <div>
-              <span>Nascimento</span>
-              <strong>{formatLabelDate(player.birth)}</strong>
+              <span>{uiText.common.labels.birth}</span>
+              <strong>
+                {formatLabelDate(player.birth, locale, uiText.common.notAvailable)}
+              </strong>
             </div>
             <div>
-              <span>Altura</span>
+              <span>{uiText.common.labels.height}</span>
               <strong>{player.height}</strong>
             </div>
             <div>
-              <span>Peso</span>
+              <span>{uiText.common.labels.weight}</span>
               <strong>{player.weight}</strong>
             </div>
           </div>
 
-          <p className="player-description">{shorten(player.description)}</p>
+          <p className="player-description">
+            {shorten(player.description, uiText.player.noSummary)}
+          </p>
         </div>
 
         <section
           className="section-anchor"
-          aria-label="Lista de conquistas do jogador e tÃ©cnico"
+          aria-label={uiText.player.achievementsAria}
           id="jogador-conquistas"
           data-section="jogador-conquistas"
           data-reveal="achievements"
         >
           <header className="squad-header">
-            <h3 className="squad-title">Conquistas</h3>
-            <p className="players-hint squad-subtitle">
-              Lista de tÃ­tulos e premiaÃ§Ãµes registradas para jogador e tÃ©cnico.
-            </p>
+            <h3 className="squad-title">{uiText.player.achievementsTitle}</h3>
+            <p className="players-hint squad-subtitle">{uiText.player.achievementsSubtitle}</p>
           </header>
 
           <div className="achievements-grid">
@@ -479,16 +464,16 @@ export default function PlayerPage() {
               className="achievement-card"
               title={player.name}
               subtitle={player.team}
-              eyebrow="Jogador"
-              badge={translatePosition(player.position)}
-              description="Perfil principal com leitura rapida das conquistas registradas para o torneio."
+              eyebrow={uiText.player.playerEyebrow}
+              badge={translatePosition(player.position, language)}
+              description={uiText.player.playerDescription}
               metricValue={String(playerCount)}
-              metricLabel="conquistas registradas"
+              metricLabel={uiText.player.recordedAchievements}
               image={player.image}
               imageAlt={player.name}
             >
               {playerAchievements.length > 0 ? (
-                <ul className="achievement-list" aria-label="Conquistas do jogador">
+                <ul className="achievement-list" aria-label={uiText.player.achievementsPlayerAria}>
                   {playerAchievements.map((achievement) => (
                     <li className="achievement-item" key={achievement.id}>
                       <strong>{achievement.title}</strong>
@@ -505,19 +490,19 @@ export default function PlayerPage() {
             <ProfileShowcaseCard
               variant="panel"
               className="achievement-card"
-              title={coach.name}
-              subtitle={coach.team}
-              eyebrow="Comando técnico"
-              badge={coach.role}
-              description="Leitura visual do técnico responsável pelo desenho tático e gestão do elenco."
+              title={coach?.name ?? uiText.player.defaultCoachName(teamName)}
+              subtitle={coach?.team ?? teamName}
+              eyebrow={uiText.player.coachEyebrow}
+              badge={coach?.role ?? uiText.player.coachRole}
+              description={uiText.player.coachDescription}
               metricValue={String(coachCount)}
-              metricLabel="conquistas registradas"
-              image={coach.image}
-              imageAlt={coach.name}
+              metricLabel={uiText.player.recordedAchievements}
+              image={coach?.image ?? ""}
+              imageAlt={coach?.name ?? uiText.player.defaultCoachName(teamName)}
               mediaClassName="profile-showcase-media-coach"
             >
               {coachAchievements.length > 0 ? (
-                <ul className="achievement-list" aria-label="Conquistas do tÃ©cnico">
+                <ul className="achievement-list" aria-label={uiText.player.achievementsCoachAria}>
                   {coachAchievements.map((achievement) => (
                     <li className="achievement-item" key={achievement.id}>
                       <strong>{achievement.title}</strong>
@@ -536,6 +521,3 @@ export default function PlayerPage() {
     </section>
   );
 }
-
-
-

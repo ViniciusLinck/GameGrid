@@ -1,3 +1,6 @@
+import { Link } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
+
 function LinkedinIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -65,14 +68,19 @@ const footerLinks = [
 ];
 
 export default function Footer() {
+  const { uiText } = useLanguage();
+
   return (
-    <footer className="site-footer" aria-label="Informacoes do desenvolvedor">
+    <footer className="site-footer" aria-label={uiText.footer.footerAria}>
       <div className="site-footer-copy">
-        <span className="site-footer-kicker">Developer</span>
+        <span className="site-footer-kicker">{uiText.footer.developer}</span>
         <strong>Vinicius Dias Linck</strong>
+        <Link to="/privacidade" className="site-footer-note">
+          {uiText.footer.privacyLink}
+        </Link>
       </div>
 
-      <div className="site-footer-links" aria-label="Links externos">
+      <div className="site-footer-links" aria-label={uiText.footer.externalLinksAria}>
         {footerLinks.map(({ id, label, href, icon: Icon }) => (
           <a
             key={id}
