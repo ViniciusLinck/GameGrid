@@ -11,6 +11,12 @@ import { motionTokens } from "../animations/motionTokens";
 import { useLanguage } from "../context/LanguageContext";
 import brandLogo from "../images/Gemini_logo-removebg.png";
 
+const languageFlags = {
+  "pt-BR": "🇧🇷",
+  en: "🇺🇸",
+  es: "🇪🇸",
+};
+
 function decodeSegment(value = "") {
   try {
     return decodeURIComponent(value);
@@ -65,6 +71,7 @@ export default function PageFrame() {
     () => buildCrumbs(location.pathname, location.search, uiText),
     [location.pathname, location.search, uiText]
   );
+  const currentLanguageFlag = languageFlags[language] ?? "🌐";
 
   useEffect(() => {
     const onScroll = () => {
@@ -132,6 +139,9 @@ export default function PageFrame() {
               <label htmlFor="language-select" className="language-switcher-label">
                 {uiText.language.label}
               </label>
+              <span className="language-current-flag" aria-hidden="true">
+                {currentLanguageFlag}
+              </span>
               <select
                 id="language-select"
                 value={language}
@@ -141,7 +151,7 @@ export default function PageFrame() {
               >
                 {options.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {(languageFlags[option.value] ?? "🌐") + " " + option.label}
                   </option>
                 ))}
               </select>
