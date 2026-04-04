@@ -28,14 +28,6 @@ function formatLabelDate(rawDate, locale, fallback) {
   return new Intl.DateTimeFormat(locale).format(date);
 }
 
-function shorten(text, fallback) {
-  const cleaned = (text ?? "").replace(/\s+/g, " ").trim();
-  if (!cleaned) {
-    return fallback;
-  }
-  return cleaned.length > 300 ? `${cleaned.slice(0, 300)}...` : cleaned;
-}
-
 function getInitials(name) {
   const initials = (name ?? "")
     .split(" ")
@@ -55,6 +47,7 @@ function buildDefaultCoach(teamName, uiText) {
       team: teamName,
       role: uiText.player.coachRole,
       image: "",
+      gallery: [],
     };
   }
 
@@ -63,7 +56,37 @@ function buildDefaultCoach(teamName, uiText) {
     team: teamName,
     role: uiText.player.coachRole,
     image: "",
+    gallery: [],
   };
+}
+
+function uniqueMedia(items) {
+  const seen = new Set();
+  return (items ?? []).filter((item) => {
+    if (!item || seen.has(item)) {
+      return false;
+    }
+    seen.add(item);
+    return true;
+  });
+}
+
+function extractSeasonScore(season) {
+  const year = String(season ?? "").match(/\d{4}/)?.[0];
+  return year ? Number(year) : -1;
+}
+
+function sortAchievements(list) {
+  return [...(list ?? [])].sort((left, right) => {
+    const bySeason = extractSeasonScore(right.season) - extractSeasonScore(left.season);
+    if (bySeason !== 0) {
+      return bySeason;
+    }
+
+    const leftTitle = String(left.title ?? "");
+    const rightTitle = String(right.title ?? "");
+    return leftTitle.localeCompare(rightTitle);
+  });
 }
 
 function PlayerSkeleton({ label }) {
@@ -98,6 +121,8 @@ export default function PlayerPage() {
   const [coach, setCoach] = useState(null);
   const [coachAchievements, setCoachAchievements] = useState([]);
   const [coachCount, setCoachCount] = useState(0);
+  const [selectedMedia, setSelectedMedia] = useState("");
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const previousPlayerCountRef = useRef(0);
   const previousCoachCountRef = useRef(0);
   const pageRef = useRef(null);
@@ -165,7 +190,10 @@ export default function PlayerPage() {
         let coachName = teamPayload.coach?.name ?? defaultCoach.name;
         let coachRole = teamPayload.coach?.role ?? defaultCoach.role;
 
-        if (normalizeTeamName(teamLabel) === "brazil" && /^tecnico de |^coach of |^entrenador de /i.test(coachName)) {
+        if (
+          normalizeTeamName(teamLabel) === "brazil" &&
+          /^tecnico de |^coach of |^entrenador de /i.test(coachName)
+        ) {
           coachName = "Carlo Ancelotti";
           coachRole = uiText.player.coachRole;
         }
@@ -175,6 +203,7 @@ export default function PlayerPage() {
           team: teamLabel,
           role: coachRole,
           image: teamPayload.coach?.image ?? "",
+          gallery: teamPayload.coach?.gallery ?? [],
         };
 
         setCoach(nextCoach);
@@ -209,12 +238,18 @@ export default function PlayerPage() {
   }, [apiLanguage, teamName, uiText]);
 
   useEffect(() => {
+    const nextGallery = uniqueMedia([player?.image, ...(player?.gallery ?? [])]);
+    setSelectedMedia(nextGallery[0] ?? "");
+    setShowFullDescription(false);
+  }, [player?.id, player?.image, player?.gallery]);
+
+  useEffect(() => {
     if (!shouldAnimate) {
       setPlayerCount(playerAchievements.length);
       setCoachCount(coachAchievements.length);
       previousPlayerCountRef.current = playerAchievements.length;
       previousCoachCountRef.current = coachAchievements.length;
-      return;
+      return undefined;
     }
 
     const playerProxy = { value: previousPlayerCountRef.current };
@@ -344,6 +379,18 @@ export default function PlayerPage() {
     return () => observer.disconnect();
   }, [player, coach]);
 
+  const playerGallery = uniqueMedia([player?.image, ...(player?.gallery ?? [])]);
+  const coachGallery = uniqueMedia([coach?.image, ...(coach?.gallery ?? [])]).slice(0, 4);
+  const playerDescription = String(player?.description ?? "").replace(/\s+/g, " ").trim();
+  const resolvedDescription = playerDescription || uiText.player.noSummary;
+  const hasLongDescription = resolvedDescription.length > 320;
+  const visibleDescription =
+    hasLongDescription && !showFullDescription
+      ? `${resolvedDescription.slice(0, 320).trim()}...`
+      : resolvedDescription;
+  const sortedPlayerAchievements = sortAchievements(playerAchievements);
+  const sortedCoachAchievements = sortAchievements(coachAchievements);
+
   useSeo({
     title: `${player?.name ?? uiText.player.defaultPlayerName} | GameGrid`,
     description: uiText.player.pageDescription(player?.name ?? uiText.player.defaultPlayerName),
@@ -409,41 +456,91 @@ export default function PlayerPage() {
           data-section="jogador-perfil"
           data-reveal="profile"
         >
-          <div className="player-detail-top">
-            <div className="player-avatar large">
-              {player.image ? <img src={player.image} alt={player.name} /> : <span>{getInitials(player.name)}</span>}
+          <div className="player-profile-shell">
+            <div className="player-profile-media-column">
+              <div className="player-profile-media">
+                {selectedMedia ? (
+                  <img src={selectedMedia} alt={player.name} />
+                ) : (
+                  <div className="player-profile-fallback">{getInitials(player.name)}</div>
+                )}
+              </div>
+
+              {playerGallery.length > 1 ? (
+                <div className="player-gallery-strip" aria-label={uiText.player.galleryTitle}>
+                  {playerGallery.map((image, index) => (
+                    <button
+                      type="button"
+                      className={`player-gallery-thumb${
+                        selectedMedia === image ? " is-active" : ""
+                      }`}
+                      key={`${image}-${index}`}
+                      onClick={() => setSelectedMedia(image)}
+                    >
+                      <img src={image} alt={`${player.name} ${index + 1}`} loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
-            <div>
-              <h1>{player.name}</h1>
-              <p>{player.team}</p>
-              <p>{translatePosition(player.position, language)}</p>
+
+            <div className="player-profile-copy">
+              <p className="player-profile-kicker">{uiText.player.profileEyebrow}</p>
+
+              <div className="player-detail-top">
+                <div>
+                  <h1>{player.name}</h1>
+                  <p>{player.team}</p>
+                  <p>{translatePosition(player.position, language)}</p>
+                </div>
+              </div>
+
+              <p className="player-profile-lead">{uiText.player.profileSubtitle}</p>
+
+              <div className="player-meta-chips">
+                <span className="player-meta-chip">{player.team}</span>
+                <span className="player-meta-chip">{translatePosition(player.position, language)}</span>
+              </div>
+
+              <div className="player-detail-grid">
+                <div>
+                  <span>{uiText.common.labels.nationality}</span>
+                  <strong>{player.nationality}</strong>
+                </div>
+                <div>
+                  <span>{uiText.common.labels.birth}</span>
+                  <strong>{formatLabelDate(player.birth, locale, uiText.common.notAvailable)}</strong>
+                </div>
+                <div>
+                  <span>{uiText.common.labels.height}</span>
+                  <strong>{player.height}</strong>
+                </div>
+                <div>
+                  <span>{uiText.common.labels.weight}</span>
+                  <strong>{player.weight}</strong>
+                </div>
+              </div>
+
+              <section className="player-summary-panel">
+                <header className="player-summary-header">
+                  <h2>{uiText.player.summaryTitle}</h2>
+                  {playerGallery.length > 1 ? <span>{uiText.player.galleryTitle}</span> : null}
+                </header>
+
+                <p className="player-description">{visibleDescription}</p>
+
+                {hasLongDescription ? (
+                  <button
+                    type="button"
+                    className="player-description-toggle"
+                    onClick={() => setShowFullDescription((value) => !value)}
+                  >
+                    {showFullDescription ? uiText.player.showLess : uiText.player.showMore}
+                  </button>
+                ) : null}
+              </section>
             </div>
           </div>
-
-          <div className="player-detail-grid">
-            <div>
-              <span>{uiText.common.labels.nationality}</span>
-              <strong>{player.nationality}</strong>
-            </div>
-            <div>
-              <span>{uiText.common.labels.birth}</span>
-              <strong>
-                {formatLabelDate(player.birth, locale, uiText.common.notAvailable)}
-              </strong>
-            </div>
-            <div>
-              <span>{uiText.common.labels.height}</span>
-              <strong>{player.height}</strong>
-            </div>
-            <div>
-              <span>{uiText.common.labels.weight}</span>
-              <strong>{player.weight}</strong>
-            </div>
-          </div>
-
-          <p className="player-description">
-            {shorten(player.description, uiText.player.noSummary)}
-          </p>
         </div>
 
         <section
@@ -463,35 +560,39 @@ export default function PlayerPage() {
               variant="panel"
               className="achievement-card"
               title={player.name}
-              subtitle={player.team}
+              subtitle={`${player.team} | ${translatePosition(player.position, language)}`}
               eyebrow={uiText.player.playerEyebrow}
               badge={translatePosition(player.position, language)}
               description={uiText.player.playerDescription}
               metricValue={String(playerCount)}
               metricLabel={uiText.player.recordedAchievements}
-              image={player.image}
+              image={selectedMedia || player.image}
               imageAlt={player.name}
             >
-              {playerAchievements.length > 0 ? (
-                <ul className="achievement-list" aria-label={uiText.player.achievementsPlayerAria}>
-                  {playerAchievements.map((achievement) => (
-                    <li className="achievement-item" key={achievement.id}>
-                      <strong>{achievement.title}</strong>
-                      <span>{achievement.team}</span>
-                      <small>{achievement.season}</small>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="achievement-empty">{uiText.player.noAchievements}</p>
-              )}
+              <div className="achievement-card-stack">
+                <p className="achievement-summary">{uiText.player.profileSubtitle}</p>
+
+                {sortedPlayerAchievements.length > 0 ? (
+                  <ul className="achievement-list" aria-label={uiText.player.achievementsPlayerAria}>
+                    {sortedPlayerAchievements.map((achievement) => (
+                      <li className="achievement-item" key={achievement.id}>
+                        <strong>{achievement.title}</strong>
+                        <span>{achievement.team}</span>
+                        <small>{achievement.season}</small>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="achievement-empty">{uiText.player.noAchievements}</p>
+                )}
+              </div>
             </ProfileShowcaseCard>
 
             <ProfileShowcaseCard
               variant="panel"
               className="achievement-card"
               title={coach?.name ?? uiText.player.defaultCoachName(teamName)}
-              subtitle={coach?.team ?? teamName}
+              subtitle={`${coach?.team ?? teamName} | ${coach?.role ?? uiText.player.coachRole}`}
               eyebrow={uiText.player.coachEyebrow}
               badge={coach?.role ?? uiText.player.coachRole}
               description={uiText.player.coachDescription}
@@ -501,19 +602,37 @@ export default function PlayerPage() {
               imageAlt={coach?.name ?? uiText.player.defaultCoachName(teamName)}
               mediaClassName="profile-showcase-media-coach"
             >
-              {coachAchievements.length > 0 ? (
-                <ul className="achievement-list" aria-label={uiText.player.achievementsCoachAria}>
-                  {coachAchievements.map((achievement) => (
-                    <li className="achievement-item" key={achievement.id}>
-                      <strong>{achievement.title}</strong>
-                      <span>{achievement.team}</span>
-                      <small>{achievement.season}</small>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="achievement-empty">{uiText.player.noAchievements}</p>
-              )}
+              <div className="achievement-card-stack">
+                <p className="achievement-summary">{uiText.player.coachDescription}</p>
+
+                {coachGallery.length > 1 ? (
+                  <div className="achievement-media-strip">
+                    {coachGallery.map((image, index) => (
+                      <div className="achievement-media-thumb" key={`${image}-${index}`}>
+                        <img
+                          src={image}
+                          alt={`${coach?.name ?? uiText.player.defaultCoachName(teamName)} ${index + 1}`}
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {sortedCoachAchievements.length > 0 ? (
+                  <ul className="achievement-list" aria-label={uiText.player.achievementsCoachAria}>
+                    {sortedCoachAchievements.map((achievement) => (
+                      <li className="achievement-item" key={achievement.id}>
+                        <strong>{achievement.title}</strong>
+                        <span>{achievement.team}</span>
+                        <small>{achievement.season}</small>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="achievement-empty">{uiText.player.noAchievements}</p>
+                )}
+              </div>
             </ProfileShowcaseCard>
           </div>
         </section>

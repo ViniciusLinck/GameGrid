@@ -768,13 +768,15 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
   const { strings } = resolveLanguage(language);
 
   if (isUnknownTeam(teamName)) {
+    const fallbackDescription = strings.unknownTeamDescription;
     return {
       teamName,
       badge: "",
       country: strings.defining,
       founded: strings.defining,
       stadium: strings.defining,
-      description: strings.unknownTeamDescription,
+      description: fallbackDescription,
+      summary: shortDescription(fallbackDescription, language),
       profile: getWorldCupProfile(teamName),
       players: fallbackPlayersByTeam(teamName, language),
       coach: fallbackCoachByTeam(teamName, language),
@@ -786,13 +788,15 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
     const team = await getTeamFromApi(teamName);
 
     if (!team) {
+      const fallbackDescription = strings.teamApiMissingDescription;
       return {
         teamName,
         badge: "",
         country: strings.defining,
         founded: strings.defining,
         stadium: strings.defining,
-        description: strings.teamApiMissingDescription,
+        description: fallbackDescription,
+        summary: shortDescription(fallbackDescription, language),
         profile: getWorldCupProfile(teamName),
         players: fallbackPlayersByTeam(teamName, language),
         coach: fallbackCoachByTeam(teamName, language),
@@ -805,8 +809,12 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
     );
     const players = (playersPayload.player ?? [])
       .filter((player) => player.strStatus !== "Retired")
-      .slice(0, 11)
       .map((player) => toPlayerView(player, team.strTeam, language));
+    const teamDescription = await getLocalizedDescription({
+      descriptionPt: team.strDescriptionPT,
+      descriptionEn: team.strDescriptionEN,
+      language,
+    });
 
     const coach = toCoachView(team, team.strTeam ?? teamName, language);
     const coachGallery = await fetchCoachGallery(coach.name, team.strTeam ?? teamName);
@@ -817,14 +825,8 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
       country: team.strCountry ?? strings.notInformed,
       founded: team.intFormedYear ?? strings.notInformed,
       stadium: team.strStadium ?? strings.notInformed,
-      description: shortDescription(
-        await getLocalizedDescription({
-          descriptionPt: team.strDescriptionPT,
-          descriptionEn: team.strDescriptionEN,
-          language,
-        }),
-        language
-      ),
+      description: teamDescription,
+      summary: shortDescription(teamDescription, language),
       profile: getWorldCupProfile(team.strTeam ?? teamName),
       players: players.length > 0 ? players : fallbackPlayersByTeam(team.strTeam ?? teamName, language),
       coach: {
@@ -835,13 +837,15 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
       isFallback: players.length === 0,
     };
   } catch {
+    const fallbackDescription = strings.teamApiUnavailableDescription;
     return {
       teamName,
       badge: "",
       country: strings.defining,
       founded: strings.defining,
       stadium: strings.defining,
-      description: strings.teamApiUnavailableDescription,
+      description: fallbackDescription,
+      summary: shortDescription(fallbackDescription, language),
       profile: getWorldCupProfile(teamName),
       players: fallbackPlayersByTeam(teamName, language),
       coach: fallbackCoachByTeam(teamName, language),
@@ -877,6 +881,7 @@ export async function fetchPlayerById(playerId, teamName = "Team", language = "p
 
     return {
       ...view,
+      summary: shortDescription(view.description, language),
       achievements,
     };
   } catch {
