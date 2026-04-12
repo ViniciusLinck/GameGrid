@@ -264,9 +264,7 @@ export default function HomePage() {
   const [displayedTotal, setDisplayedTotal] = useState(0);
   const [isLoadingMatches, setIsLoadingMatches] = useState(true);
   const [displayedNext, setDisplayedNext] = useState("N/D");
-  const [showStickyNav, setShowStickyNav] = useState(false);
   const appRef = useRef(null);
-  const heroSentinelRef = useRef(null);
   const listRef = useRef(null);
   const previousRectsRef = useRef(new Map());
   const previousTotalRef = useRef(0);
@@ -287,23 +285,6 @@ export default function HomePage() {
   }, [hasActiveFilters, setBackgroundMood]);
 
   useEffect(() => () => setBackgroundMood("transition"), [setBackgroundMood]);
-
-  useEffect(() => {
-    const sentinel = heroSentinelRef.current;
-    if (!sentinel) {
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowStickyNav(!entry.isIntersecting);
-      },
-      { threshold: 0 }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -682,45 +663,6 @@ export default function HomePage() {
           <a href="#jogos-copa">{uiText.home.matchesShortcut}</a>
         </nav>
       </header>
-      <div ref={heroSentinelRef} className="hero-sentinel" aria-hidden="true" />
-
-      {showStickyNav ? (
-        <div className="home-sticky-nav" aria-label={uiText.home.stickyAria}>
-          <MatchFiltersBar
-            idPrefix="sticky"
-            locale={locale}
-            uiText={uiText}
-            stageOptions={stageOptions}
-            selectedStageKey={selectedStageKey}
-            onStageChange={setSelectedStageKey}
-            dayOptions={dayOptions}
-            selectedDay={selectedDay}
-            onDayChange={setSelectedDay}
-            teamOptions={teamOptions}
-            selectedTeamKey={selectedTeamKey}
-            onTeamChange={(teamKey) => {
-              setSelectedTeamKey(teamKey);
-              setTeamQuery("");
-            }}
-            teamQuery={teamQuery}
-            onTeamQueryChange={(value) => {
-              setTeamQuery(value);
-              if (value.trim()) {
-                setSelectedTeamKey("");
-              }
-            }}
-            hasActiveFilters={hasActiveFilters}
-            onClear={clearFilters}
-            filteredCount={filteredMatches.length}
-            sourceSummary={sourceSummary}
-            compact
-          />
-          <nav className="hero-shortcuts hero-shortcuts-compact" aria-label={uiText.home.stickyShortcutsAria}>
-            <a href="#resumo-copa">{uiText.home.summaryShortcut}</a>
-            <a href="#jogos-copa">{uiText.home.matchesShortcut}</a>
-          </nav>
-        </div>
-      ) : null}
 
       {featuredMatchState.match ? (
         <section className="featured-match-section page-card" aria-label={uiText.home.featuredMatch}>
