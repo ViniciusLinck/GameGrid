@@ -10,6 +10,7 @@ const TRANSLATION_API_BASE = "https://api.mymemory.translated.net/get";
 const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v6";
 const MATCHES_CACHE_TTL_MS = 3 * 60 * 1000;
 const translationCache = new Map();
+const playerImageCache = new Map();
 
 const stageKeysByName = {
   "First Stage": "group_stage",
@@ -528,6 +529,80 @@ function toPlayerView(player, teamName, language) {
   };
 }
 
+function selectBestPlayerCandidate(candidates, teamName, playerName = "") {
+  const normalizedTeam = normalizeTeamName(teamName);
+  const normalizedPlayerName = String(playerName ?? "").trim().toLowerCase();
+
+  const sameTeamCandidates = candidates.filter(
+    (candidate) => normalizeTeamName(candidate.strTeam ?? "") === normalizedTeam
+  );
+
+  const exactNameInTeam = sameTeamCandidates.find(
+    (candidate) => String(candidate.strPlayer ?? "").trim().toLowerCase() === normalizedPlayerName
+  );
+  if (exactNameInTeam) {
+    return exactNameInTeam;
+  }
+
+  const exactNameAnywhere = candidates.find(
+    (candidate) => String(candidate.strPlayer ?? "").trim().toLowerCase() === normalizedPlayerName
+  );
+  if (exactNameAnywhere) {
+    return exactNameAnywhere;
+  }
+
+  return sameTeamCandidates[0] ?? candidates[0] ?? null;
+}
+
+async function fetchPlayerGalleryFallback(playerName, teamName = "") {
+  const safeName = String(playerName ?? "").trim();
+  if (!safeName) {
+    return [];
+  }
+
+  const cacheId = `${normalizeTeamName(teamName)}|${safeName.toLowerCase()}`;
+  if (playerImageCache.has(cacheId)) {
+    return playerImageCache.get(cacheId);
+  }
+
+  try {
+    const data = await fetchJson(
+      `${SPORTS_DB_BASE}/searchplayers.php?p=${encodeURIComponent(safeName)}`
+    );
+    const candidates = data.player ?? [];
+    const bestMatch = selectBestPlayerCandidate(candidates, teamName, safeName);
+    const gallery = bestMatch ? extractPlayerGallery(bestMatch) : [];
+    playerImageCache.set(cacheId, gallery);
+    return gallery;
+  } catch {
+    playerImageCache.set(cacheId, []);
+    return [];
+  }
+}
+
+async function hydratePlayersWithFallbackImages(players, teamName) {
+  const hydratedPlayers = await Promise.all(
+    (players ?? []).map(async (player) => {
+      if (player.image) {
+        return player;
+      }
+
+      const fallbackGallery = await fetchPlayerGalleryFallback(player.name, teamName);
+      if (fallbackGallery.length === 0) {
+        return player;
+      }
+
+      return {
+        ...player,
+        image: fallbackGallery[0] ?? "",
+        gallery: uniqueImages([...fallbackGallery, ...(player.gallery ?? [])]),
+      };
+    })
+  );
+
+  return hydratedPlayers;
+}
+
 function truncateForTranslation(text, maxLength = 900) {
   const clean = (text ?? "").replace(/\s+/g, " ").trim();
   if (clean.length <= maxLength) {
@@ -807,9 +882,10 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
     const playersPayload = await fetchJson(
       `${SPORTS_DB_BASE}/lookup_all_players.php?id=${team.idTeam}`
     );
-    const players = (playersPayload.player ?? [])
+    const rawPlayers = (playersPayload.player ?? [])
       .filter((player) => player.strStatus !== "Retired")
       .map((player) => toPlayerView(player, team.strTeam, language));
+    const players = await hydratePlayersWithFallbackImages(rawPlayers, team.strTeam ?? teamName);
     const teamDescription = await getLocalizedDescription({
       descriptionPt: team.strDescriptionPT,
       descriptionEn: team.strDescriptionEN,
@@ -872,6 +948,16 @@ export async function fetchPlayerById(playerId, teamName = "Team", language = "p
     }
 
     const view = toPlayerView(player, teamName, language);
+    if (!view.image) {
+      const fallbackGallery = await fetchPlayerGalleryFallback(
+        view.name,
+        view.team ?? teamName
+      );
+      if (fallbackGallery.length > 0) {
+        view.image = fallbackGallery[0] ?? "";
+        view.gallery = uniqueImages([...fallbackGallery, ...(view.gallery ?? [])]);
+      }
+    }
     view.description = await getLocalizedDescription({
       descriptionPt: player.strDescriptionPT,
       descriptionEn: player.strDescriptionEN,

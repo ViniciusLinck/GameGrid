@@ -148,7 +148,7 @@ export default function MatchCard({ match, featured = false }) {
           <a
             href={mapsUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="venue-link"
             title={uiText.match.mapsTitle(match.venue.stadium)}
           >
@@ -173,7 +173,7 @@ export default function MatchCard({ match, featured = false }) {
         <a
           href={CAZETV_YOUTUBE_URL}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="match-action-watch"
           title={uiText.match.watchTitle}
         >

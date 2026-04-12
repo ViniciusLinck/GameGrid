@@ -131,9 +131,10 @@ export default function PageFrame() {
 
       <header className="site-header" aria-label={uiText.navigation.mainAria}>
         <div className="global-nav-row">
-          <Link to="/" className="brand-link">
+          <Link to="/" className="brand-link" aria-label="GameGrid">
             <img src={brandLogo} alt="GameGrid" className="brand-logo" />
           </Link>
+
           <div className="global-nav-controls">
             <div className="language-switcher">
               <label htmlFor="language-select" className="language-switcher-label">

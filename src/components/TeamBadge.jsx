@@ -28,7 +28,7 @@ export default function TeamBadge({ name, flagSrc: explicitFlagSrc = "" }) {
     <div className="team-badge">
       <div className="team-icon" aria-hidden="true">
         {flagSrc ? (
-          <img src={flagSrc} alt={`Bandeira de ${name}`} loading="lazy" />
+          <img src={flagSrc} alt="" loading="lazy" />
         ) : (
           <span>{getInitials(name)}</span>
         )}

@@ -127,10 +127,41 @@ function MatchFiltersBar({
   sourceSummary,
   compact = false,
 }) {
+  const [showRefinedSearch, setShowRefinedSearch] = useState(() => !compact);
+
+  useEffect(() => {
+    if (!compact) {
+      setShowRefinedSearch(true);
+    }
+  }, [compact]);
+
+  useEffect(() => {
+    if (teamQuery.trim()) {
+      setShowRefinedSearch(true);
+    }
+  }, [teamQuery]);
+
   return (
-    <>
-      <div className={`dashboard-row ${compact ? "dashboard-row-compact" : "dashboard-row-bottom"}`}>
-        <div className="dashboard-item dashboard-control">
+    <section className={`dashboard-filters ${compact ? "dashboard-filters-compact" : ""}`}>
+      <div className="dashboard-filters-head">
+        <div>
+          <p className="dashboard-filters-kicker">{uiText.home.filtersTitle}</p>
+          {!compact ? <p className="dashboard-filters-copy">{uiText.home.filtersSubtitle}</p> : null}
+        </div>
+
+        <button
+          type="button"
+          className="dashboard-search-toggle"
+          onClick={() => setShowRefinedSearch((value) => !value)}
+          aria-expanded={showRefinedSearch}
+          aria-controls={`${idPrefix}-refined-search`}
+        >
+          {showRefinedSearch ? uiText.home.searchToggleClose : uiText.home.searchToggleOpen}
+        </button>
+      </div>
+
+      <div className={`dashboard-row ${compact ? "dashboard-row-compact" : "dashboard-row-bottom"} dashboard-row-primary`}>
+        <div className="dashboard-item dashboard-control dashboard-item-priority">
           <label htmlFor={`${idPrefix}-stage-select`} className="dashboard-label">
             {uiText.home.stage}
           </label>
@@ -147,7 +178,7 @@ function MatchFiltersBar({
           </select>
         </div>
 
-        <div className="dashboard-item dashboard-control">
+        <div className="dashboard-item dashboard-control dashboard-item-priority">
           <label htmlFor={`${idPrefix}-team-select`} className="dashboard-label">
             {uiText.home.team}
           </label>
@@ -165,7 +196,7 @@ function MatchFiltersBar({
           </select>
         </div>
 
-        <div className="dashboard-item dashboard-control">
+        <div className="dashboard-item dashboard-control dashboard-item-priority">
           <label htmlFor={`${idPrefix}-day-select`} className="dashboard-label">
             {uiText.home.day}
           </label>
@@ -182,20 +213,6 @@ function MatchFiltersBar({
           </select>
         </div>
 
-        <div className="dashboard-item dashboard-control dashboard-search">
-          <label htmlFor={`${idPrefix}-team-search`} className="dashboard-label">
-            {uiText.home.searchTeam}
-          </label>
-          <input
-            id={`${idPrefix}-team-search`}
-            type="search"
-            value={teamQuery}
-            placeholder={uiText.home.searchPlaceholder}
-            onChange={(event) => onTeamQueryChange(event.target.value)}
-            lang={locale}
-          />
-        </div>
-
         <div className="dashboard-item dashboard-action">
           <button
             type="button"
@@ -208,11 +225,32 @@ function MatchFiltersBar({
         </div>
       </div>
 
+      <div
+        id={`${idPrefix}-refined-search`}
+        className={`dashboard-refined-search ${showRefinedSearch ? "is-open" : ""}`}
+      >
+        <div className="dashboard-row dashboard-row-refined">
+          <div className="dashboard-item dashboard-control dashboard-search">
+            <label htmlFor={`${idPrefix}-team-search`} className="dashboard-label">
+              {uiText.home.searchTeam}
+            </label>
+            <input
+              id={`${idPrefix}-team-search`}
+              type="search"
+              value={teamQuery}
+              placeholder={uiText.home.searchPlaceholder}
+              onChange={(event) => onTeamQueryChange(event.target.value)}
+              lang={locale}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="dashboard-meta-row">
         <p className="dashboard-source-note">{sourceSummary}</p>
         <p className="dashboard-filtered-note">{uiText.home.visibleMatches(filteredCount)}</p>
       </div>
-    </>
+    </section>
   );
 }
 
@@ -699,7 +737,10 @@ export default function HomePage() {
       <main className="calendar" ref={listRef} id="jogos-copa">
         {matchesByDay.length === 0 ? (
           hasActiveFilters ? (
-            <section className="page-card">{uiText.home.noMatchesWithFilter}</section>
+            <section className="page-card empty-state-card">
+              <h2>{uiText.home.noMatchesWithFilter}</h2>
+              <p>{uiText.home.noMatchesDescription}</p>
+            </section>
           ) : isLoadingMatches ? (
             <section className="day-group" aria-label={uiText.common.loadingMatches}>
               <div className="day-group-header skeleton-card">
@@ -713,7 +754,9 @@ export default function HomePage() {
               </div>
             </section>
           ) : (
-            <section className="page-card">{uiText.common.loadingMatches}</section>
+            <section className="page-card empty-state-card">
+              <h2>{uiText.common.loadingMatches}</h2>
+            </section>
           )
         ) : null}
 

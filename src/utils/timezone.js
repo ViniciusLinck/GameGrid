@@ -12,7 +12,7 @@ export function formatMatchTimeToUserZone(date, time, locale = "pt-BR") {
   const parsed = safeDate(date, time);
   if (!parsed) {
     return {
-      dateLabel: "Data invalida",
+      dateLabel: "Data inválida",
       timeLabel: "--:--",
       timeZone: detectUserTimeZone(),
       iso: "",
