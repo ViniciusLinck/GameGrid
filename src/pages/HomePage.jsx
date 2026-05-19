@@ -10,7 +10,7 @@ import { seoDefaults, useSeo } from "../hooks/useSeo";
 import { fetchWorldCupMatches2026 } from "../services/worldCupApi";
 import { normalizeTeamName, normalizeText } from "../utils/flags";
 import { useLanguage } from "../context/LanguageContext";
-import logo from "../../assets/logo.svg";
+import logo from "../images/Logo.jpeg";
 
 const ALL_STAGES = "all";
 const ALL_DAYS = "all";
@@ -616,8 +616,18 @@ export default function HomePage() {
   return (
     <div ref={appRef}>
       <header className="hero" id="resumo-copa">
-        <img src={logo} alt="GameGrid" className="hero-logo" />
-        <h1 className="hero-title">{uiText.home.title}</h1>
+        <div className="hero-brand-panel">
+          <div className="hero-brand-copy">
+            <img src={logo} alt="GameGrid" className="hero-logo" />
+            <div>
+              <h1 className="hero-title">
+                <span>Game</span>
+                <strong>Grid</strong>
+              </h1>
+              <p className="hero-tagline">A Copa do Mundo, na sua tela.</p>
+            </div>
+          </div>
+        </div>
         <p className="hero-subtitle">{uiText.home.subtitle}</p>
 
         <div className="dashboard-bar">

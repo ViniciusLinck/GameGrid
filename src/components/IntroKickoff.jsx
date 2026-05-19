@@ -4,6 +4,7 @@ import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { motionTokens } from "../animations/motionTokens";
 import { useLanguage } from "../context/LanguageContext";
 import introBall from "../images/bola.gif";
+import brandLogo from "../images/Logo.jpeg";
 
 export default function IntroKickoff({ onFinish }) {
   const [hidden, setHidden] = useState(false);
@@ -131,9 +132,14 @@ export default function IntroKickoff({ onFinish }) {
     <div className="intro-overlay" ref={overlayRef}>
       <div className="intro-glow" />
 
-      <p className="intro-title" ref={titleRef}>
-        GameGrid 2026
-      </p>
+      <div className="intro-title" ref={titleRef}>
+        <img src={brandLogo} alt="GameGrid" className="intro-logo" />
+        <p>
+          <span>Game</span>
+          <strong>Grid</strong>
+        </p>
+        <small>A Copa do Mundo, na sua tela.</small>
+      </div>
 
       <div className="intro-stage">
         <div className="intro-streak" ref={streakRef} />

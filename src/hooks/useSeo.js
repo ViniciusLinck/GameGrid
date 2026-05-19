@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 const SITE_URL = "https://viniciuslinck.github.io/GameGrid";
-const DEFAULT_IMAGE = `${SITE_URL}/favicon.svg`;
+const DEFAULT_IMAGE = `${SITE_URL}/favicon.png`;
 const DEFAULT_TITLE = "GameGrid | Copa do Mundo 2026";
 const DEFAULT_DESCRIPTION =
   "Calendario da Copa do Mundo 2026 com jogos, fases, detalhes de times e jogadores.";
