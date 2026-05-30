@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { gsap } from "gsap"
 import { Link, useParams } from "react-router-dom"
 import { fetchTeamDetails } from "../services/worldCupApi"
@@ -17,6 +17,7 @@ const STARTING_LINEUP_LIMITS = {
   midfield: 3,
   attack: 3,
 }
+const POSITION_FILTERS = ["all", ...SQUAD_GROUP_ORDER]
 
 function decodeRouteTeam(routeValue) {
   try {
@@ -90,6 +91,27 @@ function uniqueMedia(items) {
   })
 }
 
+function playerKey(player) {
+  return String(player?.id ?? `${player?.name ?? ""}|${player?.position ?? ""}`)
+    .trim()
+    .toLowerCase()
+}
+
+function orderPlayersWithStarters(players, starterKeys) {
+  const starters = []
+  const others = []
+
+  for (const player of players) {
+    if (starterKeys.has(playerKey(player))) {
+      starters.push(player)
+    } else {
+      others.push(player)
+    }
+  }
+
+  return [...starters, ...others]
+}
+
 function selectStartingEleven(players) {
   const groupedPlayers = players.reduce(
     (accumulator, player) => {
@@ -138,6 +160,7 @@ export default function TeamPage() {
   const teamName = decodeRouteTeam(routeTeamName)
   const [teamDetails, setTeamDetails] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activePositionGroup, setActivePositionGroup] = useState("all")
   const pageRef = useRef(null)
   const { shouldAnimate } = useMotionPreferences()
   const { setBackgroundMood } = useBackgroundMood()
@@ -248,7 +271,7 @@ export default function TeamPage() {
       observer.disconnect()
       context.revert()
     }
-  }, [shouldAnimate, teamDetails])
+  }, [shouldAnimate, teamDetails, activePositionGroup])
 
   useEffect(() => {
     if (!pageRef.current || !shouldAnimate) {
@@ -376,10 +399,38 @@ export default function TeamPage() {
         card.removeEventListener("pointerleave", onLeave)
       })
     }
-  }, [shouldAnimate, teamDetails])
+  }, [shouldAnimate, teamDetails, activePositionGroup])
 
-  const teamPlayers = teamDetails?.players ?? []
-  const startingEleven = selectStartingEleven(teamPlayers)
+  const squadPlayers = teamDetails?.players ?? []
+  const startingEleven = selectStartingEleven(squadPlayers)
+  const starterKeys = useMemo(() => new Set(startingEleven.map(playerKey)), [startingEleven])
+  const positionCounts = useMemo(
+    () =>
+      squadPlayers.reduce(
+        (accumulator, player) => {
+          const groupKey = normalizePositionGroup(player.position)
+          accumulator[groupKey] += 1
+          accumulator.all += 1
+          return accumulator
+        },
+        {
+          all: 0,
+          goalkeeper: 0,
+          defense: 0,
+          midfield: 0,
+          attack: 0,
+        },
+      ),
+    [squadPlayers],
+  )
+  const visiblePlayers = useMemo(() => {
+    const subset =
+      activePositionGroup === "all"
+        ? squadPlayers
+        : squadPlayers.filter((player) => normalizePositionGroup(player.position) === activePositionGroup)
+
+    return orderPlayersWithStarters(subset, starterKeys)
+  }, [activePositionGroup, squadPlayers, starterKeys])
   const coachGallery = uniqueMedia([
     teamDetails?.coach?.image,
     ...(teamDetails?.coach?.gallery ?? []),
@@ -396,7 +447,7 @@ export default function TeamPage() {
       name: teamDetails?.teamName ?? teamName,
       sport: "Football",
       url: `${seoDefaults.siteUrl}/time/${encodeURIComponent(teamName)}`,
-      member: startingEleven.map((player) => ({
+      member: squadPlayers.map((player) => ({
         "@type": "Person",
         name: player.name,
       })),
@@ -439,9 +490,6 @@ export default function TeamPage() {
             {uiText.team.squadFocus}
           </p>
           <h1 className="squad-title">{teamDetails.teamName}</h1>
-          <p className="players-hint squad-subtitle">
-            {uiText.team.mainPlayers}
-          </p>
         </header>
 
         <ProfileShowcaseCard
@@ -453,7 +501,6 @@ export default function TeamPage() {
           }`}
           eyebrow={uiText.team.coachCommand}
           badge={teamDetails.coach?.role ?? uiText.team.coachRole}
-          description={uiText.team.coachDescription}
           image={teamDetails.coach?.image ?? ""}
           imageAlt={teamDetails.coach?.name ?? uiText.team.coachCommand}
           mediaClassName="profile-showcase-media-coach"
@@ -502,34 +549,72 @@ export default function TeamPage() {
             <header className="squad-group-header">
               <div>
                 <p className="squad-group-kicker">{uiText.team.squadFocus}</p>
-                <h3>{uiText.team.mainPlayers}</h3>
+                <h3>{uiText.team.fullSquadTitle}</h3>
               </div>
-              <span>{uiText.team.groupCount(startingEleven.length)}</span>
+              <span>{uiText.team.groupCount(visiblePlayers.length)}</span>
             </header>
 
-            <div className="player-grid squad-grid">
-              {startingEleven.map((player) => (
-                <article className="player-preview-card" key={player.id}>
-                  <div className="player-card-sheen" aria-hidden="true" />
-                  <div className="player-card-media">
-                    {player.image ? (
-                      <img src={player.image} alt={player.name} loading="lazy" />
-                    ) : (
-                      <div className="player-card-fallback">
-                        {player.name.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
+            <div className="squad-filter-bar" role="toolbar" aria-label={uiText.team.positionFilterLabel}>
+              {POSITION_FILTERS.map((groupKey) => {
+                const isActive = activePositionGroup === groupKey
+                const label =
+                  groupKey === "all"
+                    ? uiText.team.allPositions
+                    : uiText.team.positionGroups[groupKey]
+                const count = positionCounts[groupKey] ?? positionCounts.all
 
-                  <section className="player-card-content">
-                    <span className="player-card-kicker">
-                      {uiText.team.mainSelection}
-                    </span>
-                    <h3>{player.name}</h3>
-                    <p>{translatePosition(player.position, language)}</p>
-                  </section>
-                </article>
-              ))}
+                return (
+                  <button
+                    key={groupKey}
+                    type="button"
+                    className={`squad-filter-chip ${isActive ? "is-active" : ""}`}
+                    onClick={() => setActivePositionGroup(groupKey)}
+                    aria-pressed={isActive}
+                  >
+                    <span>{label}</span>
+                    <small>{count}</small>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="player-grid squad-grid">
+              {visiblePlayers.map((player) => {
+                const isStarter = starterKeys.has(playerKey(player))
+
+                return (
+                  <article
+                    className={`player-preview-card ${isStarter ? "player-preview-card-starter" : ""}`}
+                    key={playerKey(player)}
+                  >
+                    <div className="player-card-sheen" aria-hidden="true" />
+                    {isStarter ? (
+                      <span className="player-card-badge">{uiText.team.starterBadge}</span>
+                    ) : null}
+                    <div className="player-card-media">
+                      {player.image || player.gallery?.[0] ? (
+                        <img
+                          src={player.image || player.gallery?.[0]}
+                          alt={player.name}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="player-card-fallback">
+                          {player.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+
+                    <section className="player-card-content">
+                      <span className="player-card-kicker">
+                        {uiText.team.mainSelection}
+                      </span>
+                      <h3>{player.name}</h3>
+                      <p>{translatePosition(player.position, language)}</p>
+                    </section>
+                  </article>
+                )
+              })}
             </div>
           </section>
         </div>

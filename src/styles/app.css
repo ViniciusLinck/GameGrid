@@ -1047,6 +1047,32 @@
     @apply rounded-full border border-[#ffffff24] bg-[#081427c9] px-3 py-1 text-[0.74rem] uppercase tracking-[0.08em] text-[#ffd061];
   }
 
+  .squad-filter-bar {
+    @apply mt-3 flex flex-wrap gap-2;
+  }
+
+  .squad-filter-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-[#7bb7ff35] bg-[#091529d3] px-3 py-2 text-[0.76rem] font-semibold text-[#dbeaff];
+    transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .squad-filter-chip small {
+    @apply rounded-full border border-[#ffffff1f] bg-[#ffffff10] px-2 py-[0.16rem] text-[0.68rem] font-semibold text-[#ffd35c];
+  }
+
+  .squad-filter-chip:hover {
+    transform: translateY(-1px);
+    border-color: rgba(141, 207, 255, 0.42);
+    box-shadow: 0 10px 18px rgba(3, 7, 19, 0.14);
+  }
+
+  .squad-filter-chip.is-active {
+    border-color: rgba(255, 208, 97, 0.52);
+    background: linear-gradient(160deg, rgba(24, 40, 72, 0.96), rgba(11, 22, 40, 0.94));
+    color: #f7fbff;
+    box-shadow: 0 14px 24px rgba(3, 7, 19, 0.2);
+  }
+
   .full-squad-panel {
     @apply mt-6 rounded-[24px] border border-[#79b9ff33] p-4;
     background:
@@ -1092,6 +1118,21 @@
     box-shadow: 0 22px 42px rgba(2, 7, 19, 0.46);
     transform-style: preserve-3d;
     will-change: transform;
+  }
+
+  .player-preview-card-starter {
+    border-color: rgba(255, 208, 97, 0.54);
+    background:
+      radial-gradient(circle at 18% 16%, rgba(255, 241, 183, 0.45), transparent 30%),
+      radial-gradient(circle at 84% 12%, rgba(255, 208, 97, 0.18), transparent 26%),
+      linear-gradient(180deg, rgba(8, 16, 33, 0.08), rgba(8, 16, 33, 0) 32%),
+      linear-gradient(160deg, rgba(247, 250, 255, 0.94), rgba(198, 183, 130, 0.7));
+    box-shadow: 0 24px 50px rgba(2, 7, 19, 0.52);
+  }
+
+  .player-card-badge {
+    @apply absolute right-4 top-4 z-[3] rounded-full border border-[#ffffff38] bg-[#081427d9] px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-[#ffd061];
+    backdrop-filter: blur(8px);
   }
 
   .player-preview-card:hover {
@@ -1168,6 +1209,15 @@
 
   .player-card-content p {
     @apply mt-1 text-[0.86rem] text-[#e5ecff];
+  }
+
+  .player-preview-card-starter .player-card-content h3 {
+    color: #fff7d3;
+  }
+
+  .player-preview-card-starter .player-card-content p {
+    color: #1f3958;
+    font-weight: 600;
   }
 
   .player-card-meta {

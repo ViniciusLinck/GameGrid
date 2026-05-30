@@ -11,6 +11,7 @@ const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v6";
 const MATCHES_CACHE_TTL_MS = 3 * 60 * 1000;
 const translationCache = new Map();
 const playerImageCache = new Map();
+const fifaTeamsCache = new Map();
 
 const stageKeysByName = {
   "First Stage": "group_stage",
@@ -711,6 +712,26 @@ async function getTeamFromApi(teamName) {
     new Set([teamNameAliases[normalized], teamName].filter(Boolean))
   );
 
+  if (!fifaTeamsCache.has("FIFA World Cup")) {
+    try {
+      const data = await fetchJson(
+        `${SPORTS_DB_BASE}/search_all_teams.php?l=${encodeURIComponent("FIFA World Cup")}`
+      );
+      fifaTeamsCache.set("FIFA World Cup", data.teams ?? []);
+    } catch {
+      fifaTeamsCache.set("FIFA World Cup", []);
+    }
+  }
+
+  const fifaTeams = fifaTeamsCache.get("FIFA World Cup") ?? [];
+  const fifaExactMatch =
+    fifaTeams.find((team) => normalizeTeamName(team.strTeam) === normalized) ??
+    fifaTeams.find((team) => normalizeTeamName(team.strCountry) === normalized);
+
+  if (fifaExactMatch) {
+    return fifaExactMatch;
+  }
+
   for (const queryName of queryNames) {
     const url = `${SPORTS_DB_BASE}/searchteams.php?t=${encodeURIComponent(queryName)}`;
     const data = await fetchJson(url);
@@ -719,6 +740,13 @@ async function getTeamFromApi(teamName) {
     const exactMatch = teams.find((team) => normalizeTeamName(team.strTeam) === normalized);
     if (exactMatch) {
       return exactMatch;
+    }
+
+    const exactCountryMatch = teams.find(
+      (team) => normalizeTeamName(team.strCountry) === normalized
+    );
+    if (exactCountryMatch) {
+      return exactCountryMatch;
     }
   }
 

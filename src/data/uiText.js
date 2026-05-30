@@ -126,11 +126,10 @@ const catalog = {
       clickPlayerHint: "Clique em um jogador para abrir os detalhes completos.",
       squadFocus: "Elenco em destaque",
       fullSquadTitle: "Elenco completo",
-      fullSquadSubtitle:
-        "Quando a API trouxer mais atletas, você pode expandir a lista inteira mantendo os destaques principais no topo.",
+      positionFilterLabel: "Filtrar por posição",
+      allPositions: "Todas as posições",
+      starterBadge: "Titular",
       coachCommand: "Comando técnico",
-      coachDescription:
-        "Liderança, leitura do elenco principal e preparação visual da seleção para o torneio.",
       coachGalleryTitle: "Galeria do técnico",
       coachGalleryAria: "Galeria visual do técnico",
       selectionLabel: "Seleção",
@@ -337,11 +336,10 @@ const catalog = {
       clickPlayerHint: "Click a player to open full details.",
       squadFocus: "Featured squad",
       fullSquadTitle: "Full squad",
-      fullSquadSubtitle:
-        "When the API returns more athletes, you can expand the full list while keeping the highlighted core at the top.",
+      positionFilterLabel: "Filter by position",
+      allPositions: "All positions",
+      starterBadge: "Starter",
       coachCommand: "Coaching staff",
-      coachDescription:
-        "Leadership, squad reading and visual preparation of the national team for the tournament.",
       coachGalleryTitle: "Coach gallery",
       coachGalleryAria: "Coach visual gallery",
       selectionLabel: "National team",
@@ -548,11 +546,10 @@ const catalog = {
       clickPlayerHint: "Haz clic en un jugador para abrir todos los detalles.",
       squadFocus: "Plantilla destacada",
       fullSquadTitle: "Plantilla completa",
-      fullSquadSubtitle:
-        "Cuando la API traiga más jugadores, puedes expandir la lista completa manteniendo los destacados arriba.",
+      positionFilterLabel: "Filtrar por posición",
+      allPositions: "Todas las posiciones",
+      starterBadge: "Titular",
       coachCommand: "Cuerpo técnico",
-      coachDescription:
-        "Liderazgo, lectura de la plantilla principal y preparación visual de la selección para el torneo.",
       coachGalleryTitle: "Galería del entrenador",
       coachGalleryAria: "Galería visual del entrenador",
       selectionLabel: "Selección",
