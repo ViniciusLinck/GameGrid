@@ -8,6 +8,8 @@ import { useFavorites } from "../../hooks/useFavorites";
 import { useWorldCupMatchesQuery } from "../../hooks/useWorldCupMatchesQuery";
 import { buildGroupTableFromMatches } from "../../services/sportsdbApi";
 import { formatMatchTimeToUserZone } from "../../utils/timezone";
+import { useLanguage } from "../../context/LanguageContext";
+import { translateTeamName } from "../../utils/teamNames";
 
 const INITIAL_FILTERS = {
   team: "",
@@ -22,6 +24,7 @@ export default function MvpShowcase() {
   const [selectedMatch, setSelectedMatch] = useState(null);
 
   const { favorites, onToggleMatch, isMatchFavorite } = useFavorites();
+  const { language } = useLanguage();
 
   const { data: matches = [], isLoading, error } = useWorldCupMatchesQuery({
     filters,
@@ -35,8 +38,10 @@ export default function MvpShowcase() {
       names.add(match.homeTeam.name);
       names.add(match.awayTeam.name);
     });
-    return Array.from(names).sort((a, b) => a.localeCompare(b));
-  }, [matches]);
+    return Array.from(names).sort((a, b) =>
+      translateTeamName(a, language).localeCompare(translateTeamName(b, language))
+    );
+  }, [language, matches]);
 
   const stages = useMemo(() => {
     const values = new Set(matches.map((match) => match.stage).filter(Boolean));
@@ -57,7 +62,7 @@ export default function MvpShowcase() {
     <section className="grid gap-4">
       {nextMatch ? (
         <Countdown
-          label={`Contagem para ${nextMatch.homeTeam.name} x ${nextMatch.awayTeam.name}`}
+          label={`Contagem para ${translateTeamName(nextMatch.homeTeam.name, language)} x ${translateTeamName(nextMatch.awayTeam.name, language)}`}
           targetIso={formatMatchTimeToUserZone(nextMatch.date, nextMatch.time).iso}
         />
       ) : null}
@@ -69,6 +74,7 @@ export default function MvpShowcase() {
         onChange={setFilters}
         showOnlyFavorites={showOnlyFavorites}
         onToggleFavorites={() => setShowOnlyFavorites((current) => !current)}
+        language={language}
       />
 
       {isLoading ? <p className="text-ink-300">Carregando jogos...</p> : null}
@@ -82,16 +88,22 @@ export default function MvpShowcase() {
             isFavorite={isMatchFavorite(match.id)}
             onToggleFavorite={() => onToggleMatch(match.id)}
             onOpenDetails={() => setSelectedMatch(match)}
+            language={language}
           />
         ))}
       </div>
 
-      <GroupTable rows={groupTable} title="Classificacao por desempenho (jogos finalizados)" />
+      <GroupTable
+        rows={groupTable}
+        title="Classificacao por desempenho (jogos finalizados)"
+        language={language}
+      />
 
       <MatchModal
         match={selectedMatch}
         isOpen={Boolean(selectedMatch)}
         onClose={() => setSelectedMatch(null)}
+        language={language}
       />
     </section>
   );

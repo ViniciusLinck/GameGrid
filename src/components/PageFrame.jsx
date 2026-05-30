@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { CalendarDays, Home, Moon, ShieldCheck, Sun, Trophy } from "lucide-react";
+import { CalendarDays, Home, ShieldCheck, Trophy } from "lucide-react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import IntroKickoff from "./IntroKickoff";
 import WorldBackground from "./WorldBackground";
@@ -10,6 +10,7 @@ import { BackgroundMoodContext } from "../hooks/useBackgroundMood";
 import { useMotionPreferences } from "../hooks/useMotionPreferences";
 import { motionTokens } from "../animations/motionTokens";
 import { useLanguage } from "../context/LanguageContext";
+import { translateTeamName } from "../utils/teamNames";
 import brandLogo from "../images/Logo.jpeg";
 
 const languageFlags = {
@@ -23,11 +24,6 @@ Object.assign(languageFlags, {
   en: "\u{1F1FA}\u{1F1F8}",
   es: "\u{1F1EA}\u{1F1F8}",
 });
-
-const themeLabels = {
-  dark: "Ativar modo claro",
-  light: "Ativar modo escuro",
-};
 
 function decodeSegment(value = "") {
   try {
@@ -60,13 +56,6 @@ export default function PageFrame() {
   const [showIntro, setShowIntro] = useState(() => location.pathname === "/");
   const [mood, setMood] = useState("idle");
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") {
-      return "dark";
-    }
-
-    return window.localStorage.getItem("gamegrid-theme") ?? "dark";
-  });
   const isHomeRoute = location.pathname === "/";
   const pageRef = useRef(null);
   const overlayRef = useRef(null);
@@ -74,16 +63,27 @@ export default function PageFrame() {
   const { language, options, setLanguage, uiText } = useLanguage();
 
   const crumbs = useMemo(
-    () => buildCrumbs(location.pathname, uiText),
-    [location.pathname, uiText]
+    () => {
+      const baseCrumbs = buildCrumbs(location.pathname, uiText);
+
+      if (location.pathname.startsWith("/time/")) {
+        const teamSlug = decodeSegment(location.pathname.split("/")[2] ?? "");
+        const teamLabel = translateTeamName(teamSlug, language);
+        return [
+          { to: "/", label: uiText.navigation.home },
+          { label: `${uiText.navigation.team}: ${teamLabel}` },
+        ];
+      }
+
+      return baseCrumbs;
+    },
+    [language, location.pathname, uiText]
   );
   const currentLanguageFlag = languageFlags[language] ?? "\u{1F310}";
-  const isDarkTheme = theme === "dark";
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("gamegrid-theme", theme);
-  }, [theme]);
+    document.documentElement.dataset.theme = "dark";
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -171,16 +171,6 @@ export default function PageFrame() {
           </nav>
 
           <div className="global-nav-controls">
-            <button
-              type="button"
-              className="theme-toggle"
-              onClick={() => setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"))}
-              aria-label={themeLabels[theme]}
-              title={themeLabels[theme]}
-            >
-              {isDarkTheme ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-            </button>
-
             <div className="language-switcher">
               <label htmlFor="language-select" className="language-switcher-label">
                 {uiText.language.label}

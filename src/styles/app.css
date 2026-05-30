@@ -2403,35 +2403,6 @@ body {
   color: var(--gg-green);
 }
 
-.theme-toggle {
-  display: inline-flex;
-  height: 42px;
-  width: 42px;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--gg-border);
-  border-radius: var(--gg-radius);
-  background: var(--gg-panel-strong);
-  color: var(--gg-gold);
-  cursor: pointer;
-  transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    background-color 180ms ease;
-}
-
-.theme-toggle:hover {
-  transform: translateY(-1px);
-  border-color: var(--gg-border-strong);
-}
-
-.theme-toggle svg {
-  height: 18px;
-  width: 18px;
-  stroke-width: 2.2;
-}
-
 .language-switcher,
 .language-current-flag,
 .language-select,
@@ -2883,7 +2854,6 @@ body {
 .dashboard-control input,
 .language-switcher,
 .language-select,
-.theme-toggle,
 .back-to-top {
   border-color: var(--gg-line);
   border-radius: var(--gg-radius);

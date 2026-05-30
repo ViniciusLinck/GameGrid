@@ -1,4 +1,6 @@
-﻿const STATUS_OPTIONS = ["todos", "agendado", "ao vivo", "finalizado"];
+import { translateTeamName } from "../../utils/teamNames";
+
+const STATUS_OPTIONS = ["todos", "agendado", "ao vivo", "finalizado"];
 
 export default function FiltersBar({
   teams = [],
@@ -7,6 +9,7 @@ export default function FiltersBar({
   onChange,
   showOnlyFavorites,
   onToggleFavorites,
+  language = "pt-BR",
 }) {
   return (
     <section className="rounded-xl border border-[#73b8ff42] bg-[#070d1dd1] p-4">
@@ -21,7 +24,7 @@ export default function FiltersBar({
             <option value="">Todas</option>
             {teams.map((team) => (
               <option key={team} value={team}>
-                {team}
+                {translateTeamName(team, language)}
               </option>
             ))}
           </select>

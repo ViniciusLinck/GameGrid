@@ -1,4 +1,6 @@
-﻿export default function GroupTable({ rows = [], title = "Tabela de grupos" }) {
+import { translateTeamName } from "../../utils/teamNames";
+
+export default function GroupTable({ rows = [], title = "Tabela de grupos", language = "pt-BR" }) {
   return (
     <section className="rounded-xl border border-[#73b8ff42] bg-[#070d1dd1] p-4">
       <header className="mb-3">
@@ -19,17 +21,21 @@
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.team} className="border-t border-[#6aaeff30] text-ink-300">
-                <td className="px-2 py-2 font-medium text-white">{row.team}</td>
-                <td className="px-2 py-2">{row.points}</td>
-                <td className="px-2 py-2">{row.games}</td>
-                <td className="px-2 py-2">{row.wins}</td>
-                <td className="px-2 py-2">{row.draws}</td>
-                <td className="px-2 py-2">{row.losses}</td>
-                <td className="px-2 py-2">{row.goalDiff}</td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const displayTeam = translateTeamName(row.team, language);
+
+              return (
+                <tr key={row.team} className="border-t border-[#6aaeff30] text-ink-300">
+                  <td className="px-2 py-2 font-medium text-white">{displayTeam}</td>
+                  <td className="px-2 py-2">{row.points}</td>
+                  <td className="px-2 py-2">{row.games}</td>
+                  <td className="px-2 py-2">{row.wins}</td>
+                  <td className="px-2 py-2">{row.draws}</td>
+                  <td className="px-2 py-2">{row.losses}</td>
+                  <td className="px-2 py-2">{row.goalDiff}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

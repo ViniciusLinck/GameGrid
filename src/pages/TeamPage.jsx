@@ -8,6 +8,7 @@ import { useBackgroundMood } from "../hooks/useBackgroundMood"
 import { seoDefaults, useSeo } from "../hooks/useSeo"
 import { useLanguage } from "../context/LanguageContext"
 import { translatePosition } from "../utils/footballText"
+import { translateTeamName } from "../utils/teamNames"
 import ProfileShowcaseCard from "../components/ProfileShowcaseCard"
 
 const SQUAD_GROUP_ORDER = ["goalkeeper", "defense", "midfield", "attack"]
@@ -165,6 +166,10 @@ export default function TeamPage() {
   const { shouldAnimate } = useMotionPreferences()
   const { setBackgroundMood } = useBackgroundMood()
   const { language, apiLanguage, uiText } = useLanguage()
+  const displayedTeamName = useMemo(
+    () => teamDetails?.displayName ?? translateTeamName(teamDetails?.teamName ?? teamName, language),
+    [language, teamDetails?.displayName, teamDetails?.teamName, teamName],
+  )
 
   useEffect(() => {
     setBackgroundMood("focus")
@@ -437,14 +442,14 @@ export default function TeamPage() {
   ]).slice(0, 4)
 
   useSeo({
-    title: `${teamDetails?.teamName ?? teamName} | GameGrid`,
-    description: uiText.team.pageDescription(teamDetails?.teamName ?? teamName),
+    title: `${displayedTeamName} | GameGrid`,
+    description: uiText.team.pageDescription(displayedTeamName),
     path: `/time/${encodeURIComponent(teamName)}`,
     type: "profile",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "SportsTeam",
-      name: teamDetails?.teamName ?? teamName,
+      name: displayedTeamName,
       sport: "Football",
       url: `${seoDefaults.siteUrl}/time/${encodeURIComponent(teamName)}`,
       member: squadPlayers.map((player) => ({
@@ -489,14 +494,14 @@ export default function TeamPage() {
           <p className="team-section-kicker" style={{ marginTop: "1.5rem" }}>
             {uiText.team.squadFocus}
           </p>
-          <h1 className="squad-title">{teamDetails.teamName}</h1>
+          <h1 className="squad-title">{displayedTeamName}</h1>
         </header>
 
         <ProfileShowcaseCard
           variant="spotlight"
           className="coach-spotlight-card"
           title={teamDetails.coach?.name ?? uiText.team.coachCommand}
-          subtitle={`${teamDetails.teamName} | ${
+          subtitle={`${displayedTeamName} | ${
             teamDetails.coach?.role ?? uiText.team.coachRole
           }`}
           eyebrow={uiText.team.coachCommand}
@@ -509,7 +514,7 @@ export default function TeamPage() {
             <div className="coach-spotlight-meta">
               <div>
                 <span>{uiText.team.selectionLabel}</span>
-                <strong>{teamDetails.teamName}</strong>
+                <strong>{displayedTeamName}</strong>
               </div>
               <div>
                 <span>{uiText.team.baseLabel}</span>

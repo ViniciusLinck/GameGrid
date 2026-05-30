@@ -17,6 +17,10 @@ export default function WorldBackground({ mood = "idle" }) {
   }, [mood]);
 
   useEffect(() => {
+    if (!shouldAnimate) {
+      return undefined;
+    }
+
     let disposed = false;
     let cleanup = () => {};
 
@@ -35,7 +39,7 @@ export default function WorldBackground({ mood = "idle" }) {
       const deviceMemory = navigator.deviceMemory ?? 8;
       const cpuCores = navigator.hardwareConcurrency ?? 8;
       const isLowEndDevice = deviceMemory <= 4 || cpuCores <= 4;
-      const lowPowerMode = !shouldAnimate || isNarrowScreen || isLowEndDevice;
+      const lowPowerMode = isNarrowScreen || isLowEndDevice;
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(

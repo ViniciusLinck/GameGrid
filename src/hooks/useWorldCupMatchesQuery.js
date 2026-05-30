@@ -1,5 +1,21 @@
 ﻿import { useQuery } from "@tanstack/react-query";
 import { fetchWorldCupMatches } from "../services/sportsdbApi";
+import { translateTeamName } from "../utils/teamNames";
+
+function teamNameVariants(teamName) {
+  return Array.from(
+    new Set(
+      [
+        teamName,
+        translateTeamName(teamName, "pt-BR"),
+        translateTeamName(teamName, "en-US"),
+        translateTeamName(teamName, "es-ES"),
+      ]
+        .filter(Boolean)
+        .map((value) => value.toLowerCase())
+    )
+  );
+}
 
 function byFilter(matches, filters = {}, favoriteMatchIds = [], showOnlyFavorites = false) {
   const team = (filters.team ?? "").trim().toLowerCase();
@@ -10,8 +26,8 @@ function byFilter(matches, filters = {}, favoriteMatchIds = [], showOnlyFavorite
   return matches.filter((match) => {
     const inTeam =
       !team ||
-      match.homeTeam.name.toLowerCase().includes(team) ||
-      match.awayTeam.name.toLowerCase().includes(team);
+      teamNameVariants(match.homeTeam.name).some((name) => name.includes(team)) ||
+      teamNameVariants(match.awayTeam.name).some((name) => name.includes(team));
     const inStage = !stage || (match.stage ?? "").toLowerCase() === stage;
     const inDate = !date || match.date === date;
     const inStatus = status === "todos" || (match.status ?? "").toLowerCase() === status;

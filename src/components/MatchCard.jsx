@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getCazetvWatchUrl } from "../data/cazetvStreams";
 import { useLanguage } from "../context/LanguageContext";
 import { usePrivacy } from "../context/PrivacyContext";
+import { translateTeamName } from "../utils/teamNames";
 import TeamBadge from "./TeamBadge";
 import { PollWidget } from "./poll";
 
@@ -40,8 +41,8 @@ function teamRoute(teamName) {
   return `/time/${encodeURIComponent(teamName)}`;
 }
 
-function TeamSide({ team }) {
-  const content = <TeamBadge name={team.name} flagSrc={team.flagSrc} />;
+function TeamSide({ team, displayName }) {
+  const content = <TeamBadge name={displayName} flagSrc={team.flagSrc} />;
 
   if (team?.isPlaceholder) {
     return <div className="team-link team-link-static">{content}</div>;
@@ -69,7 +70,7 @@ function resolveMatchStart(match) {
 export default function MatchCard({ match, featured = false }) {
   const [showPoll, setShowPoll] = useState(false);
   const [now, setNow] = useState(() => new Date());
-  const { locale, pollLanguage, uiText } = useLanguage();
+  const { language, locale, pollLanguage, uiText } = useLanguage();
   const { preferences } = usePrivacy();
   const mapsUrl = match.mapsUrl ?? buildMapsUrl(match.venue);
   const startsAt = resolveMatchStart(match);
@@ -111,6 +112,8 @@ export default function MatchCard({ match, featured = false }) {
         .replace(".", "")
         .toUpperCase();
   const displayTime = startsAt ? timeFormatter.format(startsAt) : match.kickoff;
+  const homeTeamName = translateTeamName(match.homeTeam.name, language);
+  const awayTeamName = translateTeamName(match.awayTeam.name, language);
   const watchUrl = getCazetvWatchUrl(match.homeTeam.name, match.awayTeam.name);
 
   useEffect(() => {
@@ -135,11 +138,11 @@ export default function MatchCard({ match, featured = false }) {
       {countdownLabel ? <p className="match-countdown">{uiText.match.startsIn(countdownLabel)}</p> : null}
 
       <div className="match-sides">
-        <TeamSide team={match.homeTeam} />
+        <TeamSide team={match.homeTeam} displayName={homeTeamName} />
 
         <span className="versus">x</span>
 
-        <TeamSide team={match.awayTeam} />
+        <TeamSide team={match.awayTeam} displayName={awayTeamName} />
       </div>
 
       <div className="match-footer">
@@ -186,8 +189,8 @@ export default function MatchCard({ match, featured = false }) {
         <div id={`poll-widget-${match.id}`}>
           <PollWidget
             matchId={match.id}
-            homeName={match.homeTeam.name}
-            awayName={match.awayTeam.name}
+            homeName={homeTeamName}
+            awayName={awayTeamName}
             startsAtUtc={startsAtIso}
             venue={match.venue}
             mode={pollMode}

@@ -9,6 +9,7 @@ import { useBackgroundMood } from "../hooks/useBackgroundMood";
 import { seoDefaults, useSeo } from "../hooks/useSeo";
 import { fetchWorldCupMatches2026 } from "../services/worldCupApi";
 import { normalizeTeamName, normalizeText } from "../utils/flags";
+import { translateTeamName } from "../utils/teamNames";
 import { useLanguage } from "../context/LanguageContext";
 import logo from "../images/Logo.jpeg";
 
@@ -55,8 +56,10 @@ function getMatchStartDate(match) {
   return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
 }
 
-function getNextMatchLabel(match, locale, uiText) {
+function getNextMatchLabel(match, locale, uiText, language) {
   const startDate = getMatchStartDate(match);
+  const homeTeamName = translateTeamName(match.homeTeam.name, language);
+  const awayTeamName = translateTeamName(match.awayTeam.name, language);
   const dateFormatter = new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
@@ -64,7 +67,7 @@ function getNextMatchLabel(match, locale, uiText) {
 
   if (!startDate) {
     const date = dateFormatter.format(new Date(`${match.date}T12:00:00`));
-    return `${uiText.match.matchNumber(match.id)} | ${date} ${match.kickoff}`;
+    return `${uiText.match.matchNumber(match.id)} | ${homeTeamName} x ${awayTeamName} | ${date} ${match.kickoff}`;
   }
 
   const label = new Intl.DateTimeFormat(locale, {
@@ -75,7 +78,7 @@ function getNextMatchLabel(match, locale, uiText) {
     hour12: false,
   }).format(startDate);
 
-  return `${uiText.match.matchNumber(match.id)} | ${label.replace(",", "")}`;
+  return `${uiText.match.matchNumber(match.id)} | ${homeTeamName} x ${awayTeamName} | ${label.replace(",", "")}`;
 }
 
 function getFeaturedMatchState(matches) {
@@ -190,7 +193,7 @@ function MatchFiltersBar({
             <option value="">{uiText.home.allTeams}</option>
             {teamOptions.map((team) => (
               <option key={team.key} value={team.key}>
-                {team.name}
+                {team.label}
               </option>
             ))}
           </select>
@@ -271,7 +274,7 @@ export default function HomePage() {
   const hasInitRevealRef = useRef(false);
   const { shouldAnimate } = useMotionPreferences();
   const { setBackgroundMood } = useBackgroundMood();
-  const { apiLanguage, locale, uiText } = useLanguage();
+  const { apiLanguage, language, locale, uiText } = useLanguage();
 
   const sourceSummary = useMemo(() => getSourceSummary(matchesSource, uiText), [matchesSource, uiText]);
   const hasActiveFilters =
@@ -369,14 +372,15 @@ export default function HomePage() {
         uniqueTeams.set(key, {
           key,
           name: team.name,
+          label: translateTeamName(team.name, language),
         });
       }
     }
 
     return Array.from(uniqueTeams.values()).sort((left, right) =>
-      left.name.localeCompare(right.name, locale)
+      left.label.localeCompare(right.label, locale)
     );
-  }, [locale, matches]);
+  }, [language, locale, matches]);
 
   const filteredMatches = useMemo(() => {
     const rawQuery = normalizeText(teamQuery);
@@ -455,7 +459,7 @@ export default function HomePage() {
         itemListElement: matches.slice(0, 15).map((match, index) => ({
           "@type": "SportsEvent",
           position: index + 1,
-          name: `${match.homeTeam.name} x ${match.awayTeam.name}`,
+          name: `${translateTeamName(match.homeTeam.name, language)} x ${translateTeamName(match.awayTeam.name, language)}`,
           startDate:
             getMatchStartDate(match)?.toISOString() ?? `${match.date}T${match.kickoff}:00`,
           location: {
@@ -469,7 +473,9 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    const nextLabel = nextMatch ? getNextMatchLabel(nextMatch, locale, uiText) : uiText.common.notAvailable;
+    const nextLabel = nextMatch
+      ? getNextMatchLabel(nextMatch, locale, uiText, language)
+      : uiText.common.notAvailable;
     setDisplayedNext(nextLabel);
 
     if (!shouldAnimate) {
@@ -491,7 +497,7 @@ export default function HomePage() {
     });
 
     return () => tween.kill();
-  }, [locale, matches.length, nextMatch, shouldAnimate, uiText]);
+  }, [language, locale, matches.length, nextMatch, shouldAnimate, uiText]);
 
   useLayoutEffect(() => {
     if (!shouldAnimate) {

@@ -1,5 +1,6 @@
-﻿import { buildMapsUrlFromVenue } from "../../services/mapsHelper";
+import { buildMapsUrlFromVenue } from "../../services/mapsHelper";
 import { formatMatchTimeToUserZone } from "../../utils/timezone";
+import { translateTeamName } from "../../utils/teamNames";
 
 export default function GameCard({
   match,
@@ -7,9 +8,12 @@ export default function GameCard({
   onToggleFavorite,
   onOpenDetails,
   locale = "pt-BR",
+  language = "pt-BR",
 }) {
   const kickoff = formatMatchTimeToUserZone(match.date, match.time || match.kickoff, locale);
   const mapsUrl = buildMapsUrlFromVenue(match.venue);
+  const homeTeamName = translateTeamName(match.homeTeam.name, language);
+  const awayTeamName = translateTeamName(match.awayTeam.name, language);
 
   return (
     <article className="rounded-xl border border-[#73b8ff42] bg-[#070d1dd1] p-4">
@@ -25,7 +29,7 @@ export default function GameCard({
       </header>
 
       <h3 className="mt-3 text-lg font-semibold text-white">
-        {match.homeTeam.name} x {match.awayTeam.name}
+        {homeTeamName} x {awayTeamName}
       </h3>
 
       <div className="mt-3 space-y-1 text-sm text-ink-300">

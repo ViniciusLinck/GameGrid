@@ -2,6 +2,7 @@ import { getLanguageMeta, normalizeLanguage } from "../data/uiText";
 import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
 import { getWorldCupProfile } from "../data/worldCupInsights";
 import { normalizeTeamName } from "../utils/flags";
+import { translateTeamName } from "../utils/teamNames";
 
 const SPORTS_DB_BASE = "https://www.thesportsdb.com/api/v1/json/3";
 const FIFA_API_BASE = "https://api.fifa.com/api/v3";
@@ -421,12 +422,13 @@ function toFifaMatchView(match, language) {
 
 function fallbackPlayer(teamName, position, index, language) {
   const { strings } = resolveLanguage(language);
+  const displayTeamName = translateTeamName(teamName, language);
   return {
     id: `local-${normalizeTeamName(teamName)}-${index + 1}`,
-    name: strings.playerOf(teamName, index),
+    name: strings.playerOf(displayTeamName, index),
     team: teamName,
     position,
-    nationality: teamName,
+    nationality: displayTeamName,
     birth: strings.birthFallback,
     height: strings.heightFallback,
     weight: strings.weightFallback,
@@ -457,9 +459,10 @@ function fallbackPlayersByTeam(teamName, language) {
 
 function fallbackCoachByTeam(teamName, language) {
   const { strings } = resolveLanguage(language);
+  const displayTeamName = translateTeamName(teamName, language);
   return {
     id: `coach-${normalizeTeamName(teamName)}`,
-    name: strings.coachOf(teamName),
+    name: strings.coachOf(displayTeamName),
     role: strings.coachRole,
     image: "",
     gallery: [],
@@ -495,11 +498,12 @@ function extractPlayerGallery(player) {
 
 function toCoachView(team, teamName, language) {
   const { strings } = resolveLanguage(language);
+  const displayTeamName = translateTeamName(teamName, language);
   const managerName =
     team?.strManager
       ?.split(/[,;|]/)
       .map((name) => name.trim())
-      .find(Boolean) ?? strings.coachOf(teamName);
+      .find(Boolean) ?? strings.coachOf(displayTeamName);
 
   return {
     id: `coach-${normalizeTeamName(teamName)}`,
@@ -512,12 +516,13 @@ function toCoachView(team, teamName, language) {
 
 function toPlayerView(player, teamName, language) {
   const { strings } = resolveLanguage(language);
+  const displayTeamName = translateTeamName(teamName, language);
   const gallery = extractPlayerGallery(player);
 
   return {
     id: player.idPlayer,
     name: player.strPlayer ?? strings.player,
-    team: player.strTeam ?? teamName,
+    team: player.strTeam ?? displayTeamName,
     position: player.strPosition ?? strings.positionFallback,
     nationality: player.strNationality ?? strings.nationalityFallback,
     birth: player.dateBorn ?? strings.birthFallback,
@@ -822,8 +827,10 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
     const fallbackDescription = strings.unknownTeamDescription;
     return {
       teamName,
+      displayName: translateTeamName(teamName, language),
       badge: "",
       country: strings.defining,
+      displayCountry: strings.defining,
       founded: strings.defining,
       stadium: strings.defining,
       description: fallbackDescription,
@@ -842,8 +849,10 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
       const fallbackDescription = strings.teamApiMissingDescription;
       return {
         teamName,
+        displayName: translateTeamName(teamName, language),
         badge: "",
         country: strings.defining,
+        displayCountry: strings.defining,
         founded: strings.defining,
         stadium: strings.defining,
         description: fallbackDescription,
@@ -873,8 +882,10 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
 
     return {
       teamName: team.strTeam ?? teamName,
+      displayName: translateTeamName(team.strTeam ?? teamName, language),
       badge: team.strBadge ?? "",
       country: team.strCountry ?? strings.notInformed,
+      displayCountry: translateTeamName(team.strCountry ?? strings.notInformed, language),
       founded: team.intFormedYear ?? strings.notInformed,
       stadium: team.strStadium ?? strings.notInformed,
       description: teamDescription,
@@ -892,8 +903,10 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
     const fallbackDescription = strings.teamApiUnavailableDescription;
     return {
       teamName,
+      displayName: translateTeamName(teamName, language),
       badge: "",
       country: strings.defining,
+      displayCountry: strings.defining,
       founded: strings.defining,
       stadium: strings.defining,
       description: fallbackDescription,

@@ -1,17 +1,20 @@
-﻿import { buildMapsUrlFromVenue } from "../../services/mapsHelper";
+import { buildMapsUrlFromVenue } from "../../services/mapsHelper";
 import { formatMatchTimeToUserZone } from "../../utils/timezone";
+import { translateTeamName } from "../../utils/teamNames";
 
 function shareUrl(baseText) {
   return encodeURIComponent(baseText);
 }
 
-export default function MatchModal({ match, isOpen, onClose }) {
+export default function MatchModal({ match, isOpen, onClose, language = "pt-BR" }) {
   if (!isOpen || !match) {
     return null;
   }
 
   const kickoff = formatMatchTimeToUserZone(match.date, match.time || match.kickoff);
-  const text = `${match.homeTeam.name} x ${match.awayTeam.name} | ${kickoff.dateLabel} ${kickoff.timeLabel}`;
+  const homeTeamName = translateTeamName(match.homeTeam.name, language);
+  const awayTeamName = translateTeamName(match.awayTeam.name, language);
+  const text = `${homeTeamName} x ${awayTeamName} | ${kickoff.dateLabel} ${kickoff.timeLabel}`;
   const mapsUrl = buildMapsUrlFromVenue(match.venue);
   const wa = `https://wa.me/?text=${shareUrl(text)}`;
   const x = `https://twitter.com/intent/tweet?text=${shareUrl(text)}`;
@@ -23,7 +26,7 @@ export default function MatchModal({ match, isOpen, onClose }) {
         <header className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-semibold text-white">
-              {match.homeTeam.name} x {match.awayTeam.name}
+              {homeTeamName} x {awayTeamName}
             </h2>
             <p className="text-sm text-ink-300">{match.stage}</p>
           </div>
@@ -48,10 +51,18 @@ export default function MatchModal({ match, isOpen, onClose }) {
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <a href={wa} target="_blank" rel="noreferrer" className="rounded-full border border-[#25d36680] px-3 py-1 text-xs text-[#b9f5ce] no-underline">WhatsApp</a>
-          <a href={x} target="_blank" rel="noreferrer" className="rounded-full border border-[#8dcfff5e] px-3 py-1 text-xs text-[#d3e8ff] no-underline">Twitter</a>
-          <a href={fb} target="_blank" rel="noreferrer" className="rounded-full border border-[#8dcfff5e] px-3 py-1 text-xs text-[#d3e8ff] no-underline">Facebook</a>
-          <a href={mapsUrl} target="_blank" rel="noreferrer" className="rounded-full border border-[#8dcfff5e] px-3 py-1 text-xs text-[#d3e8ff] no-underline">Mapa do estadio</a>
+          <a href={wa} target="_blank" rel="noreferrer" className="rounded-full border border-[#25d36680] px-3 py-1 text-xs text-[#b9f5ce] no-underline">
+            WhatsApp
+          </a>
+          <a href={x} target="_blank" rel="noreferrer" className="rounded-full border border-[#8dcfff5e] px-3 py-1 text-xs text-[#d3e8ff] no-underline">
+            Twitter
+          </a>
+          <a href={fb} target="_blank" rel="noreferrer" className="rounded-full border border-[#8dcfff5e] px-3 py-1 text-xs text-[#d3e8ff] no-underline">
+            Facebook
+          </a>
+          <a href={mapsUrl} target="_blank" rel="noreferrer" className="rounded-full border border-[#8dcfff5e] px-3 py-1 text-xs text-[#d3e8ff] no-underline">
+            Mapa do estadio
+          </a>
         </div>
       </section>
     </div>
