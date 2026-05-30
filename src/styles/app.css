@@ -213,7 +213,11 @@
   }
 
   .back-to-top {
-    @apply fixed bottom-4 right-4 z-[45] rounded-full border border-[#95d6ff59] bg-[#0b1d39e6] px-3 py-2 text-[0.75rem] font-semibold text-[#d9ecff];
+    @apply fixed z-[45] rounded-full border border-[#95d6ff59] bg-[#0b1d39e6] px-3 py-2 text-[0.75rem] font-semibold text-[#d9ecff];
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 2rem);
+    white-space: nowrap;
     opacity: 0;
     pointer-events: none;
     transform: translateY(10px);
@@ -566,28 +570,29 @@
   }
 
   .team-badge {
-    @apply flex min-w-0 max-w-full items-center justify-center gap-3.5 text-center;
+    @apply inline-flex min-w-0 max-w-full items-center justify-center gap-2.5 text-left;
   }
 
   .match-card-featured .team-badge {
-    @apply gap-3;
+    @apply gap-2;
   }
 
   .team-badge strong {
-    @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[1.02rem] font-semibold leading-[1.2];
-    font-size: clamp(1.02rem, 4.4cqi, 1.38rem);
+    @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[0.98rem] font-semibold leading-[1.15];
+    font-size: clamp(0.98rem, 3.8cqi, 1.2rem);
   }
 
   .match-card-featured .team-badge strong {
-    @apply text-[1.56rem] font-bold;
+    @apply text-[1.2rem] font-bold;
+    font-size: clamp(1.15rem, 4.2cqi, 1.44rem);
   }
 
   .team-icon {
-    @apply inline-flex h-11 w-11 flex-none items-center justify-center overflow-hidden rounded-full border border-[#ffffff1f];
-    background: linear-gradient(140deg, rgba(28, 46, 83, 0.9), rgba(10, 19, 37, 0.8));
-    width: clamp(2.75rem, 11cqi, 3.6rem);
-    height: clamp(2.75rem, 11cqi, 3.6rem);
-    flex-basis: clamp(2.75rem, 11cqi, 3.6rem);
+    @apply inline-flex h-11 w-11 flex-none items-center justify-center overflow-hidden rounded-[10px] border border-transparent;
+    background: transparent;
+    width: clamp(2.65rem, 9.5cqi, 3.2rem);
+    height: clamp(2.65rem, 9.5cqi, 3.2rem);
+    flex-basis: clamp(2.65rem, 9.5cqi, 3.2rem);
   }
 
   .match-card-featured .team-icon {
@@ -595,7 +600,7 @@
   }
 
   .team-icon img {
-    @apply h-full w-full object-cover block;
+    @apply h-full w-full object-contain block;
   }
 
   .team-icon span {
@@ -856,7 +861,7 @@
   }
 
   .team-brand-badge {
-    @apply flex h-24 w-24 items-center justify-center overflow-hidden rounded-[24px] border border-[#ffffff24] bg-[#0e1c36];
+    @apply flex h-[5.75rem] w-[5.75rem] items-center justify-center overflow-hidden rounded-[14px] border border-[#ffffff24] bg-[#0e1c36];
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
@@ -870,7 +875,7 @@
   }
 
   .team-main-flag {
-    @apply h-16 w-16 rounded-full border-2 border-[#ffffff33] object-cover;
+    @apply h-[4.75rem] w-[4.75rem] rounded-[14px] border-2 border-[#ffffff33] object-cover;
   }
 
   .team-main-flag.fallback {
@@ -2068,28 +2073,24 @@
     gap: 10px;
   }
 
-  .team-badge {
-    gap: 10px;
-  }
-
   .match-card-featured .team-badge strong {
-    font-size: 1.18rem;
+    font-size: clamp(1rem, 4.8vw, 1.18rem);
   }
 
   .match-card-featured .team-icon {
-    height: 52px;
-    width: 52px;
-    flex-basis: 52px;
+    height: 58px;
+    width: 58px;
+    flex-basis: 58px;
   }
 
   .team-brand-badge {
-    height: 78px;
-    width: 78px;
+    height: 88px;
+    width: 88px;
   }
 
   .team-main-flag {
-    height: 54px;
-    width: 54px;
+    height: 64px;
+    width: 64px;
   }
 
   .site-header {
@@ -2115,6 +2116,14 @@
     height: 78px;
   }
 
+  .back-to-top {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.68rem;
+    right: max(0.625rem, env(safe-area-inset-right));
+    bottom: max(0.625rem, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 1.25rem);
+  }
+
   .dashboard-item {
     min-height: auto;
     padding: 10px;
@@ -2126,12 +2135,12 @@
   }
 
   .team-icon {
-    height: 38px;
-    width: 38px;
+    height: 40px;
+    width: 40px;
   }
 
   .team-badge strong {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
 
   .player-card-content {
@@ -2486,6 +2495,12 @@ body {
   border-radius: var(--gg-radius);
 }
 
+.team-icon,
+.team-main-flag,
+.team-brand-badge {
+  border-radius: 14px;
+}
+
 input,
 select,
 textarea {
@@ -2500,6 +2515,14 @@ textarea {
 @media (max-width: 620px) {
   .global-nav-row {
     flex-wrap: wrap;
+  }
+
+  .back-to-top {
+    padding: 0.55rem 0.8rem;
+    font-size: 0.7rem;
+    right: max(0.75rem, env(safe-area-inset-right));
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 1.5rem);
   }
 
   .brand-wordmark {
@@ -2958,7 +2981,17 @@ body {
   background-color: color-mix(in srgb, var(--gg-surface-3) 72%, transparent);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
+  .site-header {
+    position: static;
+    top: auto;
+  }
+
+  .back-to-top {
+    right: max(0.875rem, env(safe-area-inset-right));
+    bottom: max(0.875rem, env(safe-area-inset-bottom));
+  }
+
   .primary-nav {
     order: 3;
     flex-basis: 100%;
@@ -3098,8 +3131,11 @@ body {
 }
 
 .team-badge {
-  flex-direction: column;
-  gap: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: left;
 }
 
 .match-card:not(.match-card-featured) .team-badge {
@@ -3108,22 +3144,30 @@ body {
 
 .team-badge strong {
   max-width: 100%;
-  font-size: clamp(0.78rem, 3.2cqi, 0.98rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(0.84rem, 3.2cqi, 1rem);
   font-weight: 600;
+  line-height: 1.15;
 }
 
 .match-card-featured .team-badge strong {
-  font-size: clamp(0.98rem, 3.4cqi, 1.18rem);
+  font-size: clamp(1rem, 3.4cqi, 1.22rem);
 }
 
 .team-icon {
+  width: clamp(2.25rem, 9cqi, 2.75rem);
+  height: clamp(2.25rem, 9cqi, 2.75rem);
+  flex-basis: clamp(2.25rem, 9cqi, 2.75rem);
   border-radius: 10px;
-  background: rgba(245, 245, 245, 0.05);
+  border-color: transparent;
+  background: transparent;
 }
 
 .team-icon img {
   object-fit: contain;
-  padding: 3px;
+  padding: 0;
 }
 
 .versus {

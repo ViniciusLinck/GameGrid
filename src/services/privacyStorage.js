@@ -15,7 +15,7 @@ const pollStore = localforage.createInstance({
 
 const defaultPreferences = {
   acknowledged: false,
-  allowRemotePoll: false,
+  allowRemotePoll: true,
   updatedAt: "",
 };
 

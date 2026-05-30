@@ -2,17 +2,17 @@
 
 ## 1. Modos de operacao
 
-- `local` (padrao): votos persistidos no navegador com localForage.
-- `remote`: votos agregados por API serverless (global), com fallback local para estado do usuario.
+- `local`: votos persistidos no navegador com localForage.
+- `remote` (padrao recomendado): votos agregados por API compartilhada, com fallback local para estado do usuario.
 
 ## 2. Variaveis de ambiente
 
 No arquivo `.env`:
 
 ```bash
-VITE_POLL_MODE=local
+VITE_POLL_MODE=remote
 VITE_POLL_LANG=pt
-# quando modo remoto:
+# opcional: quando a API ficar em outro dominio
 VITE_POLL_API_BASE_URL=https://seu-dominio.com/api
 ```
 
@@ -45,7 +45,25 @@ await migrateLocalVotesToRemote((matchId, choice, clientId) =>
 );
 ```
 
-## 6. Deploy serverless (Vercel/Netlify)
+## 6. API compartilhada
+
+O projeto agora inclui a API Node em `poll-api.mjs`, com persistencia em arquivo.
+
+Para rodar localmente:
+
+```bash
+npm run poll-api
+```
+
+Depois inicie o app em outro terminal:
+
+```bash
+npm run dev
+```
+
+No Vite dev, as chamadas para `/api` sao encaminhadas para `http://127.0.0.1:8787`.
+
+## 7. Deploy serverless (Vercel/Netlify)
 
 Use o arquivo `serverless-example/polls-serverless.js` como base.
 
@@ -55,14 +73,14 @@ Endpoints esperados:
 - `DELETE /polls/:matchId/vote` body `{ clientId }`
 - `GET /polls/:matchId/results`
 
-## 7. Nota legal e privacidade
+## 8. Nota legal e privacidade
 
 - Pesquisa nao oficial.
 - Nao coletar PII (email, nome, telefone) sem consentimento explicito.
 - Se aplicar rate limit por IP, manter retencao minima e informar no aviso de privacidade.
 - Em modo local, resultados representam apenas este navegador.
 
-## 8. Mockups de estados (ASCII)
+## 9. Mockups de estados (ASCII)
 
 ### Antes de votar
 
@@ -97,7 +115,7 @@ Muitas tentativas. Aguarde alguns segundos para votar novamente.
 Sem conexao. Mostrando ultimo estado local.
 ```
 
-## 9. Criticos de UX incluidos
+## 10. Criticos de UX incluidos
 
 - Ordem das opcoes: Home, Empate, Away.
 - Cores distintas para barras.

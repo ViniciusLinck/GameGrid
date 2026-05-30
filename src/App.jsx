@@ -5,7 +5,6 @@ import { useLanguage } from "./context/LanguageContext";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const TeamPage = lazy(() => import("./pages/TeamPage"));
-const PlayerPage = lazy(() => import("./pages/PlayerPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
@@ -18,7 +17,7 @@ export default function App() {
         <Route element={<PageFrame />}>
           <Route index element={<HomePage />} />
           <Route path="time/:teamName" element={<TeamPage />} />
-          <Route path="jogador/:playerId" element={<PlayerPage />} />
+          <Route path="jogador/:playerId" element={<Navigate to="/" replace />} />
           <Route path="privacidade" element={<PrivacyPage />} />
           <Route path="home" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFoundPage />} />

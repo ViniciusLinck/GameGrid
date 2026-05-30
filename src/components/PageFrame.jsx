@@ -37,26 +37,13 @@ function decodeSegment(value = "") {
   }
 }
 
-function buildCrumbs(pathname, search, uiText) {
+function buildCrumbs(pathname, uiText) {
   const segments = pathname.split("/").filter(Boolean);
-  const searchParams = new URLSearchParams(search);
   const crumbs = [{ to: "/", label: uiText.navigation.home }];
 
   if (segments[0] === "time" && segments[1]) {
     const teamName = decodeSegment(segments[1]);
     crumbs.push({ label: `${uiText.navigation.team}: ${teamName}` });
-    return crumbs;
-  }
-
-  if (segments[0] === "jogador" && segments[1]) {
-    const teamName = decodeSegment(searchParams.get("team") ?? "").trim();
-    if (teamName) {
-      crumbs.push({
-        to: `/time/${encodeURIComponent(teamName)}`,
-        label: `${uiText.navigation.team}: ${teamName}`,
-      });
-    }
-    crumbs.push({ label: uiText.navigation.player });
     return crumbs;
   }
 
@@ -87,8 +74,8 @@ export default function PageFrame() {
   const { language, options, setLanguage, uiText } = useLanguage();
 
   const crumbs = useMemo(
-    () => buildCrumbs(location.pathname, location.search, uiText),
-    [location.pathname, location.search, uiText]
+    () => buildCrumbs(location.pathname, uiText),
+    [location.pathname, uiText]
   );
   const currentLanguageFlag = languageFlags[language] ?? "\u{1F310}";
   const isDarkTheme = theme === "dark";

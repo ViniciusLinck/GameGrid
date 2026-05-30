@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { getCazetvWatchUrl } from "../data/cazetvStreams";
 import { useLanguage } from "../context/LanguageContext";
 import { usePrivacy } from "../context/PrivacyContext";
 import TeamBadge from "./TeamBadge";
 import { PollWidget } from "./poll";
 
 const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
-const CAZETV_YOUTUBE_URL = "https://www.youtube.com/@CazeTV";
 
 function formatCountdown(targetDate, now) {
   const diffMs = targetDate.getTime() - now.getTime();
@@ -80,9 +80,9 @@ export default function MatchCard({ match, featured = false }) {
     now.getTime() < startsAt.getTime() + MATCH_DURATION_MS;
   const countdownLabel = featured && startsAt && !isLive ? formatCountdown(startsAt, now) : null;
   const pollMode =
-    import.meta.env.VITE_POLL_MODE === "remote" && preferences.allowRemotePoll
-      ? "remote"
-      : "local";
+    import.meta.env.VITE_POLL_MODE === "local" || !preferences.allowRemotePoll
+      ? "local"
+      : "remote";
 
   const dateFormatter = useMemo(
     () =>
@@ -111,6 +111,7 @@ export default function MatchCard({ match, featured = false }) {
         .replace(".", "")
         .toUpperCase();
   const displayTime = startsAt ? timeFormatter.format(startsAt) : match.kickoff;
+  const watchUrl = getCazetvWatchUrl(match.homeTeam.name, match.awayTeam.name);
 
   useEffect(() => {
     if (!featured) {
@@ -171,7 +172,7 @@ export default function MatchCard({ match, featured = false }) {
         </button>
 
         <a
-          href={CAZETV_YOUTUBE_URL}
+          href={watchUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="match-action-watch"

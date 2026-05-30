@@ -11,7 +11,6 @@ const catalog = {
     common: {
       loadingPage: "Carregando página...",
       loadingTeam: "Carregando detalhes da seleção...",
-      loadingPlayer: "Carregando detalhes do jogador...",
       loadingMatches: "Carregando jogos...",
       notAvailable: "N/D",
       backToTop: "Voltar ao topo",
@@ -59,7 +58,6 @@ const catalog = {
       skipToContent: "Pular para o conteúdo principal",
       home: "Jogos",
       team: "Seleção",
-      player: "Jogador",
       privacy: "Privacidade",
       mainAria: "Navegação principal",
       breadcrumbsAria: "Trilha de navegação",
@@ -138,8 +136,7 @@ const catalog = {
       selectionLabel: "Seleção",
       baseLabel: "Base",
       mainSelection: "Seleção principal",
-      playerTag: "Jogador",
-      openProfile: "Abrir perfil",
+      coachRole: "Técnico",
       positionGroups: {
         goalkeeper: "Goleiro",
         defense: "Defesa",
@@ -151,42 +148,6 @@ const catalog = {
       hideFullSquad: "Ocultar elenco completo",
       pageDescription: (teamName) =>
         `Perfil da seleção ${teamName}: histórico de Copas, elenco principal e desempenho recente.`,
-    },
-    player: {
-      notFound: "Jogador não encontrado.",
-      backHome: "Voltar para a página inicial",
-      backTeam: "<- Voltar ao time",
-      noAchievements: "Sem conquistas disponíveis na API.",
-      quickNavProfile: "Perfil",
-      quickNavAchievements: "Conquistas",
-      quickNavAria: "Atalhos da página do jogador",
-      profileEyebrow: "Ficha do jogador",
-      profileSubtitle:
-        "Perfil premium com leitura rápida de time, posição, dados físicos e presença no elenco.",
-      summaryTitle: "Resumo do jogador",
-      galleryTitle: "Galeria visual",
-      showMore: "Mostrar mais",
-      showLess: "Mostrar menos",
-      achievementsAria: "Lista de conquistas do jogador e do técnico",
-      achievementsTitle: "Conquistas",
-      achievementsSubtitle:
-        "Lista de títulos e premiações registradas para o jogador e o técnico.",
-      playerEyebrow: "Jogador",
-      coachEyebrow: "Comando técnico",
-      playerDescription:
-        "Perfil principal com leitura rápida das conquistas registradas para o torneio.",
-      coachDescription:
-        "Leitura visual do técnico responsável pelo desenho tático e pela gestão do elenco.",
-      recordedAchievements: "conquistas registradas",
-      achievementsPlayerAria: "Conquistas do jogador",
-      achievementsCoachAria: "Conquistas do técnico",
-      pageDescription: (playerName) =>
-        `Detalhes de ${playerName}: posição, nacionalidade, dados físicos e conquistas.`,
-      noSummary: "Sem resumo disponível para este jogador.",
-      noDescriptionNow: "Descrição em português indisponível no momento.",
-      defaultPlayerName: "Jogador",
-      defaultCoachName: (teamName) => `Técnico de ${teamName}`,
-      coachRole: "Técnico",
     },
     match: {
       matchNumber: (id) => `Jogo ${id}`,
@@ -212,7 +173,7 @@ const catalog = {
       bannerKicker: "Privacidade",
       bannerTitle: "Transparência sobre dados e armazenamento local",
       bannerBody:
-        "Este site usa armazenamento local para idioma, votos locais, preferências e caches técnicos. A enquete remota só é ativada se você permitir.",
+        "Este site usa armazenamento local para idioma, votos locais, preferências e caches técnicos. A enquete remota fica ligada por padrão e pode ser desligada a qualquer momento.",
       bannerButton: "Entendi",
       manageLink: "Gerenciar privacidade",
       kicker: "LGPD e transparência",
@@ -225,7 +186,7 @@ const catalog = {
         "Idioma, favoritos, preferências de privacidade, caches técnicos e votos locais da enquete podem ser salvos localmente para melhorar a experiência.",
       remoteTitle: "Enquete remota opcional",
       remoteBody:
-        "Se você habilitar a enquete remota, seu navegador poderá enviar um identificador técnico e sua escolha de voto para um backend configurado pelo projeto.",
+        "Quando a enquete remota está ativa, seu navegador pode enviar um identificador técnico e sua escolha de voto para o backend do projeto, para todo mundo ver o mesmo placar.",
       rightsTitle: "Direitos do titular",
       rightsBody:
         "Você pode solicitar informações sobre tratamento, correção, eliminação, portabilidade e revisão dos dados, conforme os direitos previstos na LGPD e observadas as limitações legais.",
@@ -237,10 +198,10 @@ const catalog = {
         "Para pedidos relacionados a privacidade, dados pessoais ou incidente de segurança, use o canal abaixo.",
       controlsTitle: "Controles disponíveis",
       controlsBody:
-        "Você pode manter a enquete apenas no modo local ou liberar a versão remota. Também pode limpar os dados locais do aplicativo a qualquer momento.",
+        "Você pode manter a enquete apenas no modo local ou usar a versão remota compartilhada. Também pode limpar os dados locais do aplicativo a qualquer momento.",
       remoteToggleTitle: "Permitir enquete remota",
       remoteToggleHint:
-        "Desligado por padrão. Quando ligado, a enquete pode usar backend remoto configurado no projeto.",
+        "Ligado por padrão. Quando ligado, a enquete usa o backend compartilhado configurado no projeto.",
       clearButton: "Limpar dados locais",
       clearSuccess: "Dados locais limpos com sucesso.",
     },
@@ -261,7 +222,6 @@ const catalog = {
     common: {
       loadingPage: "Loading page...",
       loadingTeam: "Loading team details...",
-      loadingPlayer: "Loading player details...",
       loadingMatches: "Loading matches...",
       notAvailable: "N/A",
       backToTop: "Back to top",
@@ -309,7 +269,6 @@ const catalog = {
       skipToContent: "Skip to main content",
       home: "Matches",
       team: "Team",
-      player: "Player",
       privacy: "Privacy",
       mainAria: "Main navigation",
       breadcrumbsAria: "Breadcrumbs",
@@ -388,8 +347,7 @@ const catalog = {
       selectionLabel: "National team",
       baseLabel: "Base",
       mainSelection: "Main squad",
-      playerTag: "Player",
-      openProfile: "Open profile",
+      coachRole: "Coach",
       positionGroups: {
         goalkeeper: "Goalkeeper",
         defense: "Defense",
@@ -401,42 +359,6 @@ const catalog = {
       hideFullSquad: "Hide full squad",
       pageDescription: (teamName) =>
         `Profile of ${teamName}: World Cup history, main squad and recent performance.`,
-    },
-    player: {
-      notFound: "Player not found.",
-      backHome: "Back to home page",
-      backTeam: "<- Back to team",
-      noAchievements: "No achievements available from the API.",
-      quickNavProfile: "Profile",
-      quickNavAchievements: "Achievements",
-      quickNavAria: "Player page shortcuts",
-      profileEyebrow: "Player profile",
-      profileSubtitle:
-        "Premium snapshot with team, position, physical data and current squad context.",
-      summaryTitle: "Player summary",
-      galleryTitle: "Visual gallery",
-      showMore: "Show more",
-      showLess: "Show less",
-      achievementsAria: "Player and coach achievements list",
-      achievementsTitle: "Achievements",
-      achievementsSubtitle:
-        "List of titles and awards registered for the player and coach.",
-      playerEyebrow: "Player",
-      coachEyebrow: "Coaching staff",
-      playerDescription:
-        "Main profile with a quick read of the achievements registered for the tournament.",
-      coachDescription:
-        "Visual overview of the coach responsible for tactical design and squad management.",
-      recordedAchievements: "recorded achievements",
-      achievementsPlayerAria: "Player achievements",
-      achievementsCoachAria: "Coach achievements",
-      pageDescription: (playerName) =>
-        `Details for ${playerName}: position, nationality, physical data and achievements.`,
-      noSummary: "No summary available for this player.",
-      noDescriptionNow: "Portuguese description unavailable at the moment.",
-      defaultPlayerName: "Player",
-      defaultCoachName: (teamName) => `${teamName} coach`,
-      coachRole: "Coach",
     },
     match: {
       matchNumber: (id) => `Match ${id}`,
@@ -462,7 +384,7 @@ const catalog = {
       bannerKicker: "Privacy",
       bannerTitle: "Transparency about data and local storage",
       bannerBody:
-        "This site uses local storage for language, local votes, preferences and technical caches. The remote poll is only enabled if you allow it.",
+        "This site uses local storage for language, local votes, preferences and technical caches. The remote poll is enabled by default and can be turned off at any time.",
       bannerButton: "Understood",
       manageLink: "Manage privacy",
       kicker: "LGPD and transparency",
@@ -475,7 +397,7 @@ const catalog = {
         "Language, favorites, privacy preferences, technical caches and local poll votes may be stored locally to improve the experience.",
       remoteTitle: "Optional remote poll",
       remoteBody:
-        "If you enable the remote poll, your browser may send a technical identifier and your vote choice to a backend configured by the project.",
+        "When the remote poll is on, your browser may send a technical identifier and your vote choice to the project backend so everyone sees the same tally.",
       rightsTitle: "Data subject rights",
       rightsBody:
         "You may request information about processing, correction, deletion, portability and review of data, according to applicable LGPD rights and legal limits.",
@@ -487,10 +409,10 @@ const catalog = {
         "For privacy, personal data or security incident requests, use the contact channel below.",
       controlsTitle: "Available controls",
       controlsBody:
-        "You can keep the poll in local-only mode or allow the remote version. You can also clear local application data at any time.",
+        "You can keep the poll in local-only mode or use the shared remote version. You can also clear local application data at any time.",
       remoteToggleTitle: "Allow remote poll",
       remoteToggleHint:
-        "Off by default. When enabled, the poll may use a remote backend configured by the project.",
+        "On by default. When enabled, the poll uses the shared backend configured by the project.",
       clearButton: "Clear local data",
       clearSuccess: "Local data cleared successfully.",
     },
@@ -511,7 +433,6 @@ const catalog = {
     common: {
       loadingPage: "Cargando página...",
       loadingTeam: "Cargando detalles del equipo...",
-      loadingPlayer: "Cargando detalles del jugador...",
       loadingMatches: "Cargando partidos...",
       notAvailable: "N/D",
       backToTop: "Volver arriba",
@@ -559,7 +480,6 @@ const catalog = {
       skipToContent: "Ir al contenido principal",
       home: "Partidos",
       team: "Equipo",
-      player: "Jugador",
       privacy: "Privacidad",
       mainAria: "Navegación principal",
       breadcrumbsAria: "Ruta de navegación",
@@ -638,8 +558,7 @@ const catalog = {
       selectionLabel: "Selección",
       baseLabel: "Base",
       mainSelection: "Plantilla principal",
-      playerTag: "Jugador",
-      openProfile: "Abrir perfil",
+      coachRole: "Entrenador",
       positionGroups: {
         goalkeeper: "Portero",
         defense: "Defensa",
@@ -651,42 +570,6 @@ const catalog = {
       hideFullSquad: "Ocultar plantilla completa",
       pageDescription: (teamName) =>
         `Perfil de ${teamName}: historia en los Mundiales, plantilla principal y rendimiento reciente.`,
-    },
-    player: {
-      notFound: "Jugador no encontrado.",
-      backHome: "Volver al inicio",
-      backTeam: "<- Volver al equipo",
-      noAchievements: "No hay logros disponibles en la API.",
-      quickNavProfile: "Perfil",
-      quickNavAchievements: "Logros",
-      quickNavAria: "Atajos de la página del jugador",
-      profileEyebrow: "Ficha del jugador",
-      profileSubtitle:
-        "Perfil premium con lectura rápida de equipo, posición, datos físicos y contexto actual de la selección.",
-      summaryTitle: "Resumen del jugador",
-      galleryTitle: "Galería visual",
-      showMore: "Mostrar más",
-      showLess: "Mostrar menos",
-      achievementsAria: "Lista de logros del jugador y del entrenador",
-      achievementsTitle: "Logros",
-      achievementsSubtitle:
-        "Lista de títulos y premios registrados para el jugador y el entrenador.",
-      playerEyebrow: "Jugador",
-      coachEyebrow: "Cuerpo técnico",
-      playerDescription:
-        "Perfil principal con una lectura rápida de los logros registrados para el torneo.",
-      coachDescription:
-        "Lectura visual del entrenador responsable del planteamiento táctico y la gestión del plantel.",
-      recordedAchievements: "logros registrados",
-      achievementsPlayerAria: "Logros del jugador",
-      achievementsCoachAria: "Logros del entrenador",
-      pageDescription: (playerName) =>
-        `Detalles de ${playerName}: posición, nacionalidad, datos físicos y logros.`,
-      noSummary: "No hay resumen disponible para este jugador.",
-      noDescriptionNow: "Descripción en portugués no disponible por el momento.",
-      defaultPlayerName: "Jugador",
-      defaultCoachName: (teamName) => `Entrenador de ${teamName}`,
-      coachRole: "Entrenador",
     },
     match: {
       matchNumber: (id) => `Partido ${id}`,
@@ -725,7 +608,7 @@ const catalog = {
         "El idioma, favoritos, preferencias de privacidad, caches técnicos y votos locales de la encuesta pueden guardarse localmente para mejorar la experiencia.",
       remoteTitle: "Encuesta remota opcional",
       remoteBody:
-        "Si habilitas la encuesta remota, tu navegador puede enviar un identificador técnico y tu opción de voto a un backend configurado por el proyecto.",
+        "Cuando la encuesta remota está activa, tu navegador puede enviar un identificador técnico y tu opción de voto al backend del proyecto para que todos vean el mismo conteo.",
       rightsTitle: "Derechos del titular",
       rightsBody:
         "Puedes solicitar información sobre tratamiento, corrección, eliminación, portabilidad y revisión de datos, conforme a los derechos aplicables de la LGPD y a los límites legales.",
@@ -737,10 +620,10 @@ const catalog = {
         "Para solicitudes sobre privacidad, datos personales o incidentes de seguridad, usa el canal de contacto abajo.",
       controlsTitle: "Controles disponibles",
       controlsBody:
-        "Puedes mantener la encuesta solo en modo local o permitir la versión remota. También puedes borrar los datos locales de la aplicación en cualquier momento.",
+        "Puedes mantener la encuesta solo en modo local o usar la versión remota compartida. También puedes borrar los datos locales de la aplicación en cualquier momento.",
       remoteToggleTitle: "Permitir encuesta remota",
       remoteToggleHint:
-        "Desactivada por defecto. Cuando está activa, la encuesta puede usar un backend remoto configurado por el proyecto.",
+        "Activada por defecto. Cuando está activa, la encuesta usa el backend compartido configurado por el proyecto.",
       clearButton: "Borrar datos locales",
       clearSuccess: "Datos locales borrados con éxito.",
     },

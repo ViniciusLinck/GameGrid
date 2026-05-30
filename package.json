@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "poll-api": "node poll-api.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },

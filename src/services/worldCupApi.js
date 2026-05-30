@@ -662,32 +662,6 @@ async function getLocalizedDescription({ descriptionPt = "", descriptionEn = "",
   return strings.descriptionUnavailable;
 }
 
-function toAchievementView(honour, index, language) {
-  const { strings } = resolveLanguage(language);
-  return {
-    id: honour.id ?? `${honour.idHonour ?? honour.strHonour ?? "honour"}-${index}`,
-    title: honour.strHonour ?? strings.achievementTitle,
-    season: honour.strSeason ?? strings.seasonFallback,
-    team: honour.strTeam ?? strings.teamFallback,
-  };
-}
-
-async function fetchHonoursByPlayerId(playerId, language) {
-  if (!playerId) {
-    return [];
-  }
-
-  try {
-    const data = await fetchJson(
-      `${SPORTS_DB_BASE}/lookuphonours.php?id=${encodeURIComponent(playerId)}`
-    );
-    const honours = data.honours ?? [];
-    return honours.map((honour, index) => toAchievementView(honour, index, language));
-  } catch {
-    return [];
-  }
-}
-
 async function fetchCoachGallery(coachName, teamName) {
   if (!coachName || /^(tecnico de |coach of |entrenador de )/i.test(coachName)) {
     return [];
@@ -714,32 +688,6 @@ async function fetchCoachGallery(coachName, teamName) {
   }
 }
 
-export async function fetchPersonAchievementsByName(personName, teamName = "", language = "pt-BR") {
-  const safeName = (personName ?? "").trim();
-  if (!safeName || /^(tecnico de |coach of |entrenador de )/i.test(safeName)) {
-    return [];
-  }
-
-  try {
-    const data = await fetchJson(
-      `${SPORTS_DB_BASE}/searchplayers.php?p=${encodeURIComponent(safeName)}`
-    );
-    const candidates = data.player ?? [];
-    if (candidates.length === 0) {
-      return [];
-    }
-
-    const normalizedTeam = normalizeTeamName(teamName);
-    const selectedPlayer =
-      candidates.find((candidate) => normalizeTeamName(candidate.strTeam ?? "") === normalizedTeam) ??
-      candidates[0];
-
-    return fetchHonoursByPlayerId(selectedPlayer.idPlayer, language);
-  } catch {
-    return [];
-  }
-}
-
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) {
@@ -759,22 +707,22 @@ function shortDescription(text, language) {
 
 async function getTeamFromApi(teamName) {
   const normalized = normalizeTeamName(teamName);
-  const queryName = teamNameAliases[normalized] ?? teamName;
-  const url = `${SPORTS_DB_BASE}/searchteams.php?t=${encodeURIComponent(queryName)}`;
-  const data = await fetchJson(url);
-  const teams = data.teams ?? [];
+  const queryNames = Array.from(
+    new Set([teamNameAliases[normalized], teamName].filter(Boolean))
+  );
 
-  if (teams.length === 0) {
-    return null;
+  for (const queryName of queryNames) {
+    const url = `${SPORTS_DB_BASE}/searchteams.php?t=${encodeURIComponent(queryName)}`;
+    const data = await fetchJson(url);
+    const teams = data.teams ?? [];
+
+    const exactMatch = teams.find((team) => normalizeTeamName(team.strTeam) === normalized);
+    if (exactMatch) {
+      return exactMatch;
+    }
   }
 
-  const exactWorldCupTeam =
-    teams.find((team) => normalizeTeamName(team.strTeam) === normalized) ??
-    teams.find((team) => team.strLeague === "FIFA World Cup") ??
-    teams.find((team) => team.strSport === "Soccer") ??
-    teams[0];
-
-  return exactWorldCupTeam ?? null;
+  return null;
 }
 
 function toFallbackMatch(match, language) {
@@ -927,50 +875,5 @@ export async function fetchTeamDetails(teamName, language = "pt-BR") {
       coach: fallbackCoachByTeam(teamName, language),
       isFallback: true,
     };
-  }
-}
-
-export async function fetchPlayerById(playerId, teamName = "Team", language = "pt-BR") {
-  const { strings } = resolveLanguage(language);
-
-  if (playerId.startsWith("local-")) {
-    const indexFromId = Number(playerId.split("-").at(-1)) || 1;
-    return fallbackPlayer(teamName, strings.positionFallback, indexFromId - 1, language);
-  }
-
-  try {
-    const data = await fetchJson(
-      `${SPORTS_DB_BASE}/lookupplayer.php?id=${encodeURIComponent(playerId)}`
-    );
-    const player = data.players?.[0];
-    if (!player) {
-      return null;
-    }
-
-    const view = toPlayerView(player, teamName, language);
-    if (!view.image) {
-      const fallbackGallery = await fetchPlayerGalleryFallback(
-        view.name,
-        view.team ?? teamName
-      );
-      if (fallbackGallery.length > 0) {
-        view.image = fallbackGallery[0] ?? "";
-        view.gallery = uniqueImages([...fallbackGallery, ...(view.gallery ?? [])]);
-      }
-    }
-    view.description = await getLocalizedDescription({
-      descriptionPt: player.strDescriptionPT,
-      descriptionEn: player.strDescriptionEN,
-      language,
-    });
-    const achievements = await fetchHonoursByPlayerId(player.idPlayer, language);
-
-    return {
-      ...view,
-      summary: shortDescription(view.description, language),
-      achievements,
-    };
-  } catch {
-    return null;
   }
 }

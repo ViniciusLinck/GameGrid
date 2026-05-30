@@ -130,22 +130,6 @@ export async function fetchTeamByName(teamName, signal) {
   return data.teams?.[0] ?? null;
 }
 
-export async function fetchPlayersByTeamId(teamId, signal) {
-  if (!teamId) {
-    return [];
-  }
-  const data = await fetchJson("/lookup_all_players.php", { id: teamId }, signal);
-  return data.player ?? [];
-}
-
-export async function fetchPlayerById(playerId, signal) {
-  if (!playerId) {
-    return null;
-  }
-  const data = await fetchJson("/lookupplayer.php", { id: playerId }, signal);
-  return data.players?.[0] ?? null;
-}
-
 export function buildGroupTableFromMatches(matches) {
   const table = new Map();
 

@@ -1,4 +1,4 @@
-﻿const POLL_API_BASE_URL = import.meta.env.VITE_POLL_API_BASE_URL ?? "";
+const POLL_API_BASE_URL = import.meta.env.VITE_POLL_API_BASE_URL?.trim() || "/api";
 
 function getApiBase() {
   return POLL_API_BASE_URL.replace(/\/$/, "");
@@ -22,9 +22,7 @@ async function requestJson(url, options = {}) {
   });
 
   const contentType = response.headers.get("content-type") ?? "";
-  const payload = contentType.includes("application/json")
-    ? await response.json()
-    : null;
+  const payload = contentType.includes("application/json") ? await response.json() : null;
 
   if (!response.ok) {
     const error = new Error(payload?.message ?? `Poll API HTTP ${response.status}`);
@@ -60,8 +58,10 @@ export async function clearRemoteVote(matchId, clientId) {
   });
 }
 
-export async function getResults(matchId) {
-  const url = buildUrl(`/polls/${encodeURIComponent(matchId)}/results`);
+export async function getResults(matchId, clientId) {
+  const url = buildUrl(
+    `/polls/${encodeURIComponent(matchId)}/results${clientId ? `?clientId=${encodeURIComponent(clientId)}` : ""}`
+  );
   if (!url) {
     return null;
   }

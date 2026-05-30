@@ -11,6 +11,12 @@ import { translatePosition } from "../utils/footballText"
 import ProfileShowcaseCard from "../components/ProfileShowcaseCard"
 
 const SQUAD_GROUP_ORDER = ["goalkeeper", "defense", "midfield", "attack"]
+const STARTING_LINEUP_LIMITS = {
+  goalkeeper: 1,
+  defense: 4,
+  midfield: 3,
+  attack: 3,
+}
 
 function decodeRouteTeam(routeValue) {
   try {
@@ -84,7 +90,7 @@ function uniqueMedia(items) {
   })
 }
 
-function buildSquadGroups(players, uiText) {
+function selectStartingEleven(players) {
   const groupedPlayers = players.reduce(
     (accumulator, player) => {
       const groupKey = normalizePositionGroup(player.position)
@@ -99,11 +105,32 @@ function buildSquadGroups(players, uiText) {
     },
   )
 
-  return SQUAD_GROUP_ORDER.map((groupKey) => ({
-    key: groupKey,
-    label: uiText.team.positionGroups[groupKey],
-    players: groupedPlayers[groupKey],
-  })).filter((group) => group.players.length > 0)
+  const selectedPlayers = []
+  const selectedIds = new Set()
+
+  for (const groupKey of SQUAD_GROUP_ORDER) {
+    const limit = STARTING_LINEUP_LIMITS[groupKey] ?? 0
+    for (const player of groupedPlayers[groupKey].slice(0, limit)) {
+      if (selectedIds.has(player.id)) {
+        continue
+      }
+      selectedIds.add(player.id)
+      selectedPlayers.push(player)
+    }
+  }
+
+  for (const player of players) {
+    if (selectedPlayers.length >= 11) {
+      break
+    }
+    if (selectedIds.has(player.id)) {
+      continue
+    }
+    selectedIds.add(player.id)
+    selectedPlayers.push(player)
+  }
+
+  return selectedPlayers.slice(0, 11)
 }
 
 export default function TeamPage() {
@@ -352,7 +379,7 @@ export default function TeamPage() {
   }, [shouldAnimate, teamDetails])
 
   const teamPlayers = teamDetails?.players ?? []
-  const squadGroups = buildSquadGroups(teamPlayers, uiText)
+  const startingEleven = selectStartingEleven(teamPlayers)
   const coachGallery = uniqueMedia([
     teamDetails?.coach?.image,
     ...(teamDetails?.coach?.gallery ?? []),
@@ -369,7 +396,7 @@ export default function TeamPage() {
       name: teamDetails?.teamName ?? teamName,
       sport: "Football",
       url: `${seoDefaults.siteUrl}/time/${encodeURIComponent(teamName)}`,
-      member: teamPlayers.map((player) => ({
+      member: startingEleven.map((player) => ({
         "@type": "Person",
         name: player.name,
       })),
@@ -413,7 +440,7 @@ export default function TeamPage() {
           </p>
           <h1 className="squad-title">{teamDetails.teamName}</h1>
           <p className="players-hint squad-subtitle">
-            {uiText.team.clickPlayerHint}
+            {uiText.team.mainPlayers}
           </p>
         </header>
 
@@ -422,10 +449,10 @@ export default function TeamPage() {
           className="coach-spotlight-card"
           title={teamDetails.coach?.name ?? uiText.team.coachCommand}
           subtitle={`${teamDetails.teamName} | ${
-            teamDetails.coach?.role ?? uiText.player.coachRole
+            teamDetails.coach?.role ?? uiText.team.coachRole
           }`}
           eyebrow={uiText.team.coachCommand}
-          badge={teamDetails.coach?.role ?? uiText.player.coachRole}
+          badge={teamDetails.coach?.role ?? uiText.team.coachRole}
           description={uiText.team.coachDescription}
           image={teamDetails.coach?.image ?? ""}
           imageAlt={teamDetails.coach?.name ?? uiText.team.coachCommand}
@@ -471,61 +498,40 @@ export default function TeamPage() {
         </ProfileShowcaseCard>
 
         <div className="squad-groups">
-          {squadGroups.map((group) => (
-            <section className="squad-group" key={group.key}>
-              <header className="squad-group-header">
-                <div>
-                  <p className="squad-group-kicker">{uiText.team.squadFocus}</p>
-                  <h3>{group.label}</h3>
-                </div>
-                <span>{uiText.team.groupCount(group.players.length)}</span>
-              </header>
-
-              <div className="player-grid squad-grid">
-                {group.players.map((player) => (
-                  <Link
-                    to={`/jogador/${encodeURIComponent(player.id)}?team=${encodeURIComponent(
-                      teamDetails.teamName,
-                    )}`}
-                    state={{ player }}
-                    className="player-preview-card"
-                    key={player.id}
-                  >
-                    <div className="player-card-sheen" aria-hidden="true" />
-                    <div className="player-card-media">
-                      {player.image ? (
-                        <img
-                          src={player.image}
-                          alt={player.name}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="player-card-fallback">
-                          {player.name.slice(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-
-                    <section className="player-card-content">
-                      <span className="player-card-kicker">
-                        {uiText.team.mainSelection}
-                      </span>
-                      <h3>{player.name}</h3>
-                      <p>{translatePosition(player.position, language)}</p>
-                      <div className="player-card-meta">
-                        <span className="player-card-tag">
-                          {uiText.team.playerTag}
-                        </span>
-                        <span className="player-card-action">
-                          {uiText.team.openProfile}
-                        </span>
-                      </div>
-                    </section>
-                  </Link>
-                ))}
+          <section className="squad-group">
+            <header className="squad-group-header">
+              <div>
+                <p className="squad-group-kicker">{uiText.team.squadFocus}</p>
+                <h3>{uiText.team.mainPlayers}</h3>
               </div>
-            </section>
-          ))}
+              <span>{uiText.team.groupCount(startingEleven.length)}</span>
+            </header>
+
+            <div className="player-grid squad-grid">
+              {startingEleven.map((player) => (
+                <article className="player-preview-card" key={player.id}>
+                  <div className="player-card-sheen" aria-hidden="true" />
+                  <div className="player-card-media">
+                    {player.image ? (
+                      <img src={player.image} alt={player.name} loading="lazy" />
+                    ) : (
+                      <div className="player-card-fallback">
+                        {player.name.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  <section className="player-card-content">
+                    <span className="player-card-kicker">
+                      {uiText.team.mainSelection}
+                    </span>
+                    <h3>{player.name}</h3>
+                    <p>{translatePosition(player.position, language)}</p>
+                  </section>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
       </article>
     </section>

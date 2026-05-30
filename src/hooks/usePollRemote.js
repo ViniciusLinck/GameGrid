@@ -28,13 +28,13 @@ function getRefetchInterval(startsAtUtc, isLive = false) {
 
 export function usePollRemote(matchId, { startsAtUtc, isLive = false, enabled = true } = {}) {
   const queryClient = useQueryClient();
-  const queryKey = ["poll-remote", String(matchId)];
-  const localKey = ["poll-local", String(matchId)];
   const clientId = getClientId();
+  const queryKey = ["poll-remote", String(matchId), clientId];
+  const localKey = ["poll-local", String(matchId)];
 
   const query = useQuery({
     queryKey,
-    queryFn: () => getResults(matchId),
+    queryFn: () => getResults(matchId, clientId),
     enabled: enabled && Boolean(matchId) && pollApiConfig.enabled,
     refetchInterval: () => {
       if (typeof document !== "undefined" && document.hidden) {
