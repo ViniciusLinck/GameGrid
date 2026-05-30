@@ -32,13 +32,6 @@ Site publicado: `https://viniciuslinck.github.io/GameGrid/`
 - Grid de jogadores com acesso ao perfil individual
 - Microinteracoes de cards (quando animacao esta ativa)
 
-### Pagina de jogador
-
-- Perfil completo do jogador (dados fisicos, nacionalidade, descricao)
-- Secao de conquistas (jogador e tecnico)
-- Contadores animados de conquistas
-- Revelacao progressiva dos itens no viewport
-
 ### Previsao da torcida (poll)
 
 - Modo local com persistencia em `localForage`
@@ -49,15 +42,6 @@ Site publicado: `https://viniciuslinck.github.io/GameGrid/`
 - Compartilhamento rapido (WhatsApp e Twitter)
 - Tratamento de offline e rate-limit
 
-### UX, animacoes e visual
-
-- Intro com GSAP
-- Fundo imersivo em Three.js (globo + estrelas)
-- Transicao de rotas e entrada progressiva de secoes/cards
-- Revelacao dos cards de partidas no scroll (GSAP ScrollTrigger)
-- Suporte a `prefers-reduced-motion`
-- Header global centralizado e resumo visual centralizado
-- Responsividade revisada para desktop, tablet e celular
 
 ### Privacidade e LGPD
 
@@ -72,10 +56,6 @@ Site publicado: `https://viniciuslinck.github.io/GameGrid/`
 - TheSportsDB: partidas, times, jogadores e conquistas
 - MyMemory Translation API: traducao quando necessario
 - Google Maps Search URL: abertura de estadio/cidade no mapa
-
-## Variaveis de Ambiente
-
-## Scripts
 
 ```bash
 npm install
