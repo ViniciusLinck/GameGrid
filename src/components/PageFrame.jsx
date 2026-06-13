@@ -35,7 +35,17 @@ function decodeSegment(value = "") {
 
 function buildCrumbs(pathname, uiText) {
   const segments = pathname.split("/").filter(Boolean);
-  const crumbs = [{ to: "/", label: uiText.navigation.home }];
+  const crumbs = [{ to: "/", label: "Inicio" }];
+
+  if (segments[0] === "partidas") {
+    crumbs.push({ label: "Partidas" });
+    return crumbs;
+  }
+
+  if (segments[0] === "grupos") {
+    crumbs.push({ label: "Grupos" });
+    return crumbs;
+  }
 
   if (segments[0] === "time" && segments[1]) {
     const teamName = decodeSegment(segments[1]);
@@ -70,7 +80,7 @@ export default function PageFrame() {
         const teamSlug = decodeSegment(location.pathname.split("/")[2] ?? "");
         const teamLabel = translateTeamName(teamSlug, language);
         return [
-          { to: "/", label: uiText.navigation.home },
+          { to: "/", label: "Inicio" },
           { label: `${uiText.navigation.team}: ${teamLabel}` },
         ];
       }
@@ -156,11 +166,11 @@ export default function PageFrame() {
               <Home aria-hidden="true" />
               <span>Inicio</span>
             </Link>
-            <Link to="/#jogos-copa">
+            <Link to="/partidas">
               <CalendarDays aria-hidden="true" />
               <span>Partidas</span>
             </Link>
-            <Link to="/">
+            <Link to="/grupos">
               <Trophy aria-hidden="true" />
               <span>Grupos</span>
             </Link>

@@ -312,7 +312,7 @@ export default function HomePage() {
     loadMatches({ force: true });
 
     const jitterMs = Math.floor(Math.random() * 20000);
-    const intervalId = window.setInterval(loadMatches, 300000 + jitterMs);
+    const intervalId = window.setInterval(loadMatches, 60000 + jitterMs);
     const onVisibility = () => {
       if (!document.hidden) {
         loadMatches({ force: true });
@@ -446,7 +446,7 @@ export default function HomePage() {
   useSeo({
     title: `GameGrid | ${uiText.home.collectionTitle}`,
     description: uiText.home.pageDescription(matches.length),
-    path: "/",
+    path: "/partidas",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "CollectionPage",

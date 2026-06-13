@@ -9,6 +9,7 @@ import { seoDefaults, useSeo } from "../hooks/useSeo"
 import { useLanguage } from "../context/LanguageContext"
 import { translatePosition } from "../utils/footballText"
 import { translateTeamName } from "../utils/teamNames"
+import TeamBadge from "../components/TeamBadge"
 import ProfileShowcaseCard from "../components/ProfileShowcaseCard"
 
 const SQUAD_GROUP_ORDER = ["goalkeeper", "defense", "midfield", "attack"]
@@ -494,6 +495,9 @@ export default function TeamPage() {
           <p className="team-section-kicker" style={{ marginTop: "1.5rem" }}>
             {uiText.team.squadFocus}
           </p>
+          <div className="mt-4 flex justify-center">
+            <TeamBadge name={displayedTeamName} />
+          </div>
           <h1 className="squad-title">{displayedTeamName}</h1>
         </header>
 

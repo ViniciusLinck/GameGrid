@@ -1,3 +1,4 @@
+import TeamBadge from "../TeamBadge";
 import { buildMapsUrlFromVenue } from "../../services/mapsHelper";
 import { formatMatchTimeToUserZone } from "../../utils/timezone";
 import { translateTeamName } from "../../utils/teamNames";
@@ -25,8 +26,10 @@ export default function MatchModal({ match, isOpen, onClose, language = "pt-BR" 
       <section className="w-full max-w-xl rounded-2xl border border-[#73b8ff42] bg-[#070d1df5] p-5">
         <header className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-white">
-              {homeTeamName} x {awayTeamName}
+            <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
+              <TeamBadge name={homeTeamName} />
+              <span>x</span>
+              <TeamBadge name={awayTeamName} />
             </h2>
             <p className="text-sm text-ink-300">{match.stage}</p>
           </div>

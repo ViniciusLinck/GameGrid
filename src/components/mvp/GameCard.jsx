@@ -1,3 +1,4 @@
+import TeamBadge from "../TeamBadge";
 import { buildMapsUrlFromVenue } from "../../services/mapsHelper";
 import { formatMatchTimeToUserZone } from "../../utils/timezone";
 import { translateTeamName } from "../../utils/teamNames";
@@ -29,7 +30,11 @@ export default function GameCard({
       </header>
 
       <h3 className="mt-3 text-lg font-semibold text-white">
-        {homeTeamName} x {awayTeamName}
+        <span className="flex items-center gap-2">
+          <TeamBadge name={homeTeamName} />
+          <span>x</span>
+          <TeamBadge name={awayTeamName} />
+        </span>
       </h3>
 
       <div className="mt-3 space-y-1 text-sm text-ink-300">

@@ -507,6 +507,10 @@
     @apply mt-1 text-center text-[0.8rem] font-semibold uppercase tracking-[0.08em] text-[#FF8DA8];
   }
 
+  .match-result-badge {
+    @apply mt-1 text-center text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-[#9fd9ff];
+  }
+
   .match-grid {
     @apply grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-[10px] p-[14px];
   }
@@ -567,6 +571,10 @@
 
   .match-card-featured .versus {
     @apply text-[2.1rem];
+  }
+
+  .match-score {
+    @apply min-w-[64px] rounded-full border border-[#ffc90666] bg-[#ffc90618] px-3 py-1 text-center text-[#FFC906];
   }
 
   .team-badge {
@@ -709,6 +717,74 @@
 
   .empty-state-card p {
     @apply mt-2 text-[0.92rem] leading-[1.55] text-ink-300;
+  }
+
+  .home-summary-strip {
+    @apply mt-4 flex flex-wrap items-center justify-between gap-4;
+  }
+
+  .home-summary-strip p {
+    @apply text-[0.95rem] leading-[1.55] text-ink-300;
+  }
+
+  .groups-page {
+    @apply grid gap-4;
+  }
+
+  .groups-hero h1 {
+    @apply mt-3 font-display text-[clamp(1.55rem,3vw,2.5rem)] tracking-[0.04em] text-ink-100;
+  }
+
+  .groups-hero p {
+    @apply mt-2 text-[0.95rem] leading-[1.6] text-ink-300;
+  }
+
+  .groups-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  .group-table-card {
+    @apply overflow-hidden rounded-[18px] border border-[#69afff38] bg-[#060c1aad];
+    backdrop-filter: blur(3px);
+  }
+
+  .group-table-header {
+    @apply border-b border-[#69afff33] px-4 py-3;
+    background: linear-gradient(90deg, rgba(17, 29, 53, 0.95), rgba(10, 18, 34, 0.95));
+  }
+
+  .group-table-header h2 {
+    @apply font-display text-[1.1rem] tracking-[0.04em] text-ink-100;
+  }
+
+  .group-table-scroll {
+    @apply overflow-x-auto;
+  }
+
+  .group-table {
+    @apply min-w-full text-left text-[0.82rem];
+  }
+
+  .group-table th {
+    @apply px-3 py-2 text-[#FFC906];
+  }
+
+  .group-table td {
+    @apply border-t border-[#6aaeff30] px-3 py-2 text-ink-300;
+  }
+
+  .group-table td:first-child {
+    @apply font-semibold text-ink-100;
+  }
+
+  .knockout-section {
+    @apply overflow-hidden rounded-[18px] border border-[#69afff38] bg-[#060c1aad];
+    backdrop-filter: blur(3px);
+  }
+
+  .knockout-stage {
+    @apply border-t border-[#69afff24];
   }
 
   .privacy-banner {
@@ -3056,6 +3132,17 @@ body {
 
   .primary-nav a span {
     white-space: nowrap;
+  }
+
+  .groups-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .group-table-header,
+  .group-table th,
+  .group-table td {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
 

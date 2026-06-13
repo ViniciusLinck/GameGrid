@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { getCazetvWatchUrl } from "../data/cazetvStreams";
+import { getFlagByTeamName } from "../utils/flags";
 import { useLanguage } from "../context/LanguageContext";
 import { usePrivacy } from "../context/PrivacyContext";
 import { translateTeamName } from "../utils/teamNames";
+import { getMatchStatus } from "../utils/matchUtils";
 import TeamBadge from "./TeamBadge";
 import { PollWidget } from "./poll";
-
-const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
 
 function formatCountdown(targetDate, now) {
   const diffMs = targetDate.getTime() - now.getTime();
@@ -37,22 +36,11 @@ function buildMapsUrl(venue) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
-function teamRoute(teamName) {
-  return `/time/${encodeURIComponent(teamName)}`;
-}
-
 function TeamSide({ team, displayName }) {
-  const content = <TeamBadge name={displayName} flagSrc={team.flagSrc} />;
+  const resolvedFlagSrc = team.flagSrc || getFlagByTeamName(team.name) || getFlagByTeamName(displayName);
+  const content = <TeamBadge name={displayName} flagSrc={resolvedFlagSrc} />;
 
-  if (team?.isPlaceholder) {
-    return <div className="team-link team-link-static">{content}</div>;
-  }
-
-  return (
-    <Link to={teamRoute(team.name)} className="team-link">
-      {content}
-    </Link>
-  );
+  return <div className="team-link team-link-static">{content}</div>;
 }
 
 function resolveMatchStart(match) {
@@ -75,11 +63,11 @@ export default function MatchCard({ match, featured = false }) {
   const mapsUrl = match.mapsUrl ?? buildMapsUrl(match.venue);
   const startsAt = resolveMatchStart(match);
   const startsAtIso = startsAt?.toISOString() ?? "";
-  const isLive =
-    startsAt &&
-    now.getTime() >= startsAt.getTime() &&
-    now.getTime() < startsAt.getTime() + MATCH_DURATION_MS;
-  const countdownLabel = featured && startsAt && !isLive ? formatCountdown(startsAt, now) : null;
+  const matchStatus = getMatchStatus(match, now);
+  const isLive = matchStatus === "live";
+  const isFinished = matchStatus === "finished";
+  const hasScore = match.homeScore != null && match.awayScore != null;
+  const countdownLabel = featured && startsAt && matchStatus === "upcoming" ? formatCountdown(startsAt, now) : null;
   const pollMode =
     import.meta.env.VITE_POLL_MODE === "local" || !preferences.allowRemotePoll
       ? "local"
@@ -115,6 +103,7 @@ export default function MatchCard({ match, featured = false }) {
   const homeTeamName = translateTeamName(match.homeTeam.name, language);
   const awayTeamName = translateTeamName(match.awayTeam.name, language);
   const watchUrl = getCazetvWatchUrl(match.homeTeam.name, match.awayTeam.name);
+  const scoreLabel = hasScore ? `${match.homeScore} - ${match.awayScore}` : "x";
 
   useEffect(() => {
     if (!featured) {
@@ -135,12 +124,14 @@ export default function MatchCard({ match, featured = false }) {
         <span>{match.group ? `${match.stage} | ${match.group}` : match.stage}</span>
       </div>
       {featured && isLive ? <p className="match-live-badge">{uiText.match.liveBadge}</p> : null}
+      {isLive && match.matchTime ? <p className="match-live-badge">{match.matchTime}</p> : null}
+      {isFinished ? <p className="match-result-badge">Finalizado</p> : null}
       {countdownLabel ? <p className="match-countdown">{uiText.match.startsIn(countdownLabel)}</p> : null}
 
       <div className="match-sides">
         <TeamSide team={match.homeTeam} displayName={homeTeamName} />
 
-        <span className="versus">x</span>
+        <span className={`versus ${hasScore ? "match-score" : ""}`}>{scoreLabel}</span>
 
         <TeamSide team={match.awayTeam} displayName={awayTeamName} />
       </div>

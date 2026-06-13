@@ -1,3 +1,5 @@
+import TeamBadge from "../TeamBadge";
+import { getFlagByTeamName } from "../../utils/flags";
 import { translateTeamName } from "../../utils/teamNames";
 
 export default function GroupTable({ rows = [], title = "Tabela de grupos", language = "pt-BR" }) {
@@ -26,7 +28,9 @@ export default function GroupTable({ rows = [], title = "Tabela de grupos", lang
 
               return (
                 <tr key={row.team} className="border-t border-[#6aaeff30] text-ink-300">
-                  <td className="px-2 py-2 font-medium text-white">{displayTeam}</td>
+                  <td className="px-2 py-2 font-medium text-white">
+                    <TeamBadge name={displayTeam} flagSrc={row.flagSrc || getFlagByTeamName(displayTeam)} />
+                  </td>
                   <td className="px-2 py-2">{row.points}</td>
                   <td className="px-2 py-2">{row.games}</td>
                   <td className="px-2 py-2">{row.wins}</td>

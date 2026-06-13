@@ -1,14 +1,14 @@
 import { getLanguageMeta, normalizeLanguage } from "../data/uiText";
 import { FALLBACK_MATCHES_2026 } from "../data/matches2026";
 import { getWorldCupProfile } from "../data/worldCupInsights";
-import { normalizeTeamName } from "../utils/flags";
+import { getFlagByTeamName, normalizeTeamName } from "../utils/flags";
 import { translateTeamName } from "../utils/teamNames";
 
 const SPORTS_DB_BASE = "https://www.thesportsdb.com/api/v1/json/3";
 const FIFA_API_BASE = "https://api.fifa.com/api/v3";
 const FIFA_WC_SEASON_ID = "285023";
 const TRANSLATION_API_BASE = "https://api.mymemory.translated.net/get";
-const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v6";
+const MATCHES_CACHE_KEY = "gamegrid_wc_matches_2026_v7";
 const MATCHES_CACHE_TTL_MS = 3 * 60 * 1000;
 const translationCache = new Map();
 const playerImageCache = new Map();
@@ -369,6 +369,23 @@ function normalizeFifaFlagUrl(flagUrl) {
   return flagUrl.replace("flags-{format}-{size}/", "flags-sq-4/");
 }
 
+function numberOrNull(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function normalizeMatchStatus(match, homeScore, awayScore) {
+  if (Number(match?.MatchStatus) === 3) {
+    return "live";
+  }
+
+  if (Number(match?.MatchStatus) === 0 || (homeScore !== null && awayScore !== null && match?.Winner !== undefined)) {
+    return "finished";
+  }
+
+  return "upcoming";
+}
+
 function isPlayoffPlaceholder(teamName, placeholderCode) {
   const safeName = String(teamName ?? "").trim();
   if (!safeName) {
@@ -390,11 +407,12 @@ function toVenueView(stadiumData, fallbackVenue) {
 function toMatchTeam(side, placeholderCode, language) {
   const teamName = fifaLabel(side?.TeamName, "");
   const isPlaceholder = isPlayoffPlaceholder(teamName, placeholderCode);
+  const localFlag = getFlagByTeamName(teamName);
 
   return {
     name: isPlaceholder ? teamName || formatFifaPlaceholder(placeholderCode, language) : teamName,
     code: side?.IdCountry ?? side?.Abbreviation ?? "",
-    flagSrc: isPlaceholder ? "" : normalizeFifaFlagUrl(side?.PictureUrl),
+    flagSrc: isPlaceholder ? "" : localFlag || normalizeFifaFlagUrl(side?.PictureUrl),
     isPlaceholder,
   };
 }
@@ -404,15 +422,27 @@ function toFifaMatchView(match, language) {
   const kickoffUtc = match?.Date ?? null;
   const venue = toVenueView(match?.Stadium);
   const stageKey = resolveStageKey(fifaLabel(match?.StageName));
+  const homeScore = numberOrNull(match?.HomeTeamScore ?? match?.Home?.Score);
+  const awayScore = numberOrNull(match?.AwayTeamScore ?? match?.Away?.Score);
+  const homePenaltyScore = numberOrNull(match?.HomeTeamPenaltyScore);
+  const awayPenaltyScore = numberOrNull(match?.AwayTeamPenaltyScore);
 
   return {
     id: Number(match?.MatchNumber ?? match?.IdMatch ?? 0),
+    fifaId: match?.IdMatch ?? "",
     stageKey,
     stage: translateFifaStage(stageKey, language),
     group: fifaLabel(match?.GroupName, ""),
     date: kickoffUtc ? localDateKeyFromIso(kickoffUtc) : "",
     kickoff: kickoffUtc ? formatLocalKickoff(kickoffUtc, locale) : resolveLanguage(language).strings.defining,
     kickoffUtc,
+    status: normalizeMatchStatus(match, homeScore, awayScore),
+    matchTime: match?.MatchTime ?? "",
+    winner: match?.Winner ?? "",
+    homeScore,
+    awayScore,
+    homePenaltyScore,
+    awayPenaltyScore,
     venue,
     mapsUrl: createMapsUrl(venue),
     homeTeam: toMatchTeam(match?.Home, match?.PlaceHolderA, language),
@@ -765,6 +795,13 @@ function toFallbackMatch(match, language) {
     stage: translateFifaStage(resolveStageKey(match.stage), language),
     kickoffUtc: null,
     group: "",
+    status: "upcoming",
+    matchTime: "",
+    winner: "",
+    homeScore: null,
+    awayScore: null,
+    homePenaltyScore: null,
+    awayPenaltyScore: null,
     homeTeam: { ...match.homeTeam, flagSrc: "", code: "", isPlaceholder: true },
     awayTeam: { ...match.awayTeam, flagSrc: "", code: "", isPlaceholder: true },
     mapsUrl: createMapsUrl(match.venue),
