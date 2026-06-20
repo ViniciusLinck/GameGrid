@@ -23,16 +23,19 @@ export default function LandingPage() {
     return () => setBackgroundMood("transition");
   }, [setBackgroundMood]);
 
-  const activeMatches = useMemo(
-    () => matches.filter((match) => getMatchStatus(match) !== "finished"),
+  const upcomingMatches = useMemo(
+    () => matches.filter((match) => getMatchStatus(match) === "upcoming"),
     [matches]
   );
-  const featuredMatchState = useMemo(() => getFeaturedMatchState(activeMatches), [activeMatches]);
-  const matchesByDay = useMemo(() => groupMatchesByDay(activeMatches), [activeMatches]);
+  const featuredMatchState = useMemo(
+    () => getFeaturedMatchState(upcomingMatches),
+    [upcomingMatches]
+  );
+  const matchesByDay = useMemo(() => groupMatchesByDay(upcomingMatches), [upcomingMatches]);
 
   useSeo({
     title: "GameGrid | Inicio",
-    description: "Partida em destaque, jogos ao vivo e proximas partidas da Copa do Mundo 2026.",
+    description: "Partida em destaque e proximas partidas da Copa do Mundo 2026.",
     path: "/",
     jsonLd: {
       "@context": "https://schema.org",
@@ -59,7 +62,7 @@ export default function LandingPage() {
           </div>
         </div>
         <p className="hero-subtitle">
-          Acompanhe a partida em andamento, veja o placar em tempo real e confira os proximos jogos.
+          Confira as partidas que ainda vao acontecer na Copa do Mundo 2026.
         </p>
 
         <nav className="hero-shortcuts" aria-label={uiText.home.shortcutsAria}>
@@ -72,11 +75,7 @@ export default function LandingPage() {
         <section className="featured-match-section page-card" aria-label={uiText.home.featuredMatch}>
           <div className="featured-match-copy">
             <span className="featured-match-kicker">
-              {featuredMatchState.mode === "live"
-                ? uiText.home.liveNow
-                : featuredMatchState.mode === "finished"
-                  ? "Ultimo resultado"
-                  : uiText.home.upcomingMatch}
+              {uiText.home.upcomingMatch}
             </span>
             <h2>{uiText.home.featuredMatch}</h2>
           </div>
@@ -122,7 +121,7 @@ export default function LandingPage() {
       <section className="page-card home-summary-strip">
         <p>
           {matches.length > 0
-            ? `${matches.length} partidas sincronizadas. Role para ver os proximos jogos.`
+            ? `${upcomingMatches.length} proximas partidas. Na tela Partidas voce encontra todos os jogos.`
             : uiText.common.loadingMatches}
         </p>
         <Link to="/partidas" className="match-action-watch">
