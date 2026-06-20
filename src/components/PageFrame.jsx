@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { CalendarDays, Home, ShieldCheck, Trophy } from "lucide-react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import IntroKickoff from "./IntroKickoff";
 import WorldBackground from "./WorldBackground";
 import Footer from "./Footer";
@@ -162,22 +162,22 @@ export default function PageFrame() {
           </Link>
 
           <nav className="primary-nav" aria-label="GameGrid">
-            <Link to="/">
+            <NavLink to="/" end>
               <Home aria-hidden="true" />
               <span>Inicio</span>
-            </Link>
-            <Link to="/partidas">
+            </NavLink>
+            <NavLink to="/partidas">
               <CalendarDays aria-hidden="true" />
               <span>Partidas</span>
-            </Link>
-            <Link to="/grupos">
+            </NavLink>
+            <NavLink to="/grupos">
               <Trophy aria-hidden="true" />
               <span>Grupos</span>
-            </Link>
-            <Link to="/privacidade">
+            </NavLink>
+            <NavLink to="/privacidade">
               <ShieldCheck aria-hidden="true" />
               <span>Privacidade</span>
-            </Link>
+            </NavLink>
           </nav>
 
           <div className="global-nav-controls">

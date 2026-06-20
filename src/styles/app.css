@@ -2772,8 +2772,10 @@ body {
   color: var(--gg-text);
 }
 
-.primary-nav a:first-child {
+.primary-nav a.active {
   color: var(--gg-green);
+  border-color: var(--gg-line-strong);
+  background: rgba(0, 177, 79, 0.1);
 }
 
 .primary-nav svg {
