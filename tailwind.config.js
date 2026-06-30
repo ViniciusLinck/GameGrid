@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ["Poppins", "sans-serif"],
-        body: ["Poppins", "sans-serif"],
+        display: ["Roboto", "sans-serif"],
+        body: ["Roboto", "sans-serif"],
       },
       colors: {
         ink: {

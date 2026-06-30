@@ -21,11 +21,16 @@ function getInitials(name) {
   return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
 }
 
-export default function TeamBadge({ name, flagSrc: explicitFlagSrc = "" }) {
+export default function TeamBadge({ name, flagSrc: explicitFlagSrc = "", tooltip = null, tooltipId = "" }) {
   const flagSrc = explicitFlagSrc || getFlagByTeamName(name);
+  const hasTooltip = Boolean(tooltip);
 
   return (
-    <div className="team-badge">
+    <div
+      className={`team-badge ${hasTooltip ? "team-badge-has-tooltip" : ""}`}
+      tabIndex={hasTooltip ? 0 : undefined}
+      aria-describedby={hasTooltip ? tooltipId : undefined}
+    >
       <div className="team-icon" aria-hidden="true">
         {flagSrc ? (
           <img src={flagSrc} alt="" loading="lazy" />
@@ -34,6 +39,11 @@ export default function TeamBadge({ name, flagSrc: explicitFlagSrc = "" }) {
         )}
       </div>
       <strong>{name}</strong>
+      {hasTooltip ? (
+        <span id={tooltipId} className="team-badge-tooltip" role="tooltip">
+          {tooltip}
+        </span>
+      ) : null}
     </div>
   );
 }

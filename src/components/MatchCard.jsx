@@ -36,9 +36,80 @@ function buildMapsUrl(venue) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
-function TeamSide({ team, displayName }) {
+function getReferencedMatchNumber(teamName) {
+  const directMatch = String(teamName ?? "").match(
+    /(?:vencedor|perdedor|winner|loser|ganador)\s+(?:do\s+|del\s+|of\s+)?(?:jogo|match|partido)\s+(\d+)/i
+  );
+
+  return directMatch ? Number(directMatch[1]) : null;
+}
+
+function getSemifinalReference(teamName) {
+  const match = String(teamName ?? "").match(
+    /(?:vencedor|perdedor|winner|loser|ganador)\s+(?:da\s+|de\s+la\s+|of\s+)?(?:semifinal|semi-final)\s+(\d+)/i
+  );
+
+  return match ? Number(match[1]) : null;
+}
+
+function resolveReferencedMatch(teamName, allMatches = []) {
+  const referencedMatchNumber = getReferencedMatchNumber(teamName);
+  if (referencedMatchNumber) {
+    return allMatches.find((candidate) => Number(candidate.id) === referencedMatchNumber) ?? null;
+  }
+
+  const semifinalIndex = getSemifinalReference(teamName);
+  if (semifinalIndex) {
+    const semifinalMatches = allMatches
+      .filter((candidate) => candidate.stageKey === "semi_final")
+      .sort((left, right) => Number(left.id) - Number(right.id));
+    return semifinalMatches[semifinalIndex - 1] ?? null;
+  }
+
+  return null;
+}
+
+function buildReferenceTooltip(referencedMatch, language, uiText) {
+  if (!referencedMatch) {
+    return null;
+  }
+
+  const homeTeamName = translateTeamName(referencedMatch.homeTeam.name, language);
+  const awayTeamName = translateTeamName(referencedMatch.awayTeam.name, language);
+  const homeFlagSrc =
+    referencedMatch.homeTeam.flagSrc ||
+    getFlagByTeamName(referencedMatch.homeTeam.name) ||
+    getFlagByTeamName(homeTeamName);
+  const awayFlagSrc =
+    referencedMatch.awayTeam.flagSrc ||
+    getFlagByTeamName(referencedMatch.awayTeam.name) ||
+    getFlagByTeamName(awayTeamName);
+
+  return (
+    <span className="team-reference-tooltip" aria-label={`${uiText.match.matchNumber(referencedMatch.id)}: ${homeTeamName} x ${awayTeamName}`}>
+      <span className="team-reference-team">
+        {homeFlagSrc ? <img src={homeFlagSrc} alt="" loading="lazy" /> : <span>{homeTeamName.slice(0, 2).toUpperCase()}</span>}
+        <strong>{homeTeamName}</strong>
+      </span>
+      <span className="team-reference-versus">x</span>
+      <span className="team-reference-team">
+        {awayFlagSrc ? <img src={awayFlagSrc} alt="" loading="lazy" /> : <span>{awayTeamName.slice(0, 2).toUpperCase()}</span>}
+        <strong>{awayTeamName}</strong>
+      </span>
+    </span>
+  );
+}
+
+function TeamSide({ team, displayName, tooltip = null, tooltipId = "" }) {
   const resolvedFlagSrc = team.flagSrc || getFlagByTeamName(team.name) || getFlagByTeamName(displayName);
-  const content = <TeamBadge name={displayName} flagSrc={resolvedFlagSrc} />;
+  const content = (
+    <TeamBadge
+      name={displayName}
+      flagSrc={resolvedFlagSrc}
+      tooltip={tooltip}
+      tooltipId={tooltipId}
+    />
+  );
 
   return <div className="team-link team-link-static">{content}</div>;
 }
@@ -55,7 +126,7 @@ function resolveMatchStart(match) {
   return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
 }
 
-export default function MatchCard({ match, featured = false }) {
+export default function MatchCard({ match, featured = false, allMatches = [] }) {
   const [showPoll, setShowPoll] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const { language, locale, pollLanguage, uiText } = useLanguage();
@@ -102,6 +173,16 @@ export default function MatchCard({ match, featured = false }) {
   const displayTime = startsAt ? timeFormatter.format(startsAt) : match.kickoff;
   const homeTeamName = translateTeamName(match.homeTeam.name, language);
   const awayTeamName = translateTeamName(match.awayTeam.name, language);
+  const homeTooltip = buildReferenceTooltip(
+    resolveReferencedMatch(match.homeTeam.name, allMatches),
+    language,
+    uiText
+  );
+  const awayTooltip = buildReferenceTooltip(
+    resolveReferencedMatch(match.awayTeam.name, allMatches),
+    language,
+    uiText
+  );
   const watchUrl = getCazetvWatchUrl(match.homeTeam.name, match.awayTeam.name);
   const scoreLabel = hasScore ? `${match.homeScore} - ${match.awayScore}` : "x";
 
@@ -129,11 +210,21 @@ export default function MatchCard({ match, featured = false }) {
       {countdownLabel ? <p className="match-countdown">{uiText.match.startsIn(countdownLabel)}</p> : null}
 
       <div className="match-sides">
-        <TeamSide team={match.homeTeam} displayName={homeTeamName} />
+        <TeamSide
+          team={match.homeTeam}
+          displayName={homeTeamName}
+          tooltip={homeTooltip}
+          tooltipId={`match-${match.id}-home-reference`}
+        />
 
         <span className={`versus ${hasScore ? "match-score" : ""}`}>{scoreLabel}</span>
 
-        <TeamSide team={match.awayTeam} displayName={awayTeamName} />
+        <TeamSide
+          team={match.awayTeam}
+          displayName={awayTeamName}
+          tooltip={awayTooltip}
+          tooltipId={`match-${match.id}-away-reference`}
+        />
       </div>
 
       <div className="match-footer">

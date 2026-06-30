@@ -79,7 +79,7 @@ export default function LandingPage() {
             </span>
             <h2>{uiText.home.featuredMatch}</h2>
           </div>
-          <MatchCard match={featuredMatchState.match} featured />
+          <MatchCard match={featuredMatchState.match} featured allMatches={matches} />
         </section>
       ) : isLoading ? (
         <MatchCardSkeleton featured />
@@ -110,7 +110,7 @@ export default function LandingPage() {
 
               <div className="match-grid">
                 {day.matches.map((match) => (
-                  <MatchCard key={match.id} match={match} />
+                  <MatchCard key={match.id} match={match} allMatches={matches} />
                 ))}
               </div>
             </section>

@@ -688,7 +688,7 @@ export default function HomePage() {
             </span>
             <h2>{uiText.home.featuredMatch}</h2>
           </div>
-          <MatchCard match={featuredMatchState.match} featured />
+          <MatchCard match={featuredMatchState.match} featured allMatches={matches} />
         </section>
       ) : null}
 
@@ -728,7 +728,7 @@ export default function HomePage() {
             <div className="match-grid">
               {day.matches.map((match) => (
                 <div key={match.id} data-flip-key={`jogo-${match.id}`}>
-                  <MatchCard match={match} />
+                  <MatchCard match={match} allMatches={matches} />
                 </div>
               ))}
             </div>
